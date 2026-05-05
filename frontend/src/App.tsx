@@ -1,9 +1,8 @@
 import { useRef, useState } from "react";
 
-const FALLBACK_AUDIO_URL = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3";
 
 async function getAudioUrl() {
-  //return FALLBACK_AUDIO_URL;
+
   const data = await fetch("/api/hi").then((res) => res.json());
   return data.message;
 }
