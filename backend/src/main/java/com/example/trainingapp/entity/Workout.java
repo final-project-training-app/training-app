@@ -17,4 +17,60 @@ public class Workout {
     private String workoutAudio;
     private String instructionsImage;
     private String workoutImage;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getInstructions() {
+        return instructions;
+    }
+
+    public void setInstructions(String instructions) {
+        this.instructions = instructions;
+    }
+
+    public String getInstructionsAudio() {
+        return instructionsAudio;
+    }
+
+    public void setInstructionsAudio(String instructionsAudio) {
+        this.instructionsAudio = instructionsAudio;
+    }
+
+    public String getWorkoutAudio() {
+        return workoutAudio;
+    }
+
+    public void setWorkoutAudio(String workoutAudio) {
+        this.workoutAudio = workoutAudio;
+    }
+
+    public String getInstructionsImage() {
+        return instructionsImage;
+    }
+
+    public void setInstructionsImage(String instructionsImage) {
+        this.instructionsImage = instructionsImage;
+    }
+
+    public String getWorkoutImage() {
+        return workoutImage;
+    }
+
+    public void setWorkoutImage(String workoutImage) {
+        this.workoutImage = workoutImage;
+    }
 }
