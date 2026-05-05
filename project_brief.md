@@ -1,8 +1,8 @@
 # Project Brief: [Project Name]
 
 ## Strategy and Vision
-* **Core Value Prop:** 5-minute, low-impact home workouts guided by a friendly AI coach[cite: 1].
-* **Target Audience:** Users aged 60+ with low workout experience who need reassurance[cite: 2].
+* **Core Value Prop:** 5-minute, low-impact home workouts guided by a friendly AI coach.
+* **Target Audience:** Users aged 60+ with low workout experience who need reassurance.
 * **Investor Goal:** Demonstrate a functional MVP in 3 weeks that proves AI value and "Extreme Usability.
 
 ## Success Criteria (Investor Evaluation)
