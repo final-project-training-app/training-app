@@ -1,24 +1,31 @@
 import { useRef, useState } from "react";
 
+const FALLBACK_AUDIO_URL = "https://samplelib.com/lib/preview/mp3/sample-3s.mp3";
+
+async function getAudioUrl() {
+  return FALLBACK_AUDIO_URL;
+
+  // return fetch("/api/audio-url").then((res) => res.text());
+}
+
 export default function App() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [status, setStatus] = useState<number | null>(null);
 
   async function handlePlay() {
-    const response = await fetch("/api/audio-url");
-
-    const url = await response.text();
+    
+    const url = await getAudioUrl();
 
     if (!audioRef.current) {
       audioRef.current = new Audio();
+      audioRef.current.onended = () => setPlaying(false);
     }
 
     audioRef.current.src = url;
+    audioRef.current.currentTime = 0;
     await audioRef.current.play();
     setPlaying(true);
-
-    audioRef.current.onended = () => setPlaying(false);
   }
 
   async function handlePing() {
