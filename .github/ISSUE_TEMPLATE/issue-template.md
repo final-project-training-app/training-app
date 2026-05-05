@@ -14,7 +14,7 @@ Briefly describe what needs to be done e.g..
 As a [type of user], I want [goal] so that [benefit].
 
 ## Acceptance Criteria
-- [ ] Task 1 
+- [ ] Task 1  
 - [ ] Task 2 
 - [ ] Task 3 
 
