@@ -58,3 +58,6 @@ Backenden använder:
 - användare: `postgres`
 - lösenord: `postgres`
 
+Front end kan ansluta till backenden på `http://localhost:8080`.
+Front end is running on http://localhost:5173/.
+
