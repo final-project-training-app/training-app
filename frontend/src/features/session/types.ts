@@ -3,5 +3,6 @@ export type SessionExercise = {
   title: string;
   durationSeconds: number;
   imageUrl: string;
-  AudioUrl?: string;
+  audioUrl?: string;
+  instruction: string;
 };
