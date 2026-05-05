@@ -7,7 +7,16 @@
 
 ## Data Entities (Entities)
 * **User:** Profile data, basic movement history, and experience level.
-* **Workout:** Exercise instructions, difficulty metadata, and media links.
+
+* **Workout:**
+  * `id` (Long)
+  * `name` (String)
+  * `instructions` (String)
+  * `instructions_audio` (String)
+  * `workout_audio` (String)
+  * `instructions_image` (String)
+  * `workout_image` (String)
+
 * **ActivityLog:** Completion status, timestamps, and AI feedback history.
 
 ## API & Logic (Endpoints)
