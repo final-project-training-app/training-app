@@ -58,6 +58,7 @@ public class Workout {
         this.workoutAudio = workoutAudio;
     }
 
+
     public String getInstructionsImage() {
         return instructionsImage;
     }

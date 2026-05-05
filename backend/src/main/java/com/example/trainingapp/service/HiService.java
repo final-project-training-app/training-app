@@ -3,7 +3,6 @@ package com.example.trainingapp.service;
 import com.example.trainingapp.entity.GreetingMessage;
 import com.example.trainingapp.repository.GreetingRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class HiService {
@@ -17,7 +16,8 @@ public class HiService {
     }
 
     public GreetingMessage getOrCreateGreeting() {
-        return new GreetingMessage(DEFAULT_MESSAGE);
+        return greetingRepository.findTopByOrderByIdAsc()
+                .orElseGet(() -> greetingRepository.save(new GreetingMessage(DEFAULT_MESSAGE)));
     }
 }
 
