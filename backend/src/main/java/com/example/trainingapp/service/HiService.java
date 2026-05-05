@@ -17,8 +17,7 @@ public class HiService {
     }
 
     public GreetingMessage getOrCreateGreeting() {
-        return greetingRepository.findTopByOrderByIdAsc()
-                .orElseGet(() -> greetingRepository.save(new GreetingMessage(DEFAULT_MESSAGE)));
+        return new GreetingMessage(DEFAULT_MESSAGE);
     }
 }
 

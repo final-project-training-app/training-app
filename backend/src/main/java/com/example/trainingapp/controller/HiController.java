@@ -1,6 +1,8 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.entity.GreetingMessage;
 import com.example.trainingapp.service.HiService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,8 +20,8 @@ public class HiController {
     }
 
     @GetMapping("/hi")
-    public String sayHi() {
-        return hiService.getOrCreateGreeting().getMessage();
+    public ResponseEntity<GreetingMessage> sayHi() {
+        return ResponseEntity.ok().body(hiService.getOrCreateGreeting());
     }
 }
 
