@@ -1,7 +1,7 @@
 ---
-name: Issue Name
+name: Issue Template
 about: Describe this issue template's purpose here.
-title: Issue Name
+title: Name
 labels: ''
 assignees: ''
 
