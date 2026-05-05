@@ -1,25 +1,29 @@
-import { useRef, useState } from 'react'
+import { useRef, useState } from "react";
 
 export default function App() {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [playing, setPlaying] = useState(false)
-  const [status, setStatus] = useState<number | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [status, setStatus] = useState<number | null>(null);
 
   async function handlePlay() {
-    const response = await fetch('/api/audio-url')
-    setStatus(response.status)
+    const response = await fetch("/api/audio-url");
 
-    const url = await response.text()
+    const url = await response.text();
 
     if (!audioRef.current) {
-      audioRef.current = new Audio()
+      audioRef.current = new Audio();
     }
 
-    audioRef.current.src = url
-    await audioRef.current.play()
-    setPlaying(true)
+    audioRef.current.src = url;
+    await audioRef.current.play();
+    setPlaying(true);
 
-    audioRef.current.onended = () => setPlaying(false)
+    audioRef.current.onended = () => setPlaying(false);
+  }
+
+  async function handlePing() {
+    const response = await fetch("/api/hi");
+    setStatus(response.status);
   }
 
   return (
@@ -29,15 +33,16 @@ export default function App() {
           onClick={handlePlay}
           className="rounded-2xl bg-cyan-400 px-6 py-3 text-lg font-medium text-zinc-950"
         >
-          {playing ? 'Spelar...' : 'Spela ljud'}
+          {playing ? "Spelar..." : "Spela ljud"}
         </button>
-
-        {status && (
-          <p className="text-sm text-black">
-            API status: {status}
-          </p>
-        )}
+        <button
+          onClick={handlePing}
+          className="rounded-2xl border border-zinc-700 px-6 py-3 text-black"
+        >
+          Klicka:{" "}
+          {status && <p className="text-sm text-black">API status: {status}</p>}
+        </button>
       </div>
     </main>
-  )
+  );
 }
