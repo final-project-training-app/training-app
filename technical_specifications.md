@@ -6,7 +6,14 @@
 * **AI Implementation:** [PLACEHOLDER: Describe interaction logic and difficulty adaptation].
 
 ## Data Entities (Entities)
-* **User:** Profile data, basic movement history, and experience level.
+* **User:**
+  * `id` (Long)
+  * `name` (String)
+  * `email` (String)
+  * `password` (String)
+  * `intensityLevel` (Integer)
+  * `context` (String)
+  
 
 * **Workout:**
   * `id` (Long)
