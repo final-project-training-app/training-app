@@ -1,6 +1,5 @@
 package com.example.trainingapp.controller;
 
-import com.example.trainingapp.entity.GreetingMessage;
 import com.example.trainingapp.service.HiService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +18,8 @@ public class HiController {
     }
 
     @GetMapping("/hi")
-    public GreetingMessage sayHi() {
-        return hiService.getOrCreateGreeting();
+    public String sayHi() {
+        return hiService.getOrCreateGreeting().getMessage();
     }
 }
 

@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class HiService {
 
-    private static final String DEFAULT_MESSAGE = "Hi from Spring Boot + PostgreSQL!";
+    private static final String DEFAULT_MESSAGE = "https://mizofvemlvooaycnevys.supabase.co/storage/v1/object/public/audio_files/ElevenLabs_sample_instructions_jj-pvc.mp3";
 
     private final GreetingRepository greetingRepository;
 
