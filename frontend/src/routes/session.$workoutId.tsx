@@ -1,77 +1,106 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef } from "react";
-import { SessionAudioButton } from "../features/session/components/SessionAudioButton";
-import { SessionHeader } from "../features/session/components/SessionHeader";
-import { SessionImage } from "../features/session/components/SessionImage";
-import { SessionInstruction } from "../features/session/components/SessionInstruction";
-import { SessionTimer } from "../features/session/components/SessionTimer";
-import { useSessionExercise } from "../features/session/query";
+import { useEffect, useRef, useState } from "react";
+import { WorkoutSessionView } from "../features/session/components/WorkoutSessionView";
+import { useWorkoutSession } from "../features/session/query";
 
 function SessionPage() {
   const { workoutId } = Route.useParams();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const {
-    data: exercise,
+    data: session,
     isLoading,
     isError,
     error,
-  } = useSessionExercise(workoutId);
+  } = useWorkoutSession(workoutId);
 
-  async function handlePlayAudio() {
-    if (!exercise?.audioUrl) return;
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [durationSeconds, setDurationSeconds] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
+  useEffect(() => {
+    if (!session?.audioUrl) {
+      return;
     }
 
-    audioRef.current.src = exercise.audioUrl;
+    const audio = audioRef.current ?? new Audio();
+    audioRef.current = audio;
+
+    audio.src = session.audioUrl;
+    audio.preload = "metadata";
+
+    const handleLoadedMetadata = () => {
+      if (!Number.isNaN(audio.duration) && Number.isFinite(audio.duration)) {
+        setDurationSeconds(Math.round(audio.duration));
+      }
+    };
+
+    const handleTimeUpdate = () => {
+      setElapsedSeconds(Math.floor(audio.currentTime));
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setElapsedSeconds(0);
+    };
+
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("ended", handleEnded);
+    audio.load();
+
+    return () => {
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [session?.audioUrl]);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  async function handleStartCall() {
+    if (!audioRef.current) {
+      return;
+    }
+
     audioRef.current.currentTime = 0;
     await audioRef.current.play();
+    setIsPlaying(true);
   }
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[#f8f6ff] px-4 py-6">
-        <div className="mx-auto max-w-3xl rounded-[2rem] bg-white p-6 text-center text-slate-900 shadow-sm">
-          Laddar övning...
-        </div>
-      </main>
+      <div className="flex min-h-screen items-center justify-center p-8 text-center">
+        Laddar session...
+      </div>
     );
   }
 
   if (isError) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Något gick fel när övningen skulle hämtas.";
-
     return (
-      <main className="min-h-screen bg-[#f8f6ff] px-4 py-6">
-        <div className="mx-auto max-w-3xl rounded-[2rem] bg-white p-6 text-center shadow-sm ring-1 ring-red-200">
-          <h1 className="text-2xl font-bold text-slate-950">
-            Kunde inte ladda övningen
-          </h1>
-          <p className="mt-3 text-lg text-slate-700">{message}</p>
-        </div>
-      </main>
+      <div className="flex min-h-screen items-center justify-center p-8 text-center">
+        {error instanceof Error ? error.message : "Något gick fel."}
+      </div>
     );
   }
 
-  if (!exercise) {
+  if (!session) {
     return null;
   }
 
   return (
-    <main className="min-h-screen bg-[#f8f6ff] px-4 py-6">
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
-        <SessionHeader title={exercise.title} />
-        <SessionImage title={exercise.title} imageUrl={exercise.imageUrl} />
-        <SessionAudioButton label="Spela ljud" onClick={handlePlayAudio} />
-        <SessionInstruction instruction={exercise.instruction} />
-        <SessionTimer durationSeconds={exercise.durationSeconds} />
-      </div>
-    </main>
+    <WorkoutSessionView
+      session={session}
+      elapsedSeconds={elapsedSeconds}
+      durationSeconds={durationSeconds}
+      isPlaying={isPlaying}
+      onStartCall={handleStartCall}
+    />
   );
 }
 

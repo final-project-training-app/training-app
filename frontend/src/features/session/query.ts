@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSessionExercise } from "./api";
+import { getWorkoutSession } from "./api";
 
-export function useSessionExercise(workoutId: string) {
+export function useWorkoutSession(workoutId: string) {
   return useQuery({
-    queryKey: ["session-exercise", workoutId],
-    queryFn: () => getSessionExercise(workoutId),
+    queryKey: ["workout-session", workoutId],
+    queryFn: () => getWorkoutSession(workoutId),
+    retry: 1,
   });
 }
