@@ -9,55 +9,48 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SessionRouteImport } from './routes/session'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SessionWorkoutIdRouteImport } from './routes/session.$workoutId'
 
-const SessionRoute = SessionRouteImport.update({
-  id: '/session',
-  path: '/session',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SessionWorkoutIdRoute = SessionWorkoutIdRouteImport.update({
+  id: '/session/$workoutId',
+  path: '/session/$workoutId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/session': typeof SessionRoute
+  '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/session': typeof SessionRoute
+  '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/session': typeof SessionRoute
+  '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/session'
+  fullPaths: '/' | '/session/$workoutId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/session'
-  id: '__root__' | '/' | '/session'
+  to: '/' | '/session/$workoutId'
+  id: '__root__' | '/' | '/session/$workoutId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  SessionRoute: typeof SessionRoute
+  SessionWorkoutIdRoute: typeof SessionWorkoutIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/session': {
-      id: '/session'
-      path: '/session'
-      fullPath: '/session'
-      preLoaderRoute: typeof SessionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -65,12 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/session/$workoutId': {
+      id: '/session/$workoutId'
+      path: '/session/$workoutId'
+      fullPath: '/session/$workoutId'
+      preLoaderRoute: typeof SessionWorkoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  SessionRoute: SessionRoute,
+  SessionWorkoutIdRoute: SessionWorkoutIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
