@@ -4,7 +4,7 @@ import com.example.trainingapp.entity.ActivityLog;
 import com.example.trainingapp.repository.ActivityLogRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 public class ActivityLogService {
@@ -15,8 +15,8 @@ public class ActivityLogService {
         this.activityLogRepository = activityLogRepository;
     }
 
-    public List<ActivityLog> getActivityLogsByUserId(Long userId) {
-        return activityLogRepository.findByUserIdOrderByIdDesc(userId);
+    public ActivityLog createActivityLog(ActivityLog activityLog) {
+        activityLog.setCompletedAt(LocalDateTime.now());
+        return activityLogRepository.save(activityLog);
     }
 }
-
