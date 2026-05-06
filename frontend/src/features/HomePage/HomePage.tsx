@@ -1,6 +1,9 @@
 import { Show, SignInButton, SignOutButton } from "@clerk/react";
+import { useNavigate } from "@tanstack/react-router";
 
 export default function HomePage() {
+  const navigate = useNavigate();
+
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-between bg-gradient-to-b from-[#f8f4ff] via-[#f5efff] to-[#efe9fb] px-4 py-8">
       <Show when="signed-in">
@@ -24,7 +27,11 @@ export default function HomePage() {
       <div className="flex-1" />
 
       <div className="mb-8 flex w-full max-w-md flex-col items-stretch gap-4">
-        <button className="rounded-3xl bg-[#5a2d82] px-10 py-10 text-4xl font-extrabold text-white shadow-xl shadow-[#5a2d82]/25 transition-all duration-200 hover:-translate-y-1 hover:bg-[#6a3893] hover:shadow-2xl active:translate-y-1 active:scale-[0.99] active:shadow-md focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:ring-offset-2 focus:ring-offset-[#f8f4ff]">
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/session/$workoutId", params: { workoutId: "1" } })}
+          className="rounded-3xl bg-[#5a2d82] px-10 py-10 text-4xl font-extrabold text-white shadow-xl shadow-[#5a2d82]/25 transition-all duration-200 hover:-translate-y-1 hover:bg-[#6a3893] hover:shadow-2xl active:translate-y-1 active:scale-[0.99] active:shadow-md focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:ring-offset-2 focus:ring-offset-[#f8f4ff]"
+        >
           Träna
         </button>
 
