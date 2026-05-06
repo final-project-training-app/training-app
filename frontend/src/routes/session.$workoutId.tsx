@@ -5,24 +5,15 @@ import { SessionHeader } from "../features/session/components/SessionHeader";
 import { SessionImage } from "../features/session/components/SessionImage";
 import { SessionInstruction } from "../features/session/components/SessionInstruction";
 import { SessionTimer } from "../features/session/components/SessionTimer";
-import type { SessionExercise } from "../features/session/types";
-
-const exercise: SessionExercise = {
-  id: "shoulder-rolls",
-  title: "Rulla axlarna",
-  durationSeconds: 25,
-  imageUrl:
-    "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80",
-  audioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3",
-  instruction:
-    "Lyft axlarna långsamt upp mot öronen och rulla sedan bakåt och nedåt.",
-};
+import { useSessionExercise } from "../features/session/query";
 
 function SessionPage() {
+  const { workoutId } = Route.useParams();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { data: exercise, isLoading } = useSessionExercise(workoutId);
 
   async function handlePlayAudio() {
-    if (!exercise.audioUrl) return;
+    if (!exercise?.audioUrl) return;
 
     if (!audioRef.current) {
       audioRef.current = new Audio();
@@ -31,6 +22,16 @@ function SessionPage() {
     audioRef.current.src = exercise.audioUrl;
     audioRef.current.currentTime = 0;
     await audioRef.current.play();
+  }
+
+  if (isLoading || !exercise) {
+    return (
+      <main className="min-h-screen bg-[#f8f6ff] px-4 py-6">
+        <div className="mx-auto max-w-3xl text-center text-slate-900">
+          Laddar...
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -46,6 +47,6 @@ function SessionPage() {
   );
 }
 
-export const Route = createFileRoute("/session")({
+export const Route = createFileRoute("/session/$workoutId")({
   component: SessionPage,
 });
