@@ -40,7 +40,7 @@ export default function App() {
           onClick={handlePlay}
           className="rounded-2xl bg-cyan-400 px-6 py-3 text-lg font-medium text-zinc-950"
         >
-          {playing ? "Spelar..." : "Spela ljud"}
+          {playing ? "Spelar.." : "Spela ljud"}
         </button>
         <button
           onClick={handlePing}
