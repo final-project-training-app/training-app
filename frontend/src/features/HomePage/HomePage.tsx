@@ -4,25 +4,26 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#f8f6ff]">
-      {/* Full-width image at top */}
-      <div className="flex flex-1 overflow-hidden">
+    <main className="flex min-h-screen flex-col items-center justify-between bg-purple-100 px-4 py-8">
+      {/* Small image at top */}
+      <div className="pt-12">
         <img
           src="/src/assets/image.png"
           alt="Profile"
-          className="w-full object-cover"
+          className="object-cover shadow-md"
         />
       </div>
 
-      {/* Button at bottom */}
-      <div className="flex items-center justify-center px-4 py-8">
-        <button
-          onClick={() => navigate({ to: "/session/1" })}
-          className="rounded-2xl bg-cyan-400 px-8 py-4 text-xl font-semibold text-zinc-950 shadow-md hover:bg-cyan-300 transition-colors"
-        >
-          Träna
-        </button>
-      </div>
+      {/* Empty space in middle */}
+      <div className="flex-1"></div>
+
+      {/* Dark purple button at bottom */}
+      <button
+        onClick={() => navigate({ to: "/session/1" })}
+        className="mb-8 w-full max-w-md rounded-3xl bg-purple-800 px-10 py-10 text-4xl font-extrabold text-white shadow-xl hover:bg-purple-900 transition-colors"
+      >
+        Träna
+      </button>
     </main>
   );
 }
