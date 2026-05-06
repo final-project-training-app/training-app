@@ -4,6 +4,8 @@ import com.example.trainingapp.entity.User;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,5 +27,9 @@ public class UserController {
         User createdUser = userService.createUser(user);
         return ResponseEntity.ok().body(createdUser);
     }
-}
 
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(userService.getUserById(id));
+    }
+}
