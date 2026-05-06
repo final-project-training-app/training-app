@@ -1,8 +1,6 @@
-export type SessionExercise = {
+export type WorkoutSessionData = {
   id: string;
-  title: string;
-  durationSeconds: number;
-  imageUrl: string;
+  coachName: string;
+  avatarUrl: string;
   audioUrl?: string;
-  instruction: string;
 };
