@@ -1,8 +1,13 @@
 # training-app
 
-Det här repot innehåller en enkel Spring Boot-backend i mappen `backend`.
+Det här repot innehåller en React-frontend och en Spring Boot-backend.
 
-## Backend
+## Projektstruktur
+
+- `backend` - Spring Boot API + PostgreSQL via JPA
+- `frontend` - React + Vite
+
+## Backend (aktuell status)
 
 Backenden använder:
 
@@ -10,54 +15,118 @@ Backenden använder:
 - Spring Data JPA
 - PostgreSQL
 
-### Enkel struktur
+Kodstruktur i `backend/src/main/java/com/example/trainingapp/`:
 
-`backend/src/main/java/com/example/trainingapp/`
+- `controller` - REST-endpoints
+- `service` - affarslogik
+- `repository` - JPA repository
+- `entity` - JPA entities
 
-- `controller` – REST-endpoints
-- `service` – affärslogik
-- `repository` – JPA repository
-- `entity` – JPA entity
+## API Endpoints
 
-### Endpoint
+### Hi / Greeting
 
 - `GET /api/hi`
+  - Returnerar `GreetingMessage` (id + message)
 
-Endpointen returnerar bara `Hi`.
+### Users
 
-Första anropet sparar `Hi` i databasen om det inte redan finns.
-Det visar kopplingen `controller -> service -> repository -> database`.
+- `POST /api/users`
+  - Skapar user
+- `GET /api/users/{id}`
+  - Hamtar user
+- `PUT /api/users/{id}`
+  - Uppdaterar `intensityLevel` + `context`
 
-### Starta PostgreSQL med Docker
+### Workouts
 
-Kör från `backend`:
+- `GET /api/workouts`
+  - Hamtar alla workouts
+- `GET /api/workouts/{id}`
+  - Hamtar workout by id
+- `GET /api/workouts/{id}/audio`
+  - Hamtar endast workout audio-url (string)
+- `POST /api/workouts/{id}/start?userId={userId}`
+  - Startar workout och returnerar workout-data
+  - Om `userId` skickas skapas en enkel `STARTED` logg
+
+### Activity Logs
+
+- `POST /api/activity-logs`
+  - Sparar workout-resultat/logg
+  - Service satter `completedAt` automatiskt
+
+Exempel body:
+
+```json
+{
+  "userId": 1,
+  "workoutId": 1,
+  "durationSeconds": 180,
+  "status": "COMPLETED"
+}
+```
+
+## Enkla MVP-floden
+
+- Start workout:
+  - `Frontend -> POST /api/workouts/{id}/start -> Workout returneras`
+- Complete workout:
+  - `Frontend -> POST /api/activity-logs -> logg sparas (timestamp satts i service)`
+
+## Konfiguration
+
+`backend/src/main/resources/application.properties` anvander miljovariabler:
+
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `PORT` (optional, default `8080`)
+- `SUPABASE_URL` (optional)
+- `SUPABASE_API_KEY` (optional)
+- `SUPABASE_BUCKET_NAME` (optional)
+
+## Starta lokalt
+
+### 1) Starta PostgreSQL med Docker (om du kor lokalt DB)
+
+Kor fran `backend`:
 
 ```powershell
 docker compose up -d
 ```
 
-### Starta backend
+### 2) Starta backend
 
-Kör från `backend`:
+Kor fran `backend`:
 
 ```powershell
 mvn spring-boot:run
 ```
 
-### Testa endpointen
+Om du anvander `.env` i `backend`, ladda variabler i PowerShell innan start:
 
 ```powershell
-Invoke-RestMethod http://localhost:8080/api/hi
+Get-Content .env | ForEach-Object {
+  $k, $v = $_ -split '=', 2
+  [System.Environment]::SetEnvironmentVariable($k, $v)
+}
+mvn spring-boot:run
 ```
 
-### Databasinställningar
+### 3) Starta frontend
 
-Backenden använder:
+Kor fran `frontend`:
 
-- databas: `training_app`
-- användare: `postgres`
-- lösenord: `postgres`
+```powershell
+npm install
+npm run dev
+```
 
-Front end kan ansluta till backenden på `http://localhost:8080`.
-Front end is running on http://localhost:5173/.
+## Snabbtest med Postman
 
+- `GET http://localhost:8080/api/workouts`
+- `POST http://localhost:8080/api/workouts/1/start?userId=1`
+- `POST http://localhost:8080/api/activity-logs`
+
+Frontend kor normalt pa `http://localhost:5173`.
