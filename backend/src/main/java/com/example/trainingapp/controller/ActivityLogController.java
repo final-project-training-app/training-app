@@ -11,7 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/activity-logs")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://frontend-training.up.railway.app"
+})
 public class ActivityLogController {
 
     private final ActivityLogService activityLogService;

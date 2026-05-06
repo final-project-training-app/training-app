@@ -34,7 +34,7 @@ Kodstruktur i `backend/src/main/java/com/example/trainingapp/`:
 - `POST /api/users`
   - Skapar user
 - `GET /api/users/{id}`
-  - Hamtar user
+  - Hamtar usern
 - `PUT /api/users/{id}`
   - Uppdaterar `intensityLevel` + `context`
 

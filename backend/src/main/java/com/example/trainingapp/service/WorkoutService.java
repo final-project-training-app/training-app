@@ -7,6 +7,7 @@ import com.example.trainingapp.repository.WorkoutRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -50,6 +51,7 @@ public class WorkoutService {
             activityLog.setUserId(userId);
             activityLog.setWorkoutId(workout.getId());
             activityLog.setStatus("STARTED");
+            activityLog.setCompletedAt(LocalDateTime.now());
             activityLogRepository.save(activityLog);
         }
 

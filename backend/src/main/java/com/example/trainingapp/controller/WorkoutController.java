@@ -16,7 +16,10 @@ import com.example.trainingapp.service.WorkoutService;
 
 @RestController
 @RequestMapping("/api/workouts")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://frontend-training.up.railway.app"
+})
 public class WorkoutController {
 
     private final WorkoutService workoutService;
