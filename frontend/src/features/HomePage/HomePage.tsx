@@ -19,7 +19,6 @@ export default function HomePage() {
 
       {/* Dark purple button at bottom */}
       <button
-        onClick={() => navigate({ to: "/session/1" })}
         className="mb-8 w-full max-w-md rounded-3xl bg-purple-800 px-10 py-10 text-4xl font-extrabold text-white shadow-xl hover:bg-purple-900 transition-colors"
       >
         Träna
