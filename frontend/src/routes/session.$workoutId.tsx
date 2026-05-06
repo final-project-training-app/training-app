@@ -10,7 +10,13 @@ import { useSessionExercise } from "../features/session/query";
 function SessionPage() {
   const { workoutId } = Route.useParams();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const { data: exercise, isLoading } = useSessionExercise(workoutId);
+
+  const {
+    data: exercise,
+    isLoading,
+    isError,
+    error,
+  } = useSessionExercise(workoutId);
 
   async function handlePlayAudio() {
     if (!exercise?.audioUrl) return;
@@ -24,14 +30,36 @@ function SessionPage() {
     await audioRef.current.play();
   }
 
-  if (isLoading || !exercise) {
+  if (isLoading) {
     return (
       <main className="min-h-screen bg-[#f8f6ff] px-4 py-6">
-        <div className="mx-auto max-w-3xl text-center text-slate-900">
-          Laddar...
+        <div className="mx-auto max-w-3xl rounded-[2rem] bg-white p-6 text-center text-slate-900 shadow-sm">
+          Laddar övning...
         </div>
       </main>
     );
+  }
+
+  if (isError) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Något gick fel när övningen skulle hämtas.";
+
+    return (
+      <main className="min-h-screen bg-[#f8f6ff] px-4 py-6">
+        <div className="mx-auto max-w-3xl rounded-[2rem] bg-white p-6 text-center shadow-sm ring-1 ring-red-200">
+          <h1 className="text-2xl font-bold text-slate-950">
+            Kunde inte ladda övningen
+          </h1>
+          <p className="mt-3 text-lg text-slate-700">{message}</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!exercise) {
+    return null;
   }
 
   return (

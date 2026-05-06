@@ -18,7 +18,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://backend-training.up.railway.app",
+        target: "https://backend-training.up.railway.app",
         changeOrigin: true,
       },
     },
