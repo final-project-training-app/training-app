@@ -3,6 +3,7 @@ package com.example.trainingapp.controller;
 import com.example.trainingapp.entity.User;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -40,5 +44,22 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUserPreferences(@PathVariable Long id, @RequestBody User userRequest) {
         return ResponseEntity.ok().body(userService.updateUserPreferences(id, userRequest));
+    }
+
+    @GetMapping("/me/profile")
+    public ResponseEntity<Map<String, Object>> getCurrentUserProfile(JwtAuthenticationToken token) {
+        if (token == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        Jwt jwt = (Jwt) token.getPrincipal();
+        String userId = jwt.getClaimAsString("sub");
+        String email = jwt.getClaimAsString("email");
+        
+        return ResponseEntity.ok().body(Map.of(
+            "userId", userId,
+            "email", email,
+            "claims", jwt.getClaims()
+        ));
     }
 }
