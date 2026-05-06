@@ -1,5 +1,7 @@
-export async function apiFetch(path: string, init?: RequestInit) {
-  const response = await fetch(path, init);
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+export async function apiFetch(path: string) {
+  const response = await fetch(`${API_URL}${path}`);
 
   if (!response.ok) {
     const text = await response.text();
