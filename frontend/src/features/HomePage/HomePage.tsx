@@ -1,7 +1,18 @@
+import { Show, SignInButton, SignOutButton } from "@clerk/react";
+
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between bg-purple-100 px-4 py-8">
-      {/* Small image at top */}
+    <main className="relative flex min-h-screen flex-col items-center justify-between bg-gradient-to-b from-[#f8f4ff] via-[#f5efff] to-[#efe9fb] px-4 py-8">
+      <Show when="signed-in">
+        <div className="absolute right-4 top-4">
+          <SignOutButton>
+            <button className="rounded-full border border-[#d4c4f4] bg-white/85 px-5 py-3 text-base font-semibold text-[#4d2a7a] shadow-sm backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md active:translate-y-0 active:scale-[0.98] active:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:ring-offset-2 focus:ring-offset-[#f8f4ff]">
+              Logga ut
+            </button>
+          </SignOutButton>
+        </div>
+      </Show>
+
       <div className="pt-12">
         <img
           src="/src/assets/image.png"
@@ -10,13 +21,21 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Empty space in middle */}
-      <div className="flex-1"></div>
+      <div className="flex-1" />
 
-      {/* Dark purple button at bottom */}
-      <button className="mb-8 w-full max-w-md rounded-3xl bg-purple-800 px-10 py-10 text-4xl font-extrabold text-white shadow-xl hover:bg-purple-900 transition-colors">
-        Träna
-      </button>
+      <div className="mb-8 flex w-full max-w-md flex-col items-stretch gap-4">
+        <button className="rounded-3xl bg-[#5a2d82] px-10 py-10 text-4xl font-extrabold text-white shadow-xl shadow-[#5a2d82]/25 transition-all duration-200 hover:-translate-y-1 hover:bg-[#6a3893] hover:shadow-2xl active:translate-y-1 active:scale-[0.99] active:shadow-md focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:ring-offset-2 focus:ring-offset-[#f8f4ff]">
+          Träna
+        </button>
+
+        <Show when="signed-out">
+          <SignInButton>
+            <button className="rounded-2xl border border-[#d4c4f4] bg-white/85 px-8 py-4 text-xl font-semibold text-[#4d2a7a] shadow-sm backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:ring-offset-2 focus:ring-offset-[#f8f4ff]">
+              Logga in
+            </button>
+          </SignInButton>
+        </Show>
+      </div>
     </main>
   );
 }
