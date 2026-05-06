@@ -9,7 +9,7 @@ export default function HomePage() {
       <Show when="signed-in">
         <div className="absolute right-4 top-4">
           <SignOutButton>
-            <button className="rounded-full border border-[#d4c4f4] bg-white/85 px-5 py-3 text-base font-semibold text-[#4d2a7a] shadow-sm backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md active:translate-y-0 active:scale-[0.98] active:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:ring-offset-2 focus:ring-offset-[#f8f4ff]">
+            <button className="rounded-full border border-[#d4c4f4] bg-white/85 px-10 py-8 text-base font-semibold text-[#4d2a7a] shadow-sm backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md active:translate-y-0 active:scale-[0.98] active:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:ring-offset-2 focus:ring-offset-[#f8f4ff]">
               Logga ut
             </button>
           </SignOutButton>
