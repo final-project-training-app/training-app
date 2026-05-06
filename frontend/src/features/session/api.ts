@@ -12,8 +12,11 @@ type BackendWorkoutResponse = {
 
 export async function getWorkoutSession(
   workoutId: string,
+  token?: string,
 ): Promise<WorkoutSessionData> {
-  const data = await getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`);
+  const data = await getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`, {
+    token,
+  });
 
   return {
     id: String(data.id),
