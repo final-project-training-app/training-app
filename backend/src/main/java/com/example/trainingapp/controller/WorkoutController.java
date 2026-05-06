@@ -31,5 +31,10 @@ public class WorkoutController {
     public ResponseEntity<List<Workout>> getAllWorkouts() {
         return ResponseEntity.ok().body(workoutService.getAllWorkouts());
     }
+
+    @GetMapping("/{id}/audio")
+    public ResponseEntity<Workout> getWorkoutById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(workoutService.getWorkoutById(id));
+    }
 }
 
