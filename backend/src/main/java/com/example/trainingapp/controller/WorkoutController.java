@@ -1,7 +1,7 @@
 package com.example.trainingapp.controller;
 
-import com.example.trainingapp.entity.Workout;
-import com.example.trainingapp.service.WorkoutService;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.example.trainingapp.entity.Workout;
+import com.example.trainingapp.service.WorkoutService;
 
 @RestController
 @RequestMapping("/api/workouts")
@@ -32,7 +33,7 @@ public class WorkoutController {
         return ResponseEntity.ok().body(workoutService.getAllWorkouts());
     }
 
-    @GetMapping("/{id}/audio")
+    @GetMapping("/{id}")
     public ResponseEntity<Workout> getWorkoutById(@PathVariable Long id) {
         return ResponseEntity.ok().body(workoutService.getWorkoutById(id));
     }
