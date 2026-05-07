@@ -1,10 +1,7 @@
-export type SessionScreen = "landing" | "call";
-export type SessionAudioKind = "guide" | "exercise";
-export type SessionPanel = "none" | "info" | "exercise";
+export type SessionPanel = "none" | "info" | "exercise" | "suite";
 
 export type CoachCallSession = {
   id: string;
-  title: string;
   coachName: string;
   coachImageUrl?: string;
 
@@ -12,7 +9,6 @@ export type CoachCallSession = {
   intensityLabel: string;
   trainingContext: string;
 
-  guideAudioUrl?: string;
   exerciseAudioUrl?: string;
 
   durationSeconds: number;
