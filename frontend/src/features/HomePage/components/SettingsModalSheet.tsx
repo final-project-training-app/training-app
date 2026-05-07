@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import IntensitySlider from "./IntensitySlider";
+import ContextModel from "./ContextModal";
 
 export default function SettingsModalSheet({
   open,
@@ -20,6 +21,7 @@ export default function SettingsModalSheet({
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSheetHeight(DEFAULT_HEIGHT);
     }
   }, [open]);
@@ -96,13 +98,7 @@ export default function SettingsModalSheet({
           </section>
 
           <section className="mt-12">
-            <h2 className="text-[clamp(1.6rem,3.4vw,2.9rem)] font-bold tracking-tight text-[#372b8f]">
-              Kontext
-            </h2>
-            <p className="mt-3 max-w-3xl text-[clamp(1.15rem,2.9vw,1.8rem)] leading-relaxed text-[#312b70]">
-              Beratta om behov, mal eller eventuella begransningar sa att passet
-              kan anpassas battre.
-            </p>
+            <ContextModel />
           </section>
 
           <section className="mt-10 space-y-4">
