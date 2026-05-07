@@ -57,6 +57,26 @@ export default function SettingsModalSheet({
         <section className="mt-4">
           <h2>Kontext</h2>
         </section>
+        <section className="mt-6 flex gap-3">
+          <button
+            className="flex-1 rounded-xl bg-[#5a2d82] px-4 py-3 text-white font-semibold shadow-md transition-all duration-150 hover:bg-[#6a3893] active:scale-[0.97]"
+            onClick={() => {
+              // save logic here later
+              console.log("saved");
+            }}
+          >
+            Spara
+          </button>
+
+          <button
+            className="flex-1 rounded-xl bg-white px-4 py-3 font-semibold text-[#4d2a7a] shadow-sm ring-1 ring-[#d4c4f4]/70 transition-all duration-150 hover:bg-[#f5efff] active:scale-[0.97]"
+            onClick={() => {
+              setOpen(false);
+            }}
+          >
+            Avbryt
+          </button>
+        </section>
       </div>
     </>
   );
