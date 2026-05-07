@@ -19,8 +19,8 @@ export default function GeminiLiveTest() {
   const controllerRef = useRef<AbortController | null>(null);
   useEffect(() => () => controllerRef.current?.abort(), []);
 
-  async function loadToken() {
-    if (inFlightRef.current) return;
+  async function loadToken(): Promise<string | null> {
+    if (inFlightRef.current) return null;
     inFlightRef.current = true;
     controllerRef.current = new AbortController();
     setTokenLoading(true);
@@ -40,6 +40,7 @@ export default function GeminiLiveTest() {
         );
 
       const contentType = res.headers.get("content-type") ?? "";
+      let tokenValue: string | null = null;
       if (contentType.includes("application/json")) {
         interface AuthTokenResponse {
           name?: string;
@@ -51,18 +52,20 @@ export default function GeminiLiveTest() {
         if (data.expireTime) {
           console.log("[Token] expires at:", new Date(data.expireTime).toISOString());
         }
-        const tokenValue = data.token ?? data.name ?? null;
+        tokenValue = data.token ?? data.name ?? null;
         if (!tokenValue) throw new Error("Token missing in response");
-        setToken(tokenValue);
       } else {
         const text = await res.text();
         if (!text) throw new Error("Empty token response");
-        setToken(text.trim());
+        tokenValue = text.trim();
       }
+      setToken(tokenValue);
+      return tokenValue;
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
         setTokenError((error as Error).message);
       }
+      return null;
     } finally {
       inFlightRef.current = false;
       controllerRef.current = null;
@@ -99,7 +102,7 @@ export default function GeminiLiveTest() {
     playheadRef.current = startAt + audioBuffer.duration;
   };
 
-  const { geminiConnect, geminiDisconnect, startAudioCapture, stopAudioCapture, isActive, getSession } =
+  const { geminiConnect, geminiDisconnect, startAudioCapture, stopAudioCapture, endUserTurn, isActive, currentTurn, getSession } =
     useGeminiLive({
       token,
       onAudioData: (data) => {
@@ -123,11 +126,20 @@ export default function GeminiLiveTest() {
       return;
     }
 
-    // Always fetch a fresh token before each connection
-    await loadToken();
+    // Reset playhead so buffered audio from a previous session doesn't delay new audio
+    playheadRef.current = 0;
+    if (aiAudioCtxRef.current) {
+      await aiAudioCtxRef.current.close();
+      aiAudioCtxRef.current = null;
+    }
+
+    // Always fetch a fresh token before each connection and pass it directly
+    // to avoid the useEffect timing gap where tokenRef may still hold the old value
+    const freshToken = await loadToken();
+    if (!freshToken) return;
 
     try {
-      await geminiConnect();
+      await geminiConnect(freshToken);
     } catch (e) {
       console.error("geminiConnect() failed:", e);
     }
@@ -159,9 +171,79 @@ export default function GeminiLiveTest() {
     }
   };
 
+  const onEndTurn = () => {
+    try {
+      endUserTurn();
+      setAudioCapturing(false);
+    } catch (e) {
+      console.error("endUserTurn() failed:", e);
+    }
+  };
+
+  // When Gemini finishes its turn, automatically restart the user's microphone
+  const prevTurnRef = useRef(currentTurn);
+  useEffect(() => {
+    const prev = prevTurnRef.current;
+    prevTurnRef.current = currentTurn;
+    if (prev === "gemini" && currentTurn === "idle" && isActive) {
+      void onStartAudio();
+    }
+  }, [currentTurn, isActive]);
+
+  const turnLabel =
+    currentTurn === "user"
+      ? "Din tur"
+      : currentTurn === "gemini"
+        ? "Geminis tur"
+        : "Väntar";
+
+  const turnColor =
+    currentTurn === "user"
+      ? "#22c55e"
+      : currentTurn === "gemini"
+        ? "#a855f7"
+        : "#9ca3af";
+
   return (
     <div style={{ padding: 16, fontFamily: "sans-serif" }}>
       <h3>Gemini Live — quick test</h3>
+
+      {isActive && (
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 16,
+            padding: "8px 16px",
+            borderRadius: 24,
+            background: turnColor,
+            color: "#fff",
+            fontWeight: 600,
+            fontSize: 16,
+            transition: "background 0.3s",
+          }}
+        >
+          <span
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: "#fff",
+              opacity: currentTurn === "idle" ? 0.4 : 1,
+              animation: currentTurn !== "idle" ? "pulse 1s infinite" : "none",
+            }}
+          />
+          {turnLabel}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.3); }
+        }
+      `}</style>
 
       <div style={{ marginBottom: 8 }}>
         <strong>Token status:</strong>{" "}
@@ -208,7 +290,7 @@ export default function GeminiLiveTest() {
         </button>
 
         <button
-          onClick={() => geminiDisconnect()}
+          onClick={() => { geminiDisconnect(); setAudioCapturing(false); }}
           disabled={!isActive}
           style={{ marginRight: 8 }}
         >
@@ -229,6 +311,19 @@ export default function GeminiLiveTest() {
           style={{ marginRight: 8 }}
         >
           Stop Audio
+        </button>
+
+        <button
+          onClick={onEndTurn}
+          disabled={!audioCapturing}
+          style={{
+            marginRight: 8,
+            background: audioCapturing ? "#22c55e" : undefined,
+            color: audioCapturing ? "#fff" : undefined,
+            fontWeight: audioCapturing ? 600 : undefined,
+          }}
+        >
+          Avsluta min tur
         </button>
 
         <button

@@ -38,12 +38,15 @@ function pcm16ToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
+export type Turn = "user" | "gemini" | "idle";
+
 export const useGeminiLive = ({
   token,
   onAudioData,
   onMessage,
 }: UseGeminiLiveProps) => {
   const [isActive, setIsActive] = useState(false);
+  const [currentTurn, setCurrentTurn] = useState<Turn>("idle");
   const sessionRef = useRef<Session | null>(null);
   const tokenRef = useRef(token);
   const onAudioRef = useRef(onAudioData);
@@ -55,13 +58,16 @@ export const useGeminiLive = ({
     onMessageRef.current = onMessage;
   }, [token, onAudioData, onMessage]);
 
-  async function geminiConnect() {
+  async function geminiConnect(overrideToken?: string) {
     console.log("[GeminiLive] connect pressed");
 
-    if (!tokenRef.current) {
+    const activeToken = overrideToken ?? tokenRef.current;
+    if (!activeToken) {
       console.error("[GeminiLive] missing token");
       return;
     }
+    // Keep ref in sync if an override was supplied before the useEffect fires
+    if (overrideToken) tokenRef.current = overrideToken;
 
     if (sessionRef.current) {
       console.log("[GeminiLive] already connected — skipping");
@@ -70,7 +76,7 @@ export const useGeminiLive = ({
 
     try {
       const ai = new GoogleGenAI({
-        apiKey: tokenRef.current,
+        apiKey: activeToken,
         httpOptions: { apiVersion: "v1alpha" },
       });
 
@@ -83,6 +89,11 @@ export const useGeminiLive = ({
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: "Zephyr" },
             },
+          },
+          realtimeInputConfig: {
+            // Disable server-side VAD so we control turns explicitly via
+            // activityStart / activityEnd — avoids Gemini waiting indefinitely.
+            automaticActivityDetection: { disabled: true },
           },
         },
         callbacks: {
@@ -112,10 +123,16 @@ export const useGeminiLive = ({
               audioParts++;
             }
 
-            if (audioParts === 0 && parts.length > 0) {
+            if (audioParts > 0) {
+              setCurrentTurn("gemini");
+            } else if (audioParts === 0 && parts.length > 0) {
               console.log(
                 "[GeminiLive] modelTurn had parts, but no inline audio data",
               );
+            }
+
+            if (message.serverContent?.turnComplete) {
+              setCurrentTurn("idle");
             }
 
             const text = parts.map((p) => p?.text).filter(Boolean).join(" ");
@@ -147,9 +164,11 @@ export const useGeminiLive = ({
 
   function geminiDisconnect() {
     console.log("[GeminiLive] disconnect pressed");
+    stopAudioCapture();
     sessionRef.current?.close();
     sessionRef.current = null;
     setIsActive(false);
+    setCurrentTurn("idle");
   }
 
   function getSession() {
@@ -275,6 +294,8 @@ export const useGeminiLive = ({
       // Do NOT connect workletNode to destination — avoids mic feedback loop.
       source.connect(workletNode);
       isCapturingRef.current = true;
+      setCurrentTurn("user");
+      sessionRef.current?.sendRealtimeInput({ activityStart: {} });
 
       statsIntervalRef.current = setInterval(() => {
         /*  const s = statsRef.current;
@@ -300,6 +321,14 @@ export const useGeminiLive = ({
       );
     } catch (error) {
       console.error("[GeminiLive] audio capture setup failed:", error);
+    }
+  }
+
+  function endUserTurn() {
+    stopAudioCapture();
+    if (sessionRef.current) {
+      sessionRef.current.sendRealtimeInput({ activityEnd: {} });
+      setCurrentTurn("gemini");
     }
   }
 
@@ -357,7 +386,9 @@ export const useGeminiLive = ({
     geminiDisconnect,
     startAudioCapture,
     stopAudioCapture,
+    endUserTurn,
     isActive,
+    currentTurn,
     getSession,
   };
 };
