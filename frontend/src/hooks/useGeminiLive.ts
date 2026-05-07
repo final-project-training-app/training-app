@@ -93,14 +93,33 @@ export const useGeminiLive = ({
           onmessage: (message: LiveServerMessage) => {
             console.log("[GeminiLive] message:", message);
             onMessageRef.current?.(message);
-            const part = message.serverContent?.modelTurn?.parts?.[0];
-            if (part?.inlineData?.data) {
-              const bytes = Uint8Array.from(atob(part.inlineData.data), (c) =>
-                c.charCodeAt(0),
+
+            const parts = message.serverContent?.modelTurn?.parts ?? [];
+            let audioParts = 0;
+
+            for (const part of parts) {
+              const b64 = part?.inlineData?.data;
+              if (!b64) continue;
+
+              const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+              console.log(
+                "[GeminiLive] audio part:",
+                part.inlineData?.mimeType ?? "(unknown mime)",
+                "bytes:",
+                bytes.byteLength,
               );
               onAudioRef.current?.(bytes.buffer);
+              audioParts++;
             }
-            if (part?.text) console.log("[GeminiLive] text:", part.text);
+
+            if (audioParts === 0 && parts.length > 0) {
+              console.log(
+                "[GeminiLive] modelTurn had parts, but no inline audio data",
+              );
+            }
+
+            const text = parts.map((p) => p?.text).filter(Boolean).join(" ");
+            if (text) console.log("[GeminiLive] text:", text);
           },
           onerror: (e: ErrorEvent) => {
             console.error("[GeminiLive] error:", e.message);
@@ -258,8 +277,8 @@ export const useGeminiLive = ({
       isCapturingRef.current = true;
 
       statsIntervalRef.current = setInterval(() => {
-        const s = statsRef.current;
-        console.table({
+        /*  const s = statsRef.current;
+      console.table({
           "input sample rate (Hz)": { value: s.inputSampleRate },
           "output sample rate (Hz)": { value: s.outputSampleRate },
           channels: { value: s.channels },
@@ -270,6 +289,7 @@ export const useGeminiLive = ({
           "dropped silent chunks": { value: s.droppedSilentChunks },
           "total bytes sent": { value: s.totalBytesSent },
         });
+        */
         statsRef.current.chunksThisSecond = 0;
         statsRef.current.bytesThisSecond = 0;
       }, 1000);
