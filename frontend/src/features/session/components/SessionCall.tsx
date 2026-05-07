@@ -70,22 +70,14 @@ export function SessionCall({
       <div className="mx-auto flex h-full w-full max-w-107.5 flex-col justify-between px-5 py-6">
         <div>
           <div className="mb-7 flex justify-center">
-            {session.coachImageUrl ? (
-              <img
-                src={session.coachImageUrl}
-                alt={session.coachName}
-                className="h-56 w-56 rounded-full bg-(--brand-control) object-contain"
-              />
-            ) : (
-              <div className="flex h-56 w-56 items-center justify-center rounded-full bg-(--brand-control) text-6xl font-extrabold text-(--brand-primary)">
-                PT
-              </div>
-            )}
+            <div className="flex h-56 w-56 items-center justify-center rounded-full bg-(--brand-control) text-6xl font-extrabold text-(--brand-primary)">
+              PT
+            </div>
           </div>
 
           <div className="mb-10 text-center">
             <h1 className="text-5xl font-extrabold text-(--brand-ink)">
-              {session.coachName}
+              {session.workoutName}
             </h1>
             <p className="mt-2 text-3xl font-bold text-(--brand-primary)">
               {formatTime(elapsedSeconds)}

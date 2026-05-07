@@ -1,15 +1,47 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { Phone, Settings } from "lucide-react";
+import { useEffect, useState } from "react";
+import coachHeroImage from "../../assets/image.png";
+import { startSessionAudio } from "../session/audio";
+import { coachCallSessionQueryOptions } from "../session/query";
+import type { CoachCallSession } from "../session/types";
 import { Show, SignOutButton } from "@clerk/react";
 import { Settings, Phone } from "lucide-react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const handleStartCall = async () => {
     navigate({ to: "/session/$workoutId", params: { workoutId: "1" } });
   };
+
+  useEffect(() => {
+    void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
+  }, [queryClient]);
+
+  async function handleStartCall() {
+    const queryOptions = coachCallSessionQueryOptions("1");
+    const cachedSession = queryClient.getQueryData<CoachCallSession>(
+      queryOptions.queryKey,
+    );
+    const session =
+      cachedSession ??
+      (await queryClient.fetchQuery(queryOptions).catch(() => null));
+
+    if (session?.workoutAudioUrl) {
+      void startSessionAudio(session.workoutAudioUrl).catch(() => {
+        // SessionPage will make one more attempt if the browser still blocks playback here.
+      });
+    }
+
+    navigate({
+      to: "/session/$workoutId",
+      params: { workoutId: "1" },
+    });
+  }
 
   return (
     <main className="relative flex h-dvh items-center justify-center overflow-hidden bg-(--brand-page) text-(--brand-ink)">
@@ -20,6 +52,14 @@ export default function HomePage() {
               Logga ut
             </button>
           </SignOutButton>
+        </Show>
+
+        <Show when="signed-out">
+          <SignInButton>
+            <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3.5 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
+              Logga in
+            </button>
+          </SignInButton>
         </Show>
       </div>
 
@@ -55,6 +95,8 @@ export default function HomePage() {
         </div>
         <SettingsModalSheet open={open} setOpen={setOpen} />
       </section>
+
+      <SettingsModalSheet open={open} setOpen={setOpen} />
     </main>
   );
 }
