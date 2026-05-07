@@ -47,10 +47,7 @@ export default function HomePage() {
     hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-md
     active:scale-[0.96] active:bg-[#d8c6ff] active:ring-[#8b5cf6]
     focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] focus:ring-offset-2 focus:ring-offset-[#f8f4ff]"
-            onClick={() => {
-              if (!open) setOpen(true);
-              else setOpen(false);
-            }}
+            onClick={() => setOpen(!open)}
           >
             <Settings size={20} className="text-[#6b4b91]" />
             Inställningar
@@ -64,7 +61,7 @@ export default function HomePage() {
             </button>
           </SignInButton>
         </Show>
-        {open && <SettingsModalSheet />}
+        <SettingsModalSheet open={open} />
       </div>
     </main>
   );
