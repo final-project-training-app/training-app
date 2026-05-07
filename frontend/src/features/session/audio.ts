@@ -9,10 +9,6 @@ function createSessionAudio() {
   return sessionAudio;
 }
 
-export function getSessionAudio() {
-  return createSessionAudio();
-}
-
 export async function startSessionAudio(url: string) {
   const audio = createSessionAudio();
 
