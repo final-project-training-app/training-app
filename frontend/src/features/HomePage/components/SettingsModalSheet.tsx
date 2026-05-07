@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 export default function SettingsModalSheet({
   open,
   setOpen,
@@ -5,6 +7,21 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
+  const startY = useRef(0);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    startY.current = e.clientY;
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    const diff = e.clientY - startY.current;
+
+    // only close if dragged down enough
+    if (diff > 100) {
+      setOpen(false);
+    }
+  };
+
   return (
     <>
       {/* overlay (click outside to close) */}
@@ -17,8 +34,13 @@ export default function SettingsModalSheet({
 
       {/* bottom sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-white p-5 shadow-2xl transition-transform duration-300
-        ${open ? "translate-y-0" : "translate-y-full"}`}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        style={{
+          transform: open ? "translateY(0)" : "translateY(100%)",
+        }}
+        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-white p-5 shadow-2xl transition-transform duration-300 touch-none"
       >
         {/* drag handle (click to close) */}
         <div
