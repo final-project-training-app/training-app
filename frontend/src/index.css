@@ -1,5 +1,43 @@
 @import "tailwindcss";
 
+:root {
+  --brand-primary: #5836d6;
+  --brand-primary-strong: #5b3fe6;
+
+  --brand-ink: #100b2f;
+  --brand-ink-soft: #2b254d;
+  --brand-muted: #6f6a93;
+
+  --brand-page: #f5f0ff;
+  --brand-page-start: #f7f2ff;
+  --brand-page-end: #ffffff;
+
+  --brand-soft: #eeeaff;
+  --brand-surface: #fffaff;
+  --brand-surface-soft: #fbf8ff;
+  --brand-surface-glass: rgba(255, 250, 255, 0.7);
+  --brand-surface-raised: rgba(255, 250, 255, 0.78);
+  --brand-control: #f4efff;
+
+  --brand-border: #d8ccff;
+  --brand-border-strong: #8067d9;
+  --brand-panel-border: rgba(83, 64, 211, 0.35);
+  --brand-overlay: rgba(255, 255, 255, 0.45);
+
+  --brand-shadow: rgba(88, 54, 214, 0.22);
+  --brand-image-shadow: rgba(42, 32, 88, 0.12);
+
+  --brand-danger: #ef4444;
+  --brand-on-primary: #ffffff;
+  --brand-on-danger: #ffffff;
+
+  --brand-call-background: radial-gradient(
+    circle at top,
+    var(--brand-page-start) 0%,
+    var(--brand-page-end) 58%
+  );
+}
+
 html,
 body,
 #root {
@@ -9,8 +47,8 @@ body,
 body {
   margin: 0;
   min-height: 100vh;
-  background: white;
-  color: #0f172a;
+  background: var(--brand-page);
+  color: var(--brand-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
