@@ -1,8 +1,7 @@
 import { useRef, useState } from "react";
-
+import GeminiLiveTest from "./features/session/components/GeminiLiveTest";
 
 async function getAudioUrl() {
-
   const data = await fetch("/api/hi").then((res) => res.json());
   return data.message;
 }
@@ -13,9 +12,8 @@ export default function App() {
   const [status, setStatus] = useState<number | null>(null);
 
   async function handlePlay() {
-    
-    const url = await getAudioUrl()
-    console.log(url)
+    const url = await getAudioUrl();
+    console.log(url);
 
     if (!audioRef.current) {
       audioRef.current = new Audio();
@@ -31,6 +29,11 @@ export default function App() {
   async function handlePing() {
     const response = await fetch("/api/hi");
     setStatus(response.status);
+  }
+  const test = true;
+
+  if (test) {
+    return <GeminiLiveTest />;
   }
 
   return (
