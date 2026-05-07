@@ -37,9 +37,7 @@ export async function getCoachCallSession(
   workoutId: string,
 ): Promise<CoachCallSession> {
   const [workout, progress, user] = await Promise.all([
-    getJson<BackendWorkoutResponse>(
-      `/api/workouts/${workoutId}`,
-    ),
+    getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`),
     getJson<BackendProgressResponse>(`/api/users/${currentUserId}/progress`),
     getJson<BackendUserResponse>(`/api/users/${currentUserId}`),
   ]);
@@ -50,7 +48,8 @@ export async function getCoachCallSession(
     instructions: workout.instructions ?? "",
     level: workout.level || undefined,
     type: workout.type || undefined,
-    workoutAudioUrl: workout.workoutAudio || workout.instructionsAudio || undefined,
+    workoutAudioUrl:
+      workout.workoutAudio || workout.instructionsAudio || undefined,
     durationSeconds: toDurationSeconds(workout.durationMinutes),
 
     userName: user.name,
