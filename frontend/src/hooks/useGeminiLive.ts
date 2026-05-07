@@ -7,10 +7,35 @@ import {
   type Session,
 } from "@google/genai";
 
+const SAMPLE_RATE = 16000;
+const CHUNK_SAMPLES = 2560; // 160 ms @ 16 kHz
+const SILENCE_THRESHOLD = 0.01; // RMS below this = silence, chunk dropped
+
 interface UseGeminiLiveProps {
   token: string;
   onAudioData?: (data: ArrayBuffer) => void;
   onMessage?: (message: LiveServerMessage) => void;
+}
+
+interface DebugStats {
+  inputSampleRate: number;
+  outputSampleRate: number;
+  channels: number;
+  chunkSizeSamples: number;
+  chunkSizeMs: number;
+  chunksThisSecond: number;
+  bytesThisSecond: number;
+  droppedSilentChunks: number;
+  totalBytesSent: number;
+}
+
+function pcm16ToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 export const useGeminiLive = ({
@@ -20,7 +45,6 @@ export const useGeminiLive = ({
 }: UseGeminiLiveProps) => {
   const [isActive, setIsActive] = useState(false);
   const sessionRef = useRef<Session | null>(null);
-
   const tokenRef = useRef(token);
   const onAudioRef = useRef(onAudioData);
   const onMessageRef = useRef(onMessage);
@@ -40,16 +64,14 @@ export const useGeminiLive = ({
     }
 
     if (sessionRef.current) {
-      console.log("[GeminiLive] already connected");
+      console.log("[GeminiLive] already connected — skipping");
       return;
     }
 
     try {
       const ai = new GoogleGenAI({
         apiKey: tokenRef.current,
-        httpOptions: {
-          apiVersion: "v1alpha",
-        },
+        httpOptions: { apiVersion: "v1alpha" },
       });
 
       const session = await ai.live.connect({
@@ -59,9 +81,7 @@ export const useGeminiLive = ({
           mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: "Zephyr",
-              },
+              prebuiltVoiceConfig: { voiceName: "Zephyr" },
             },
           },
         },
@@ -73,7 +93,6 @@ export const useGeminiLive = ({
           onmessage: (message: LiveServerMessage) => {
             console.log("[GeminiLive] message:", message);
             onMessageRef.current?.(message);
-
             const part = message.serverContent?.modelTurn?.parts?.[0];
             if (part?.inlineData?.data) {
               const bytes = Uint8Array.from(atob(part.inlineData.data), (c) =>
@@ -81,16 +100,18 @@ export const useGeminiLive = ({
               );
               onAudioRef.current?.(bytes.buffer);
             }
-
-            if (part?.text) {
-              console.log("[GeminiLive] text:", part.text);
-            }
+            if (part?.text) console.log("[GeminiLive] text:", part.text);
           },
           onerror: (e: ErrorEvent) => {
             console.error("[GeminiLive] error:", e.message);
           },
           onclose: (e: CloseEvent) => {
-            console.log("[GeminiLive] closed:", e.reason);
+            console.log(
+              "[GeminiLive] closed — code:",
+              e.code,
+              "reason:",
+              e.reason || "(no reason)",
+            );
             setIsActive(false);
             sessionRef.current = null;
           },
@@ -119,28 +140,83 @@ export const useGeminiLive = ({
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const workletBlobUrlRef = useRef<string | null>(null);
+  const isCapturingRef = useRef(false);
+  const statsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const statsRef = useRef<DebugStats>({
+    inputSampleRate: 0,
+    outputSampleRate: SAMPLE_RATE,
+    channels: 1,
+    chunkSizeSamples: CHUNK_SAMPLES,
+    chunkSizeMs: (CHUNK_SAMPLES / SAMPLE_RATE) * 1000,
+    chunksThisSecond: 0,
+    bytesThisSecond: 0,
+    droppedSilentChunks: 0,
+    totalBytesSent: 0,
+  });
 
   async function startAudioCapture() {
+    if (isCapturingRef.current) {
+      console.warn(
+        "[GeminiLive] startAudioCapture() called while already capturing — ignored",
+      );
+      return;
+    }
+
     try {
       console.log("[GeminiLive] requesting microphone access");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          sampleRate: SAMPLE_RATE,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       mediaStreamRef.current = stream;
 
-      const audioContext = new (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        window.AudioContext || (window as any).webkitAudioContext
-      )();
+      const trackSettings = stream.getAudioTracks()[0]?.getSettings() ?? {};
+      console.log("[GeminiLive] track settings:", trackSettings);
+      statsRef.current.inputSampleRate = trackSettings.sampleRate ?? SAMPLE_RATE;
+      statsRef.current.channels = trackSettings.channelCount ?? 1;
+
+      const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
       audioContextRef.current = audioContext;
+      statsRef.current.outputSampleRate = audioContext.sampleRate;
+      console.log("[GeminiLive] AudioContext.sampleRate:", audioContext.sampleRate);
 
       const source = audioContext.createMediaStreamSource(stream);
 
+      // Worklet: mono channel 0 only, buffer into CHUNK_SAMPLES frames,
+      // compute RMS for silence detection, convert Float32→PCM16, transfer buffer (zero-copy).
       const workletCode = `
+        const CHUNK = ${CHUNK_SAMPLES};
+        const SILENCE = ${SILENCE_THRESHOLD};
         class AudioProcessor extends AudioWorkletProcessor {
+          constructor() {
+            super();
+            this._buf = new Float32Array(CHUNK);
+            this._idx = 0;
+          }
           process(inputs) {
-            const input = inputs[0];
-            if (input.length > 0) {
-              const audioData = input[0];
-              this.port.postMessage({ audioData: Array.from(audioData) });
+            const ch = inputs[0]?.[0];
+            if (!ch) return true;
+            for (let i = 0; i < ch.length; i++) {
+              this._buf[this._idx++] = ch[i];
+              if (this._idx >= CHUNK) {
+                let ss = 0;
+                for (let j = 0; j < CHUNK; j++) ss += this._buf[j] * this._buf[j];
+                const rms = Math.sqrt(ss / CHUNK);
+                const pcm16 = new Int16Array(CHUNK);
+                for (let j = 0; j < CHUNK; j++) {
+                  pcm16[j] = Math.round(Math.max(-1, Math.min(1, this._buf[j])) * 32767);
+                }
+                this.port.postMessage({ pcm16: pcm16.buffer, rms }, [pcm16.buffer]);
+                this._idx = 0;
+              }
             }
             return true;
           }
@@ -149,42 +225,108 @@ export const useGeminiLive = ({
       `;
 
       const blob = new Blob([workletCode], { type: "application/javascript" });
-      const workletUrl = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
+      workletBlobUrlRef.current = blobUrl;
 
-      await audioContext.audioWorklet.addModule(workletUrl);
+      await audioContext.audioWorklet.addModule(blobUrl);
       const workletNode = new AudioWorkletNode(audioContext, "audio-processor");
       workletNodeRef.current = workletNode;
 
-      workletNode.port.onmessage = (event) => {
-        const audioData = event.data.audioData;
-        const base64Audio = btoa(
-          String.fromCharCode(
-            ...new Uint8Array(new Float32Array(audioData).buffer),
-          ),
-        );
+      workletNode.port.onmessage = (
+        event: MessageEvent<{ pcm16: ArrayBuffer; rms: number }>,
+      ) => {
+        const { pcm16, rms } = event.data;
 
-        sessionRef.current?.sendClientContent({
-          turns: [base64Audio],
+        if (rms < SILENCE_THRESHOLD) {
+          statsRef.current.droppedSilentChunks++;
+          return;
+        }
+
+        const base64 = pcm16ToBase64(pcm16);
+
+        sessionRef.current?.sendRealtimeInput({
+          audio: { data: base64, mimeType: `audio/pcm;rate=${SAMPLE_RATE}` },
         });
+
+        statsRef.current.chunksThisSecond++;
+        statsRef.current.bytesThisSecond += pcm16.byteLength;
+        statsRef.current.totalBytesSent += pcm16.byteLength;
       };
 
+      // Do NOT connect workletNode to destination — avoids mic feedback loop.
       source.connect(workletNode);
-      workletNode.connect(audioContext.destination);
-      console.log("[GeminiLive] audio capture started with AudioWorklet");
+      isCapturingRef.current = true;
+
+      statsIntervalRef.current = setInterval(() => {
+        const s = statsRef.current;
+        console.table({
+          "input sample rate (Hz)": { value: s.inputSampleRate },
+          "output sample rate (Hz)": { value: s.outputSampleRate },
+          channels: { value: s.channels },
+          "chunk size (samples)": { value: s.chunkSizeSamples },
+          "chunk size (ms)": { value: s.chunkSizeMs.toFixed(1) },
+          "chunks / sec": { value: s.chunksThisSecond },
+          "bytes / sec": { value: s.bytesThisSecond },
+          "dropped silent chunks": { value: s.droppedSilentChunks },
+          "total bytes sent": { value: s.totalBytesSent },
+        });
+        statsRef.current.chunksThisSecond = 0;
+        statsRef.current.bytesThisSecond = 0;
+      }, 1000);
+
+      console.log(
+        `[GeminiLive] audio capture started — mono PCM16 @ ${SAMPLE_RATE} Hz, ` +
+          `chunk ${CHUNK_SAMPLES} samples / ${((CHUNK_SAMPLES / SAMPLE_RATE) * 1000).toFixed(0)} ms`,
+      );
     } catch (error) {
       console.error("[GeminiLive] audio capture setup failed:", error);
     }
   }
 
   function stopAudioCapture() {
-    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    if (!isCapturingRef.current) {
+      console.warn("[GeminiLive] stopAudioCapture() called but not capturing");
+      return;
+    }
+
+    if (statsIntervalRef.current) {
+      clearInterval(statsIntervalRef.current);
+      statsIntervalRef.current = null;
+    }
+
     workletNodeRef.current?.disconnect();
+    workletNodeRef.current = null;
+
+    mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+    mediaStreamRef.current = null;
+
     audioContextRef.current?.close();
-    console.log("[GeminiLive] audio capture stopped");
+    audioContextRef.current = null;
+
+    if (workletBlobUrlRef.current) {
+      URL.revokeObjectURL(workletBlobUrlRef.current);
+      workletBlobUrlRef.current = null;
+    }
+
+    isCapturingRef.current = false;
+
+    console.log(
+      "[GeminiLive] audio capture stopped — total bytes sent:",
+      statsRef.current.totalBytesSent,
+    );
+
+    statsRef.current = {
+      ...statsRef.current,
+      chunksThisSecond: 0,
+      bytesThisSecond: 0,
+      droppedSilentChunks: 0,
+      totalBytesSent: 0,
+    };
   }
 
   useEffect(() => {
     return () => {
+      stopAudioCapture();
       sessionRef.current?.close();
       sessionRef.current = null;
     };
