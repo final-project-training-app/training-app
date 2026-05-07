@@ -42,7 +42,9 @@ export function SessionInfoPanel({
 
             <div className="space-y-5 text-xl font-semibold leading-tight">
               <p>{session.exerciseDescription}</p>
-              <p>Övningen kommer pågå under {session.durationSeconds} sekunder.</p>
+              <p>
+                Övningen kommer pågå under {session.durationSeconds} sekunder.
+              </p>
             </div>
           </>
         ) : (
