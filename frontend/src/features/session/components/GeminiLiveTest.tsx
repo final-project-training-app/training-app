@@ -174,21 +174,11 @@ export default function GeminiLiveTest() {
   const onEndTurn = () => {
     try {
       endUserTurn();
-      setAudioCapturing(false);
     } catch (e) {
       console.error("endUserTurn() failed:", e);
     }
   };
 
-  // When Gemini finishes its turn, automatically restart the user's microphone
-  const prevTurnRef = useRef(currentTurn);
-  useEffect(() => {
-    const prev = prevTurnRef.current;
-    prevTurnRef.current = currentTurn;
-    if (prev === "gemini" && currentTurn === "idle" && isActive) {
-      void onStartAudio();
-    }
-  }, [currentTurn, isActive]);
 
   const turnLabel =
     currentTurn === "user"

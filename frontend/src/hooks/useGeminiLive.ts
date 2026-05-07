@@ -90,11 +90,6 @@ export const useGeminiLive = ({
               prebuiltVoiceConfig: { voiceName: "Zephyr" },
             },
           },
-          realtimeInputConfig: {
-            // Disable server-side VAD so we control turns explicitly via
-            // activityStart / activityEnd — avoids Gemini waiting indefinitely.
-            automaticActivityDetection: { disabled: true },
-          },
         },
         callbacks: {
           onopen: () => {
@@ -132,7 +127,7 @@ export const useGeminiLive = ({
             }
 
             if (message.serverContent?.turnComplete) {
-              setCurrentTurn("idle");
+              setCurrentTurn("user");
             }
 
             const text = parts.map((p) => p?.text).filter(Boolean).join(" ");
@@ -273,12 +268,7 @@ export const useGeminiLive = ({
       workletNode.port.onmessage = (
         event: MessageEvent<{ pcm16: ArrayBuffer; rms: number }>,
       ) => {
-        const { pcm16, rms } = event.data;
-
-        if (rms < SILENCE_THRESHOLD) {
-          statsRef.current.droppedSilentChunks++;
-          return;
-        }
+        const { pcm16 } = event.data;
 
         const base64 = pcm16ToBase64(pcm16);
 
@@ -295,7 +285,6 @@ export const useGeminiLive = ({
       source.connect(workletNode);
       isCapturingRef.current = true;
       setCurrentTurn("user");
-      sessionRef.current?.sendRealtimeInput({ activityStart: {} });
 
       statsIntervalRef.current = setInterval(() => {
         /*  const s = statsRef.current;
@@ -325,9 +314,8 @@ export const useGeminiLive = ({
   }
 
   function endUserTurn() {
-    stopAudioCapture();
     if (sessionRef.current) {
-      sessionRef.current.sendRealtimeInput({ activityEnd: {} });
+      sessionRef.current.sendRealtimeInput({ audioStreamEnd: true });
       setCurrentTurn("gemini");
     }
   }
