@@ -80,16 +80,20 @@ export default function HomePage() {
             Ring tränaren
           </button>
 
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="flex min-h-15 w-[84%] items-center justify-center gap-3 self-center rounded-xl border-2 border-(--brand-border-strong) bg-(--brand-surface-raised) px-5 text-[1.08rem] font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-[0.98] [@media(max-height:700px)]:min-h-12"
-          >
-            <Settings size={20} strokeWidth={2.55} />
-            Inställningar
-          </button>
+          <Show when="signed-in">
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="flex min-h-15 w-[84%] items-center justify-center gap-3 self-center rounded-xl border-2 border-(--brand-border-strong) bg-(--brand-surface-raised) px-5 text-[1.08rem] font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-[0.98] [@media(max-height:700px)]:min-h-12"
+            >
+              <Settings size={20} strokeWidth={2.55} />
+              Inställningar
+            </button>
+          </Show>
         </div>
-        <SettingsModalSheet open={open} setOpen={setOpen} />
+        <Show when="signed-in">
+          <SettingsModalSheet open={open} setOpen={setOpen} />
+        </Show>
       </section>
     </main>
   );

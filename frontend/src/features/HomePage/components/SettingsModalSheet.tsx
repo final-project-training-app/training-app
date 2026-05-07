@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import IntensitySlider from "./IntensitySlider";
+import ContextModel from "./ContextModal";
+import { useToast } from "../../../hooks/useToast";
 
 export default function SettingsModalSheet({
   open,
@@ -8,18 +10,20 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
-  const DEFAULT_HEIGHT = 92;
-  const MIN_HEIGHT = 62;
-  const MAX_HEIGHT = 96;
+  const DEFAULT_HEIGHT = 96;
+  const MIN_HEIGHT = 68;
+  const MAX_HEIGHT = 98;
   const DISMISS_HEIGHT = 54;
 
   const [sheetHeight, setSheetHeight] = useState(DEFAULT_HEIGHT);
   const startY = useRef(0);
   const startHeight = useRef(DEFAULT_HEIGHT);
   const isDragging = useRef(false);
+  const { toast, showToast } = useToast();
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSheetHeight(DEFAULT_HEIGHT);
     }
   }, [open]);
@@ -76,7 +80,7 @@ export default function SettingsModalSheet({
           transform: open ? "translateY(0)" : "translateY(100%)",
           height: `${sheetHeight}dvh`,
         }}
-        className="fixed bottom-0 left-0 right-0 z-50 overflow-y-auto rounded-t-[2.25rem] bg-[#f7f5fc] px-6 pb-8 pt-5 shadow-2xl transition-transform duration-300"
+        className="fixed bottom-0 left-0 right-0 z-50 overflow-y-auto rounded-t-[2.25rem] bg-[#f7f5fc] px-6 pb-7 pt-4 shadow-2xl transition-transform duration-300"
       >
         <div
           onPointerDown={onHandlePointerDown}
@@ -91,38 +95,39 @@ export default function SettingsModalSheet({
             Installningar
           </h1>
 
-          <section className="mt-10">
+          <section className="mt-8">
             <IntensitySlider />
           </section>
 
-          <section className="mt-12">
-            <h2 className="text-[clamp(1.6rem,3.4vw,2.9rem)] font-bold tracking-tight text-[#372b8f]">
-              Kontext
-            </h2>
-            <p className="mt-3 max-w-3xl text-[clamp(1.15rem,2.9vw,1.8rem)] leading-relaxed text-[#312b70]">
-              Beratta om behov, mal eller eventuella begransningar sa att passet
-              kan anpassas battre.
-            </p>
+          <section className="mt-7">
+            <ContextModel />
           </section>
 
-          <section className="mt-10 space-y-4">
+          <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
             <button
-              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.25rem,3.6vw,2rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985]"
+              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
               onClick={() => {
                 console.log("saved");
+                showToast("Inställningar sparade ✓");
               }}
             >
-              Spara andringar
+              Spara ändringar
             </button>
 
             <button
-              className="w-full rounded-xl bg-transparent px-4 py-3 text-[clamp(1.2rem,3.4vw,1.85rem)] font-semibold text-[#4d2a7a] transition-all duration-150 hover:text-[#3f2066]"
-              onClick={() => {
-                setOpen(false);
-              }}
+              className="w-full rounded-xl px-4 py-3 text-[clamp(1.24rem,3.5vw,1.95rem)] font-semibold text-[#4d2a7a] transition-all duration-150
+  hover:text-[#3f2066]
+  active:bg-[#efe9fb] active:text-[#3f2066] active:scale-[0.985]"
+              onClick={() => setOpen(false)}
             >
               Avbryt
             </button>
+            {toast && (
+              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 rounded-2xl bg-[#f1ecff] text-[#3f2a7a] px-6 py-3 text-[1.2rem] font-semibold shadow-lg border border-[#ddd2ff]">
+                {" "}
+                {toast}
+              </div>
+            )}
           </section>
         </div>
       </div>

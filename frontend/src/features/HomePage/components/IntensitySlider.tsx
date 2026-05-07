@@ -1,3 +1,4 @@
+import { Settings } from "lucide-react";
 import { useState } from "react";
 
 const IntensitySlider = () => {
@@ -15,9 +16,7 @@ const IntensitySlider = () => {
   return (
     <section>
       <div className="mb-3 flex items-center gap-3 text-[#4f3bb8]">
-        <span className="text-[clamp(1.7rem,4vw,2.35rem)] leading-none">
-          ⚙️
-        </span>
+        <Settings className="text-[var(--brand-primary)]" size={28} />
         <h2 className="text-[clamp(1.75rem,4.4vw,3rem)] font-bold leading-none tracking-tight">
           Intensitet
         </h2>
