@@ -1,26 +1,23 @@
 export type SessionPanel = "none" | "info" | "exercise" | "suite";
 
-export type TrainingSuiteItem = {
-  day: string;
-  activity: string;
+export type CompletedWorkout = {
+  dateLabel: string;
+  workoutName: string;
 };
 
 export type CoachCallSession = {
   id: string;
-  coachName: string;
-  coachImageUrl?: string;
+  workoutName: string;
+  instructions: string;
+  level?: string;
+  type?: string;
+  workoutAudioUrl?: string;
+  durationSeconds: number;
 
   userName: string;
-  intensityLabel: string;
-  trainingContext: string;
+  intensityLevel: number;
+  context: string;
 
-  exerciseAudioUrl?: string;
-
-  durationSeconds: number;
-  exerciseTitle: string;
-  exerciseDescription: string;
-  exerciseImageUrl?: string;
-
-  trainingStreakDays: number;
-  trainingSuite: TrainingSuiteItem[];
+  currentStreak: number;
+  completedWorkouts: CompletedWorkout[];
 };
