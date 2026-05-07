@@ -1,13 +1,15 @@
-import { useParams } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { startSessionAudio, stopSessionAudio } from "./audio";
 import { SessionCall } from "./components/SessionCall";
-import { SessionLanding } from "./components/SessionLanding";
 import { useCoachCallSession } from "./query";
-import type { SessionAudioKind, SessionPanel, SessionScreen } from "./types";
+import type { SessionPanel } from "./types";
 
 export function SessionPage() {
   const { workoutId } = useParams({ from: "/session/$workoutId" });
+  const navigate = useNavigate();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasStartedAudioRef = useRef(false);
 
   const {
     data: session,
@@ -16,29 +18,11 @@ export function SessionPage() {
     error,
   } = useCoachCallSession(workoutId);
 
-  const [screen, setScreen] = useState<SessionScreen>("landing");
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(0);
 
-  function getAudioUrl(kind: SessionAudioKind) {
-    if (!session) return undefined;
-
-    return kind === "guide" ? session.guideAudioUrl : session.exerciseAudioUrl;
-  }
-
-  async function playAudio(kind: SessionAudioKind) {
-    const url = getAudioUrl(kind);
-    if (!url) return;
-
-    const audio = audioRef.current ?? new Audio();
-    audioRef.current = audio;
-
-    audio.pause();
-    audio.src = url;
-    audio.currentTime = 0;
-    audio.preload = "metadata";
-
+  function bindAudioState(audio: HTMLAudioElement) {
     audio.onloadedmetadata = () => {
       if (Number.isFinite(audio.duration)) {
         setDurationSeconds(Math.round(audio.duration));
@@ -53,24 +37,68 @@ export function SessionPage() {
       setElapsedSeconds(0);
     };
 
-    await audio.play();
+    if (Number.isFinite(audio.duration)) {
+      setDurationSeconds(Math.round(audio.duration));
+    }
+
+    setElapsedSeconds(Math.floor(audio.currentTime));
   }
 
-  async function handleStart() {
-    if (!session) return;
+  async function playCallAudio(restart = false) {
+    if (!session?.exerciseAudioUrl) {
+      return;
+    }
 
-    setElapsedSeconds(0);
-    setDurationSeconds(0);
-    setActivePanel("none");
-    setScreen("call");
+    const audio =
+      restart || !audioRef.current
+        ? await startSessionAudio(session.exerciseAudioUrl)
+        : audioRef.current;
 
-    await playAudio("exercise");
+    audioRef.current = audio;
+
+    if (restart) {
+      audio.currentTime = 0;
+    }
+
+    bindAudioState(audio);
+
+    if (!audio.paused) {
+      return;
+    }
+
+    void audio.play().catch(() => {
+      // Browsers may block autoplay; in that case the call screen still opens.
+    });
   }
+
+  useEffect(() => {
+    if (!session?.exerciseAudioUrl || hasStartedAudioRef.current) {
+      return;
+    }
+
+    hasStartedAudioRef.current = true;
+
+    void playCallAudio();
+
+    return () => {
+      const audio = audioRef.current;
+
+      if (!audio) {
+        return;
+      }
+
+      audio.onloadedmetadata = null;
+      audio.ontimeupdate = null;
+      audio.onended = null;
+    };
+  }, [session?.exerciseAudioUrl]);
 
   function handleEnd() {
-    audioRef.current?.pause();
+    stopSessionAudio();
     setActivePanel("none");
-    window.history.back();
+    setElapsedSeconds(0);
+    hasStartedAudioRef.current = false;
+    void navigate({ to: "/" });
   }
 
   function togglePanel(panel: Exclude<SessionPanel, "none">) {
@@ -97,10 +125,6 @@ export function SessionPage() {
     return null;
   }
 
-  if (screen === "landing") {
-    return <SessionLanding session={session} onStart={handleStart} />;
-  }
-
   return (
     <SessionCall
       session={session}
@@ -108,7 +132,7 @@ export function SessionPage() {
       durationSeconds={durationSeconds}
       activePanel={activePanel}
       onSpeaker={() => togglePanel("exercise")}
-      onExerciseAudio={() => playAudio("exercise")}
+      onTrainingSuite={() => togglePanel("suite")}
       onInfo={() => togglePanel("info")}
       onClosePanel={() => setActivePanel("none")}
       onEnd={handleEnd}
