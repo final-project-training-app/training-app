@@ -1,5 +1,5 @@
 import { getJson } from "../../lib/api/fetcher";
-import type { CoachCallSession } from "./types";
+import type { CoachCallSession, TrainingSuiteItem } from "./types";
 
 type BackendWorkoutResponse = {
   id: number;
@@ -20,6 +20,17 @@ type BackendWorkoutResponse = {
   durationSeconds?: number | null;
 };
 
+const trainingSuite: TrainingSuiteItem[] = [
+  { day: "Onsdag 6 maj", activity: "Axelrullningar" },
+  { day: "Tisdag 5 maj", activity: "Knälyft" },
+  { day: "Måndag 4 maj", activity: "Huvudvrid" },
+  { day: "Söndag 3 maj", activity: "Tåsträck" },
+  { day: "Lördag 2 maj", activity: "Ljumskstretch" },
+  { day: "Fredag 1 maj", activity: "Höftstretch" },
+  { day: "Torsdag 30 april", activity: "Benlyft" },
+  { day: "Onsdag 29 april", activity: "Vristcirkel" },
+];
+
 const fallbackSession: CoachCallSession = {
   id: "fallback",
   coachName: "Tränaren",
@@ -35,6 +46,9 @@ const fallbackSession: CoachCallSession = {
   exerciseDescription:
     "I den här övningen kommer vi att höja axlarna och sänka axlarna. Övningen stärker hållningen och hjälper dig att bli mer medveten om spänningar i nacke och axlar.",
   exerciseImageUrl: "/session/exercise-shoulder-raises.svg",
+
+  trainingStreakDays: 12,
+  trainingSuite,
 };
 
 export const fallbackExerciseAudioUrl = fallbackSession.exerciseAudioUrl ?? "";
@@ -69,6 +83,9 @@ export async function getCoachCallSession(
         data.workoutImage ??
         data.instructionsImage ??
         fallbackSession.exerciseImageUrl,
+
+      trainingStreakDays: fallbackSession.trainingStreakDays,
+      trainingSuite: fallbackSession.trainingSuite,
     };
   } catch (error) {
     console.warn(
