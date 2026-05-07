@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = (
+  import.meta.env.VITE_API_URL ?? "https://backend-training.up.railway.app"
+).replace(/\/$/, "");
 
 type ApiFetchOptions = {
   token?: string;

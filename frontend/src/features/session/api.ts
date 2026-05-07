@@ -1,33 +1,62 @@
 import { getJson } from "../../lib/api/fetcher";
-import type { WorkoutSessionData } from "./types";
+import type { CoachCallSession } from "./types";
 
 type BackendWorkoutResponse = {
   id: number;
   name: string;
-  instructionsAudio: string | null;
-  workoutAudio: string | null;
-  instructionsImage: string | null;
-  workoutImage: string | null;
+  instructions?: string | null;
+  instructionsAudio?: string | null;
+  level?: string | null;
+  type?: string | null;
+  durationMinutes?: number | null;
+  workoutAudio?: string | null;
 };
 
-export async function getWorkoutSession(
+type BackendProgressResponse = {
+  currentStreak: number;
+  completedWorkouts: Array<{
+    dateLabel: string;
+    workoutName: string;
+  }>;
+};
+
+type BackendUserResponse = {
+  id: number;
+  name: string;
+  intensityLevel: number;
+  context: string;
+};
+
+const currentUserId = "1";
+
+function toDurationSeconds(durationMinutes?: number | null) {
+  return durationMinutes ? durationMinutes * 60 : 0;
+}
+
+export async function getCoachCallSession(
   workoutId: string,
-  token?: string,
-): Promise<WorkoutSessionData> {
-  const data = await getJson<BackendWorkoutResponse>(
-    `/api/workouts/${workoutId}`,
-    {
-      token,
-    },
-  );
+): Promise<CoachCallSession> {
+  const [workout, progress, user] = await Promise.all([
+    getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`),
+    getJson<BackendProgressResponse>(`/api/users/${currentUserId}/progress`),
+    getJson<BackendUserResponse>(`/api/users/${currentUserId}`),
+  ]);
 
   return {
-    id: String(data.id),
-    coachName: "Tränaren",
-    avatarUrl:
-      data.workoutImage ??
-      data.instructionsImage ??
-      "https://placehold.co/400x400/f4efff/4f46e5?text=Trainer",
-    audioUrl: data.workoutAudio ?? data.instructionsAudio ?? undefined,
+    id: String(workout.id),
+    workoutName: workout.name,
+    instructions: workout.instructions ?? "",
+    level: workout.level || undefined,
+    type: workout.type || undefined,
+    workoutAudioUrl:
+      workout.workoutAudio || workout.instructionsAudio || undefined,
+    durationSeconds: toDurationSeconds(workout.durationMinutes),
+
+    userName: user.name,
+    intensityLevel: user.intensityLevel,
+    context: user.context,
+
+    currentStreak: progress.currentStreak,
+    completedWorkouts: progress.completedWorkouts,
   };
 }
