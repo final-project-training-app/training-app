@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
+import { useToast } from "../../../hooks/useToast";
 
 export default function SettingsModalSheet({
   open,
@@ -18,6 +19,7 @@ export default function SettingsModalSheet({
   const startY = useRef(0);
   const startHeight = useRef(DEFAULT_HEIGHT);
   const isDragging = useRef(false);
+  const { toast, showToast } = useToast();
 
   useEffect(() => {
     if (open) {
@@ -106,6 +108,7 @@ export default function SettingsModalSheet({
               className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
               onClick={() => {
                 console.log("saved");
+                showToast("Inställningar sparade ✓");
               }}
             >
               Spara ändringar
@@ -119,6 +122,12 @@ export default function SettingsModalSheet({
             >
               Avbryt
             </button>
+            {toast && (
+              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 rounded-2xl bg-[#f1ecff] text-[#3f2a7a] px-6 py-3 text-[1.2rem] font-semibold shadow-lg border border-[#ddd2ff]">
+                {" "}
+                {toast}
+              </div>
+            )}
           </section>
         </div>
       </div>
