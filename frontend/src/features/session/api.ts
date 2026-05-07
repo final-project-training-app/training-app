@@ -1,33 +1,98 @@
 import { getJson } from "../../lib/api/fetcher";
-import type { WorkoutSessionData } from "./types";
+import type { CoachCallSession, TrainingSuiteItem } from "./types";
 
 type BackendWorkoutResponse = {
   id: number;
   name: string;
-  instructionsAudio: string | null;
-  workoutAudio: string | null;
-  instructionsImage: string | null;
-  workoutImage: string | null;
+  coachName?: string | null;
+  coachImage?: string | null;
+
+  userName?: string | null;
+  intensityLabel?: string | null;
+  trainingContext?: string | null;
+
+  instructions?: string | null;
+  instructionsAudio?: string | null;
+  instructionsImage?: string | null;
+
+  workoutAudio?: string | null;
+  workoutImage?: string | null;
+  durationSeconds?: number | null;
 };
 
-export async function getWorkoutSession(
-  workoutId: string,
-  token?: string,
-): Promise<WorkoutSessionData> {
-  const data = await getJson<BackendWorkoutResponse>(
-    `/api/workouts/${workoutId}`,
-    {
-      token,
-    },
-  );
+const trainingSuite: TrainingSuiteItem[] = [
+  { day: "Onsdag 6 maj", activity: "Axelrullningar" },
+  { day: "Tisdag 5 maj", activity: "Knälyft" },
+  { day: "Måndag 4 maj", activity: "Huvudvrid" },
+  { day: "Söndag 3 maj", activity: "Tåsträck" },
+  { day: "Lördag 2 maj", activity: "Ljumskstretch" },
+  { day: "Fredag 1 maj", activity: "Höftstretch" },
+  { day: "Torsdag 30 april", activity: "Benlyft" },
+  { day: "Onsdag 29 april", activity: "Vristcirkel" },
+];
 
-  return {
-    id: String(data.id),
-    coachName: "Tränaren",
-    avatarUrl:
-      data.workoutImage ??
-      data.instructionsImage ??
-      "https://placehold.co/400x400/f4efff/4f46e5?text=Trainer",
-    audioUrl: data.workoutAudio ?? data.instructionsAudio ?? undefined,
-  };
+const fallbackSession: CoachCallSession = {
+  id: "fallback",
+  coachName: "Tränaren",
+  userName: "Stefan",
+  intensityLabel: "Mycket låg",
+  trainingContext:
+    "Behöver bli mer rörlig. Har en fotskada och vill undvika tung belastning på foten.",
+
+  exerciseAudioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3",
+
+  durationSeconds: 45,
+  exerciseTitle: "Axelhöjningar",
+  exerciseDescription:
+    "I den här övningen kommer vi att höja axlarna och sänka axlarna. Övningen stärker hållningen och hjälper dig att bli mer medveten om spänningar i nacke och axlar.",
+  exerciseImageUrl: "/session/exercise-shoulder-raises.svg",
+
+  trainingStreakDays: 12,
+  trainingSuite,
+};
+
+export const fallbackExerciseAudioUrl = fallbackSession.exerciseAudioUrl ?? "";
+
+export async function getCoachCallSession(
+  workoutId: string,
+): Promise<CoachCallSession> {
+  try {
+    const data = await getJson<BackendWorkoutResponse>(
+      `/api/workouts/${workoutId}`,
+    );
+
+    return {
+      id: String(data.id),
+      coachName: data.coachName || fallbackSession.coachName,
+      coachImageUrl: data.coachImage || undefined,
+
+      userName: data.userName || fallbackSession.userName,
+      intensityLabel: data.intensityLabel || fallbackSession.intensityLabel,
+      trainingContext: data.trainingContext || fallbackSession.trainingContext,
+
+      exerciseAudioUrl:
+        data.workoutAudio ??
+        data.instructionsAudio ??
+        fallbackSession.exerciseAudioUrl,
+
+      durationSeconds: data.durationSeconds ?? fallbackSession.durationSeconds,
+      exerciseTitle: data.name || fallbackSession.exerciseTitle,
+      exerciseDescription:
+        data.instructions || fallbackSession.exerciseDescription,
+      exerciseImageUrl:
+        data.workoutImage ??
+        data.instructionsImage ??
+        fallbackSession.exerciseImageUrl,
+
+      trainingStreakDays: fallbackSession.trainingStreakDays,
+      trainingSuite: fallbackSession.trainingSuite,
+    };
+  } catch (error) {
+    console.warn(
+      "Using fallback session because backend is unavailable",
+      error,
+    );
+
+    return fallbackSession;
+  }
 }

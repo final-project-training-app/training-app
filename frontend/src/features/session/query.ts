@@ -1,16 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@clerk/react";
-import { getWorkoutSession } from "./api";
+import { getCoachCallSession } from "./api";
 
-export function useWorkoutSession(workoutId: string) {
-  const { getToken } = useAuth();
-
-  return useQuery({
-    queryKey: ["workout-session", workoutId],
-    queryFn: async () => {
-      const token = await getToken();
-      return getWorkoutSession(workoutId, token ?? undefined);
-    },
+export function coachCallSessionQueryOptions(workoutId: string) {
+  return {
+    queryKey: ["coach-call-session", workoutId] as const,
+    queryFn: () => getCoachCallSession(workoutId),
     retry: 1,
-  });
+  };
+}
+
+export function useCoachCallSession(workoutId: string) {
+  return useQuery(coachCallSessionQueryOptions(workoutId));
 }
