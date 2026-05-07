@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import IntensitySlider from "./IntensitySlider";
 
 export default function SettingsModalSheet({
   open,
@@ -50,8 +51,8 @@ export default function SettingsModalSheet({
 
         <h1 className="text-lg font-semibold">Inställningar</h1>
 
-        <section className="mt-4">
-          <h2>Intensitet</h2>
+        <section className="intensity mt-6">
+          <IntensitySlider />
         </section>
 
         <section className="mt-4">
