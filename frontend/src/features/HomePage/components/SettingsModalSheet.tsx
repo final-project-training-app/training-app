@@ -96,10 +96,10 @@ export default function SettingsModalSheet({
           </section>
 
           <section className="mt-12">
-            <h2 className="text-[clamp(1.45rem,4.2vw,2.65rem)] font-bold tracking-tight text-[#372b8f]">
+            <h2 className="text-[clamp(1.6rem,3.4vw,2.9rem)] font-bold tracking-tight text-[#372b8f]">
               Kontext
             </h2>
-            <p className="mt-3 max-w-3xl text-[clamp(1rem,2.7vw,1.55rem)] leading-relaxed text-[#312b70]">
+            <p className="mt-3 max-w-3xl text-[clamp(1.15rem,2.9vw,1.8rem)] leading-relaxed text-[#312b70]">
               Beratta om behov, mal eller eventuella begransningar sa att passet
               kan anpassas battre.
             </p>
@@ -107,7 +107,7 @@ export default function SettingsModalSheet({
 
           <section className="mt-10 space-y-4">
             <button
-              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-4 text-[clamp(1.1rem,3.2vw,1.85rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985]"
+              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.25rem,3.6vw,2rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985]"
               onClick={() => {
                 console.log("saved");
               }}
@@ -116,7 +116,7 @@ export default function SettingsModalSheet({
             </button>
 
             <button
-              className="w-full rounded-xl bg-transparent px-4 py-2 text-[clamp(1.1rem,3vw,1.7rem)] font-semibold text-[#4d2a7a] transition-all duration-150 hover:text-[#3f2066]"
+              className="w-full rounded-xl bg-transparent px-4 py-3 text-[clamp(1.2rem,3.4vw,1.85rem)] font-semibold text-[#4d2a7a] transition-all duration-150 hover:text-[#3f2066]"
               onClick={() => {
                 setOpen(false);
               }}
