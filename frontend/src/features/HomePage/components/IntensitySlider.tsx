@@ -13,7 +13,7 @@ const IntensitySlider = () => {
   const progress = (value / (steps.length - 1)) * 100;
 
   return (
-    <section className="mt-8">
+    <section>
       <div className="mb-3 flex items-center gap-3 text-[#4f3bb8]">
         <span className="text-[clamp(1.7rem,4vw,2.35rem)] leading-none">
           ⚙️
@@ -23,12 +23,12 @@ const IntensitySlider = () => {
         </h2>
       </div>
 
-      <p className="max-w-3xl text-[clamp(1.2rem,3.4vw,2rem)] leading-[1.28] text-[#2f2b68]">
+      <p className="max-w-3xl text-[clamp(1rem,2.7vw,1.55rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
         Valj hur intensiv din traning eller stretching ska vara. Du kan alltid
         andra senare.
       </p>
 
-      <div className="mt-14 px-2">
+      <div className="mt-10 px-1 sm:px-2">
         <div className="relative">
           <div className="pointer-events-none absolute left-2 right-2 top-5 h-1.5 rounded-full bg-[#c7bfe8]" />
           <div
@@ -66,7 +66,7 @@ const IntensitySlider = () => {
             ))}
           </div>
 
-          <div className="mt-9 grid grid-cols-5 gap-2 text-center">
+          <div className="mt-7 grid grid-cols-5 gap-1.5 text-center sm:gap-2">
             {steps.map((label, index) => (
               <span
                 key={label}
