@@ -45,13 +45,13 @@ export function SessionPage() {
   }
 
   async function playCallAudio(restart = false) {
-    if (!session?.exerciseAudioUrl) {
+    if (!session?.workoutAudioUrl) {
       return;
     }
 
     const audio =
       restart || !audioRef.current
-        ? await startSessionAudio(session.exerciseAudioUrl)
+        ? await startSessionAudio(session.workoutAudioUrl)
         : audioRef.current;
 
     audioRef.current = audio;
@@ -72,7 +72,7 @@ export function SessionPage() {
   }
 
   useEffect(() => {
-    if (!session?.exerciseAudioUrl || hasStartedAudioRef.current) {
+    if (!session?.workoutAudioUrl || hasStartedAudioRef.current) {
       return;
     }
 
@@ -91,7 +91,7 @@ export function SessionPage() {
       audio.ontimeupdate = null;
       audio.onended = null;
     };
-  }, [session?.exerciseAudioUrl]);
+  }, [session?.workoutAudioUrl]);
 
   function handleEnd() {
     stopSessionAudio();

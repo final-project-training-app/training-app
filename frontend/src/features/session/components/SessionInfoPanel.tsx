@@ -19,8 +19,8 @@ export function SessionInfoPanel({
     return (
       <SessionPanelModal title="Träningssvit" onClose={onClose}>
         <TrainingSuitePanel
-          streakDays={session.trainingStreakDays}
-          items={session.trainingSuite}
+          streakDays={session.currentStreak}
+          items={session.completedWorkouts}
         />
       </SessionPanelModal>
     );
@@ -28,14 +28,14 @@ export function SessionInfoPanel({
 
   if (panel === "exercise") {
     return (
-      <SessionPanelModal title={session.exerciseTitle} onClose={onClose}>
+      <SessionPanelModal title={session.workoutName} onClose={onClose}>
         <ExercisePanel session={session} />
       </SessionPanelModal>
     );
   }
 
   return (
-    <SessionPanelModal title={session.userName} onClose={onClose}>
+    <SessionPanelModal title="Min info" onClose={onClose}>
       <UserInfoPanel session={session} />
     </SessionPanelModal>
   );

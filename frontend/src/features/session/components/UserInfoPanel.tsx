@@ -8,12 +8,16 @@ type UserInfoPanelProps = {
 export function UserInfoPanel({ session }: UserInfoPanelProps) {
   return (
     <div className="space-y-5 text-xl font-semibold leading-tight">
+      <SessionPanelSection title="Namn:">
+        <p>{session.userName}</p>
+      </SessionPanelSection>
+
       <SessionPanelSection title="Intensitet:">
-        <p>{session.intensityLabel}</p>
+        <p>Nivå {session.intensityLevel}</p>
       </SessionPanelSection>
 
       <SessionPanelSection title="Träningskontext:">
-        <p>{session.trainingContext}</p>
+        <p>{session.context}</p>
       </SessionPanelSection>
     </div>
   );

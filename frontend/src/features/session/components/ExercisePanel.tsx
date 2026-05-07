@@ -6,19 +6,12 @@ type ExercisePanelProps = {
 
 export function ExercisePanel({ session }: ExercisePanelProps) {
   return (
-    <>
-      {session.exerciseImageUrl ? (
-        <img
-          src={session.exerciseImageUrl}
-          alt={session.exerciseTitle}
-          className="mb-4 h-40 w-full object-contain"
-        />
-      ) : null}
+    <div className="space-y-5 text-xl font-semibold leading-tight">
+      <p>{session.instructions}</p>
 
-      <div className="space-y-5 text-xl font-semibold leading-tight">
-        <p>{session.exerciseDescription}</p>
+      {session.durationSeconds > 0 ? (
         <p>Övningen kommer pågå under {session.durationSeconds} sekunder.</p>
-      </div>
-    </>
+      ) : null}
+    </div>
   );
 }
