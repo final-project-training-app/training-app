@@ -13,10 +13,28 @@ export function SessionInfoPanel({
   onClose,
 }: SessionInfoPanelProps) {
   const isExercise = panel === "exercise";
+  const isSuite = panel === "suite";
+
+  const trainingSuite = [
+    { day: "Onsdag 6 maj", activity: "Axelrullningar" },
+    { day: "Tisdag 5 maj", activity: "Knälyft" },
+    { day: "Måndag 4 maj", activity: "Huvudvrid" },
+    { day: "Söndag 3 maj", activity: "Tåsträck" },
+    { day: "Lördag 2 maj", activity: "Ljumskstretch" },
+    { day: "Fredag 1 maj", activity: "Höftstretch" },
+    { day: "Torsdag 30 april", activity: "Benlyft" },
+    { day: "Onsdag 29 april", activity: "Vristcirkel" },
+  ];
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center bg-white/45 px-6 pt-16 backdrop-blur-[2px]">
-      <section className="pointer-events-none relative w-full max-w-82.5 border border-[#5340d3]/35 bg-[#fbf8ff]/95 p-6 text-[#5340d3] shadow-xl">
+    <div
+      className="pointer-events-auto absolute inset-0 z-10 flex items-start justify-center bg-(--brand-overlay) px-6 pt-16 backdrop-blur-[2px]"
+      onClick={onClose}
+    >
+      <section
+        className="pointer-events-auto relative max-h-[70dvh] w-full max-w-82.5 overflow-hidden border border-(--brand-panel-border) bg-(--brand-surface-soft) p-6 text-(--brand-primary) shadow-[0_18px_40px_var(--brand-shadow)]"
+        onClick={(event) => event.stopPropagation()}
+      >
         <button
           type="button"
           onClick={onClose}
@@ -26,7 +44,30 @@ export function SessionInfoPanel({
           <X size={24} />
         </button>
 
-        {isExercise ? (
+        {isSuite ? (
+          <>
+            <h2 className="mb-5 pr-8 text-4xl font-extrabold">Träningssvit</h2>
+
+            <div className="space-y-5 text-xl font-semibold leading-tight">
+              <section>
+                <h3 className="font-extrabold">Nuvarande svit:</h3>
+                <p>12 dagar</p>
+              </section>
+
+              <div className="pointer-events-auto max-h-64 space-y-3 overflow-y-auto pr-2">
+                {trainingSuite.map((item) => (
+                  <p
+                    key={`${item.day}-${item.activity}`}
+                    className="flex flex-col gap-0.5"
+                  >
+                    <span className="font-extrabold">{item.day}</span>
+                    <span>{item.activity}</span>
+                  </p>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : isExercise ? (
           <>
             <h2 className="mb-4 pr-8 text-4xl font-extrabold">
               {session.exerciseTitle}

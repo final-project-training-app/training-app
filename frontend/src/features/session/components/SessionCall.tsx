@@ -16,7 +16,7 @@ type SessionCallProps = {
   durationSeconds: number;
   activePanel: SessionPanel;
   onSpeaker: () => void;
-  onExerciseAudio: () => void;
+  onTrainingSuite: () => void;
   onInfo: () => void;
   onClosePanel: () => void;
   onEnd: () => void;
@@ -46,10 +46,10 @@ function ControlButton({
       onClick={onClick}
       className="flex flex-col items-center gap-2 text-center"
     >
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f4efff] text-[#5340d3]">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-(--brand-control) text-(--brand-primary)">
         {children}
       </div>
-      <span className="text-base font-medium text-slate-900">{label}</span>
+      <span className="text-base font-medium text-(--brand-ink)">{label}</span>
     </button>
   );
 }
@@ -60,13 +60,13 @@ export function SessionCall({
   durationSeconds,
   activePanel,
   onSpeaker,
-  onExerciseAudio,
+  onTrainingSuite,
   onInfo,
   onClosePanel,
   onEnd,
 }: SessionCallProps) {
   return (
-    <main className="relative h-dvh overflow-hidden bg-[radial-gradient(circle_at_top,#f7f2ff_0%,#ffffff_58%)]">
+    <main className="relative h-dvh overflow-hidden [background:var(--brand-call-background)]">
       <div className="mx-auto flex h-full w-full max-w-107.5 flex-col justify-between px-5 py-6">
         <div>
           <div className="mb-7 flex justify-center">
@@ -74,20 +74,20 @@ export function SessionCall({
               <img
                 src={session.coachImageUrl}
                 alt={session.coachName}
-                className="h-56 w-56 rounded-full bg-[#f4efff] object-contain"
+                className="h-56 w-56 rounded-full bg-(--brand-control) object-contain"
               />
             ) : (
-              <div className="flex h-56 w-56 items-center justify-center rounded-full bg-[#f4efff] text-6xl font-extrabold text-[#5340d3]">
+              <div className="flex h-56 w-56 items-center justify-center rounded-full bg-(--brand-control) text-6xl font-extrabold text-(--brand-primary)">
                 PT
               </div>
             )}
           </div>
 
           <div className="mb-10 text-center">
-            <h1 className="text-5xl font-extrabold text-slate-950">
+            <h1 className="text-5xl font-extrabold text-(--brand-ink)">
               {session.coachName}
             </h1>
-            <p className="mt-2 text-3xl font-bold text-[#5340d3]">
+            <p className="mt-2 text-3xl font-bold text-(--brand-primary)">
               {formatTime(elapsedSeconds)}
             </p>
           </div>
@@ -111,7 +111,7 @@ export function SessionCall({
               </span>
             </ControlButton>
 
-            <ControlButton label="träningssvit" onClick={onExerciseAudio}>
+            <ControlButton label="träningssvit" onClick={onTrainingSuite}>
               <CalendarDays size={34} />
             </ControlButton>
 
@@ -126,10 +126,12 @@ export function SessionCall({
           onClick={onEnd}
           className="mb-2 flex flex-col items-center gap-3"
         >
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-red-500 text-white">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-(--brand-danger) text-(--brand-on-danger)">
             <PhoneOff size={40} />
           </div>
-          <span className="text-xl font-medium text-slate-900">avsluta</span>
+          <span className="text-xl font-medium text-(--brand-ink)">
+            avsluta
+          </span>
         </button>
       </div>
 
