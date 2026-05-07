@@ -18,7 +18,6 @@ export default function SettingsModalSheet({
   const startY = useRef(0);
   const startHeight = useRef(DEFAULT_HEIGHT);
   const isDragging = useRef(false);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -104,28 +103,19 @@ export default function SettingsModalSheet({
 
           <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
             <button
-              className={`w-full rounded-2xl px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold shadow-md transition-all duration-150 active:scale-[0.985] md:py-6
-    ${
-      saved
-        ? "bg-green-600 text-white"
-        : "bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] text-white hover:brightness-105"
-    }`}
+              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
               onClick={() => {
-                setSaved(true);
                 console.log("saved");
-
-                // optional: reset after a short delay
-                setTimeout(() => setSaved(false), 1500);
               }}
             >
-              {saved ? "Sparat ✓" : "Spara ändringar"}
+              Spara ändringar
             </button>
 
             <button
-              className="w-full rounded-xl bg-transparent px-4 py-3 text-[clamp(1.24rem,3.5vw,1.95rem)] font-semibold text-[#4d2a7a] transition-all duration-150 hover:text-[#3f2066]"
-              onClick={() => {
-                setOpen(false);
-              }}
+              className="w-full rounded-xl px-4 py-3 text-[clamp(1.24rem,3.5vw,1.95rem)] font-semibold text-[#4d2a7a] transition-all duration-150
+  hover:text-[#3f2066]
+  active:bg-[#efe9fb] active:text-[#3f2066] active:scale-[0.985]"
+              onClick={() => setOpen(false)}
             >
               Avbryt
             </button>
