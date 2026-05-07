@@ -15,7 +15,7 @@ public class Workout {
     private Long id;
     private String name;
     private String instructions;
-    private String level;
+    private Integer level;
     private String type;
     private Integer durationMinutes;
     private String instructionsAudio;
@@ -47,11 +47,11 @@ public class Workout {
         this.instructions = instructions;
     }
 
-    public String getLevel() {
+    public Integer getLevel() {
         return level;
     }
 
-    public void setLevel(String level) {
+    public void setLevel(Integer level) {
         this.level = level;
     }
 

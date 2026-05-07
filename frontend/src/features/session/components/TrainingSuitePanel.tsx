@@ -1,9 +1,9 @@
-import type { TrainingSuiteItem } from "../types";
+import type { CompletedWorkout } from "../types";
 import { SessionPanelSection } from "./SessionPanelSection";
 
 type TrainingSuitePanelProps = {
   streakDays: number;
-  items: TrainingSuiteItem[];
+  items: CompletedWorkout[];
 };
 
 export function TrainingSuitePanel({
@@ -19,11 +19,11 @@ export function TrainingSuitePanel({
       <div className="pointer-events-auto max-h-64 space-y-3 overflow-y-auto pr-2">
         {items.map((item) => (
           <p
-            key={`${item.day}-${item.activity}`}
+            key={`${item.dateLabel}-${item.workoutName}`}
             className="flex flex-col gap-0.5"
           >
-            <span className="font-extrabold">{item.day}</span>
-            <span>{item.activity}</span>
+            <span className="font-extrabold">{item.dateLabel}</span>
+            <span>{item.workoutName}</span>
           </p>
         ))}
       </div>

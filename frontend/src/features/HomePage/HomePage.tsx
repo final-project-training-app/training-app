@@ -1,15 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Show, SignOutButton } from "@clerk/react";
-import { Settings, Phone } from "lucide-react";
+import { Phone, Settings } from "lucide-react";
+import coachHeroImage from "../../assets/image.png";
+import { startSessionAudio } from "../session/audio";
+import { coachCallSessionQueryOptions } from "../session/query";
+import type { CoachCallSession } from "../session/types";
+import { Show, SignInButton, SignOutButton } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const handleStartCall = async () => {
-    navigate({ to: "/session/$workoutId", params: { workoutId: "1" } });
-  };
+
+  useEffect(() => {
+    void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
+  }, [queryClient]);
+
+  async function handleStartCall() {
+    const queryOptions = coachCallSessionQueryOptions("1");
+    const cachedSession = queryClient.getQueryData<CoachCallSession>(
+      queryOptions.queryKey,
+    );
+    const session =
+      cachedSession ??
+      (await queryClient.fetchQuery(queryOptions).catch(() => null));
+
+    if (session?.workoutAudioUrl) {
+      void startSessionAudio(session.workoutAudioUrl).catch(() => {
+        // SessionPage will make one more attempt if the browser still blocks playback here.
+      });
+    }
+
+    navigate({
+      to: "/session/$workoutId",
+      params: { workoutId: "1" },
+    });
+  }
 
   return (
     <main className="relative flex h-dvh items-center justify-center overflow-hidden bg-(--brand-page) text-(--brand-ink)">
@@ -21,12 +49,20 @@ export default function HomePage() {
             </button>
           </SignOutButton>
         </Show>
+
+        <Show when="signed-out">
+          <SignInButton>
+            <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3.5 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
+              Logga in
+            </button>
+          </SignInButton>
+        </Show>
       </div>
 
       <section className="flex h-full w-full max-w-[36rem] flex-col px-5 pt-[max(2px,env(safe-area-inset-top))] pb-[max(26px,env(safe-area-inset-bottom))] [@media(max-height:700px)]:pb-[max(18px,env(safe-area-inset-bottom))]">
         <div className="flex min-h-0 flex-[1.55] items-start justify-center overflow-hidden pt-0">
           <img
-            src="/src/assets/image.png"
+            src={coachHeroImage}
             alt="Träningsapp"
             className="h-full w-full origin-top scale-[1.24] object-contain object-top drop-shadow-[0_16px_28px_var(--brand-image-shadow)] [@media(max-height:700px)]:scale-[1.12]"
           />
