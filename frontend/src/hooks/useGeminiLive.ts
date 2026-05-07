@@ -9,7 +9,7 @@ import {
 
 const SAMPLE_RATE = 16000;
 const CHUNK_SAMPLES = 2560; // 160 ms @ 16 kHz
-const SILENCE_THRESHOLD = 0.01; // RMS below this = silence, chunk dropped
+const INTERRUPT_THRESHOLD = 0.25; // RMS required to interrupt Gemini mid-response
 
 interface UseGeminiLiveProps {
   token: string;
@@ -47,6 +47,7 @@ export const useGeminiLive = ({
 }: UseGeminiLiveProps) => {
   const [isActive, setIsActive] = useState(false);
   const [currentTurn, setCurrentTurn] = useState<Turn>("idle");
+  const geminiSpeakingRef = useRef(false);
   const sessionRef = useRef<Session | null>(null);
   const tokenRef = useRef(token);
   const onAudioRef = useRef(onAudioData);
@@ -120,6 +121,7 @@ export const useGeminiLive = ({
 
             if (audioParts > 0) {
               setCurrentTurn("gemini");
+              geminiSpeakingRef.current = true;
             } else if (audioParts === 0 && parts.length > 0) {
               console.log(
                 "[GeminiLive] modelTurn had parts, but no inline audio data",
@@ -128,9 +130,13 @@ export const useGeminiLive = ({
 
             if (message.serverContent?.turnComplete) {
               setCurrentTurn("user");
+              geminiSpeakingRef.current = false;
             }
 
-            const text = parts.map((p) => p?.text).filter(Boolean).join(" ");
+            const text = parts
+              .map((p) => p?.text)
+              .filter(Boolean)
+              .join(" ");
             if (text) console.log("[GeminiLive] text:", text);
           },
           onerror: (e: ErrorEvent) => {
@@ -164,6 +170,7 @@ export const useGeminiLive = ({
     sessionRef.current = null;
     setIsActive(false);
     setCurrentTurn("idle");
+    geminiSpeakingRef.current = false;
   }
 
   function getSession() {
@@ -213,21 +220,24 @@ export const useGeminiLive = ({
 
       const trackSettings = stream.getAudioTracks()[0]?.getSettings() ?? {};
       console.log("[GeminiLive] track settings:", trackSettings);
-      statsRef.current.inputSampleRate = trackSettings.sampleRate ?? SAMPLE_RATE;
+      statsRef.current.inputSampleRate =
+        trackSettings.sampleRate ?? SAMPLE_RATE;
       statsRef.current.channels = trackSettings.channelCount ?? 1;
 
       const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
       audioContextRef.current = audioContext;
       statsRef.current.outputSampleRate = audioContext.sampleRate;
-      console.log("[GeminiLive] AudioContext.sampleRate:", audioContext.sampleRate);
+      console.log(
+        "[GeminiLive] AudioContext.sampleRate:",
+        audioContext.sampleRate,
+      );
 
       const source = audioContext.createMediaStreamSource(stream);
 
       // Worklet: mono channel 0 only, buffer into CHUNK_SAMPLES frames,
-      // compute RMS for silence detection, convert Float32→PCM16, transfer buffer (zero-copy).
+      // compute RMS, convert Float32→PCM16, transfer buffer (zero-copy).
       const workletCode = `
         const CHUNK = ${CHUNK_SAMPLES};
-        const SILENCE = ${SILENCE_THRESHOLD};
         class AudioProcessor extends AudioWorkletProcessor {
           constructor() {
             super();
@@ -268,7 +278,9 @@ export const useGeminiLive = ({
       workletNode.port.onmessage = (
         event: MessageEvent<{ pcm16: ArrayBuffer; rms: number }>,
       ) => {
-        const { pcm16 } = event.data;
+        const { pcm16, rms } = event.data;
+
+        if (geminiSpeakingRef.current && rms < INTERRUPT_THRESHOLD) return;
 
         const base64 = pcm16ToBase64(pcm16);
 
