@@ -4,8 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "workouts")
 public class Workout {
 
     @Id
@@ -13,6 +15,9 @@ public class Workout {
     private Long id;
     private String name;
     private String instructions;
+    private String level;
+    private String type;
+    private Integer durationMinutes;
     private String instructionsAudio;
     private String workoutAudio;
     private String instructionsImage;
@@ -40,6 +45,30 @@ public class Workout {
 
     public void setInstructions(String instructions) {
         this.instructions = instructions;
+    }
+
+    public String getLevel() {
+        return level;
+    }
+
+    public void setLevel(String level) {
+        this.level = level;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Integer getDurationMinutes() {
+        return durationMinutes;
+    }
+
+    public void setDurationMinutes(Integer durationMinutes) {
+        this.durationMinutes = durationMinutes;
     }
 
     public String getInstructionsAudio() {

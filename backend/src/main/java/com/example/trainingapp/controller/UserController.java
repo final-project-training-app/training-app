@@ -1,6 +1,7 @@
 package com.example.trainingapp.controller;
 
 import com.example.trainingapp.entity.User;
+import com.example.trainingapp.service.ActivityLogService;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,9 +26,11 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final ActivityLogService activityLogService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, ActivityLogService activityLogService) {
         this.userService = userService;
+        this.activityLogService = activityLogService;
     }
 
     @PostMapping
@@ -44,6 +47,11 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUserPreferences(@PathVariable Long id, @RequestBody User userRequest) {
         return ResponseEntity.ok().body(userService.updateUserPreferences(id, userRequest));
+    }
+
+    @GetMapping("/{userId}/progress")
+    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId) {
+        return ResponseEntity.ok().body(activityLogService.getUserProgress(userId));
     }
 
     @GetMapping("/me/profile")
