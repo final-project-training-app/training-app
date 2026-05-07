@@ -2,8 +2,8 @@ import { useState } from "react";
 
 const IntensitySlider = () => {
   const steps = [
-    "Mycket latt",
-    "Latt",
+    "Mycket lätt",
+    "Lätt",
     "Medium",
     "Intensiv",
     "Mycket intensiv",
@@ -23,7 +23,7 @@ const IntensitySlider = () => {
         </h2>
       </div>
 
-      <p className="max-w-3xl text-[clamp(1rem,2.7vw,1.55rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
+      <p className="max-w-3xl text-[clamp(1.15rem,3vw,1.85rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
         Valj hur intensiv din traning eller stretching ska vara. Du kan alltid
         andra senare.
       </p>
@@ -56,10 +56,10 @@ const IntensitySlider = () => {
                 aria-label={`Valj ${label}`}
               >
                 <span
-                  className={`block h-11 w-11 rounded-full border-[4px] transition-all duration-150 ${
+                  className={`block rounded-full transition-all duration-150 flex items-center justify-center ${
                     index === value
-                      ? "border-[#5b44c9] bg-[#5b44c9]"
-                      : "border-[#b6abd9] bg-[#f5f2fb]"
+                      ? "h-14 w-14 border-[5px] bg-[#5b44c9] border-[#5b44c9] shadow-lg"
+                      : "h-11 w-11 border-[4px] bg-[#f5f2fb] border-[#b6abd9]"
                   }`}
                 />
               </button>
@@ -72,8 +72,8 @@ const IntensitySlider = () => {
                 key={label}
                 className={`leading-[1.16] transition-all duration-150 ${
                   index === value
-                    ? "text-[clamp(1.05rem,2.9vw,1.65rem)] font-bold text-[#2b2277]"
-                    : "text-[clamp(0.95rem,2.5vw,1.5rem)] font-medium text-[#342f77]"
+                    ? "text-[clamp(1.25rem,3.3vw,2rem)] font-bold text-[#2b2277]"
+                    : "text-[clamp(1.05rem,2.7vw,1.6rem)] font-medium text-[#342f77]"
                 }`}
               >
                 {label}
