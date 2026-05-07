@@ -1,8 +1,15 @@
-export default function SettingsModalSheet({ open }: { open: boolean }) {
+export default function SettingsModalSheet({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+}) {
   return (
     <>
-      {/* overlay */}
+      {/* overlay (click outside to close) */}
       <div
+        onClick={() => setOpen(false)}
         className={`fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
@@ -13,7 +20,11 @@ export default function SettingsModalSheet({ open }: { open: boolean }) {
         className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-white p-5 shadow-2xl transition-transform duration-300
         ${open ? "translate-y-0" : "translate-y-full"}`}
       >
-        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-gray-300" />
+        {/* drag handle (click to close) */}
+        <div
+          onClick={() => setOpen(false)}
+          className="mx-auto mb-4 h-1.5 w-12 cursor-pointer rounded-full bg-gray-300"
+        />
 
         <h1 className="text-lg font-semibold">Inställningar</h1>
 

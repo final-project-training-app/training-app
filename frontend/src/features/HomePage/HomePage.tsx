@@ -61,7 +61,7 @@ export default function HomePage() {
             </button>
           </SignInButton>
         </Show>
-        <SettingsModalSheet open={open} />
+        <SettingsModalSheet open={open} setOpen={setOpen} />
       </div>
     </main>
   );
