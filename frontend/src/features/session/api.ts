@@ -1,11 +1,9 @@
 import { getJson } from "../../lib/api/fetcher";
-import coachImageUrl from "../../assets/image.png";
 import type { CoachCallSession } from "./types";
 
 type BackendWorkoutResponse = {
   id: number;
   name: string;
-  title?: string | null;
   coachName?: string | null;
   coachImage?: string | null;
 
@@ -24,16 +22,12 @@ type BackendWorkoutResponse = {
 
 const fallbackSession: CoachCallSession = {
   id: "fallback",
-  title: "Placeholder",
   coachName: "Tränaren",
-  coachImageUrl,
-
   userName: "Stefan",
   intensityLabel: "Mycket låg",
   trainingContext:
     "Behöver bli mer rörlig. Har en fotskada och vill undvika tung belastning på foten.",
 
-  guideAudioUrl: "https://samplelib.com/lib/preview/mp3/sample-3s.mp3",
   exerciseAudioUrl: "https://samplelib.com/lib/preview/mp3/sample-6s.mp3",
 
   durationSeconds: 45,
@@ -42,6 +36,8 @@ const fallbackSession: CoachCallSession = {
     "I den här övningen kommer vi att höja axlarna och sänka axlarna. Övningen stärker hållningen och hjälper dig att bli mer medveten om spänningar i nacke och axlar.",
   exerciseImageUrl: "/session/exercise-shoulder-raises.svg",
 };
+
+export const fallbackExerciseAudioUrl = fallbackSession.exerciseAudioUrl ?? "";
 
 export async function getCoachCallSession(
   workoutId: string,
@@ -53,15 +49,13 @@ export async function getCoachCallSession(
 
     return {
       id: String(data.id),
-      title: data.title || fallbackSession.title,
       coachName: data.coachName || fallbackSession.coachName,
-      coachImageUrl: data.coachImage ?? fallbackSession.coachImageUrl,
+      coachImageUrl: data.coachImage || undefined,
 
       userName: data.userName || fallbackSession.userName,
       intensityLabel: data.intensityLabel || fallbackSession.intensityLabel,
       trainingContext: data.trainingContext || fallbackSession.trainingContext,
 
-      guideAudioUrl: data.instructionsAudio ?? fallbackSession.guideAudioUrl,
       exerciseAudioUrl:
         data.workoutAudio ??
         data.instructionsAudio ??
