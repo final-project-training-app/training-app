@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGeminiLive } from "../../../hooks/useGeminiLive";
 import { useLiveToken } from "../../../hooks/useLiveToken";
 import { executeLiveToolCall, liveSystemInstruction, liveTools } from "./tools";
+import { fixedLiveUserId } from "./tools/shared/liveIntroDefaults";
 
 type ToolEvent = {
   id: string;
   name: string;
   response: unknown;
+};
+
+type SelectedWorkout = {
+  id: number;
+  name: string | null;
 };
 
 function stringifyMessage(value: unknown) {
@@ -20,10 +26,18 @@ function stringifyMessage(value: unknown) {
 
 export function GeminiLiveTest() {
   const [lastMessage, setLastMessage] = useState<string | null>(null);
-  const [totalAudioBytes, setTotalAudioBytes] = useState(0);
   const [audioCapturing, setAudioCapturing] = useState(false);
   const [toolEvents, setToolEvents] = useState<ToolEvent[]>([]);
   const [endpointTestLoading, setEndpointTestLoading] = useState(false);
+  const [selectedWorkout, setSelectedWorkout] = useState<SelectedWorkout | null>(null);
+
+  const audioCapturingRef = useRef(false);
+  const introStartedRef = useRef(false);
+  const pendingSelectedWorkoutRef = useRef<SelectedWorkout | null>(null);
+
+  useEffect(() => {
+    audioCapturingRef.current = audioCapturing;
+  }, [audioCapturing]);
 
   const { token, loadToken, tokenLoading, tokenError } = useLiveToken();
 
@@ -41,19 +55,75 @@ export function GeminiLiveTest() {
     token,
     tools: liveTools,
     systemInstruction: liveSystemInstruction,
-    onAudioData: (data) => {
-      setTotalAudioBytes((bytes) => bytes + (data?.byteLength ?? 0));
-    },
+    onAudioData: () => {},
     onMessage: (message) => {
       setLastMessage(stringifyMessage(message));
+
+      if (pendingSelectedWorkoutRef.current && message.serverContent?.turnComplete) {
+        geminiDisconnect();
+        setAudioCapturing(false);
+      }
     },
     onToolCall: async (functionCall) => {
       const response = await executeLiveToolCall(functionCall);
       addToolEvent(response);
 
+      const selected = readSelectedWorkout(response);
+      if (selected) {
+        pendingSelectedWorkoutRef.current = selected;
+        setSelectedWorkout(selected);
+
+        if (audioCapturingRef.current) {
+          stopAudioCapture();
+          setAudioCapturing(false);
+        }
+      }
+
       return response;
     },
   });
+
+  function readSelectedWorkout(
+    response: Awaited<ReturnType<typeof executeLiveToolCall>>,
+  ): SelectedWorkout | null {
+    if (response.name !== "get_workout_details") {
+      return null;
+    }
+
+    const responseBody = response.response;
+    if (!responseBody || typeof responseBody !== "object" || !("output" in responseBody)) {
+      return null;
+    }
+
+    const output = (responseBody as { output?: Record<string, unknown> }).output;
+    if (!output || typeof output !== "object") {
+      return null;
+    }
+
+    const workout = output.workout;
+    const workoutRecord =
+      workout && typeof workout === "object"
+        ? (workout as { id?: unknown; name?: unknown })
+        : null;
+    const workoutId =
+      typeof output.workoutId === "number"
+        ? output.workoutId
+        : typeof workoutRecord?.id === "number"
+          ? workoutRecord.id
+          : null;
+
+    if (!workoutId) {
+      return null;
+    }
+
+    const workoutName =
+      typeof workoutRecord?.name === "string" ? workoutRecord.name : null;
+
+    return {
+      id: workoutId,
+      name: workoutName,
+    };
+  }
 
   function addToolEvent(response: Awaited<ReturnType<typeof executeLiveToolCall>>) {
     setToolEvents((events) => [
@@ -67,6 +137,9 @@ export function GeminiLiveTest() {
   }
 
   async function handleConnect() {
+    pendingSelectedWorkoutRef.current = null;
+    introStartedRef.current = false;
+    setSelectedWorkout(null);
     const freshToken = await loadToken();
     if (!freshToken) return;
 
@@ -76,6 +149,21 @@ export function GeminiLiveTest() {
   async function handleStartAudio() {
     const started = await startAudioCapture();
     setAudioCapturing(started);
+
+    if (!started || introStartedRef.current) {
+      return;
+    }
+
+    introStartedRef.current = true;
+    getSession()?.sendClientContent({
+      turns: [
+        {
+          role: "user",
+          parts: [{ text: "Starta träningsintrot nu." }],
+        },
+      ],
+      turnComplete: true,
+    });
   }
 
   function handleStopAudio() {
@@ -84,20 +172,19 @@ export function GeminiLiveTest() {
   }
 
   function handleDisconnect() {
+    pendingSelectedWorkoutRef.current = null;
+    introStartedRef.current = false;
     geminiDisconnect();
     setAudioCapturing(false);
   }
 
-  async function handleTestTrainingContext() {
+  async function handleTestWorkoutCatalog() {
     setEndpointTestLoading(true);
 
     try {
       const response = await executeLiveToolCall({
-        name: "get_training_context",
-        args: {
-          userId: 1,
-          workoutId: 1,
-        },
+        name: "get_workout_catalog",
+        args: {},
       });
 
       addToolEvent(response);
@@ -121,10 +208,10 @@ export function GeminiLiveTest() {
             Live sandbox
           </p>
           <h2 className="mt-2 text-2xl font-extrabold text-(--brand-ink)">
-            Gemini Live Test
+            Workout Start Intro
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-(--brand-muted)">
-            Live function calling mot deployad backend. Tools är uppdelade i user, progress, workout och trainingContext.
+            Låst intro-läge för att välja träningspass. Mic startar ett kort AI-intro, använder fast user {fixedLiveUserId} i dev och stänger sedan ner sig själv efter valt workout.
           </p>
         </div>
 
@@ -144,11 +231,11 @@ export function GeminiLiveTest() {
         </button>
         <button
           type="button"
-          onClick={() => void handleTestTrainingContext()}
+          onClick={() => void handleTestWorkoutCatalog()}
           disabled={endpointTestLoading}
           className="rounded-xl border border-(--brand-border) bg-white px-4 py-3 font-bold text-(--brand-ink)"
         >
-          {endpointTestLoading ? "Hämtar endpoints..." : "Testa training context"}
+          {endpointTestLoading ? "Hämtar workouts..." : "Testa workout-katalog"}
         </button>
 
         <button
@@ -214,13 +301,23 @@ export function GeminiLiveTest() {
           <p className="mt-1 font-bold text-(--brand-ink)">{token ? "Loaded" : "Missing"}</p>
         </div>
         <div className="rounded-xl bg-(--brand-soft) p-4">
+          <p className="text-sm font-bold text-(--brand-muted)">Dev user</p>
+          <p className="mt-1 font-bold text-(--brand-ink)">{fixedLiveUserId}</p>
+        </div>
+        <div className="rounded-xl bg-(--brand-soft) p-4">
           <p className="text-sm font-bold text-(--brand-muted)">Audio capture</p>
           <p className="mt-1 font-bold text-(--brand-ink)">{audioCapturing ? "On" : "Off"}</p>
         </div>
         <div className="rounded-xl bg-(--brand-soft) p-4">
-          <p className="text-sm font-bold text-(--brand-muted)">Audio bytes</p>
-          <p className="mt-1 font-bold text-(--brand-ink)">{totalAudioBytes}</p>
+          <p className="text-sm font-bold text-(--brand-muted)">Valt workout</p>
+          <p className="mt-1 font-bold text-(--brand-ink)">
+            {selectedWorkout ? `${selectedWorkout.id} · ${selectedWorkout.name ?? "okänt namn"}` : "Inte valt ännu"}
+          </p>
         </div>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
+        Flöde: starta mikrofon → AI säger kort hej → hämtar progress för user {fixedLiveUserId} → hämtar workout-katalog → väljer workout → kör get_workout_details → stoppar mic → avslutar Gemini Live.
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
