@@ -27,6 +27,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
         "http://localhost:5173",
         "https://frontend-training.up.railway.app"
 })
+//a comment to trigger redeploy
 public class UserController {
 
     private final UserService userService;
