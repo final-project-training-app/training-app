@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as AiDevRouteImport } from './routes/ai-dev'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionWorkoutIdRouteImport } from './routes/session.$workoutId'
 
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiDevRoute = AiDevRouteImport.update({
   id: '/ai-dev',
   path: '/ai-dev',
@@ -32,35 +38,46 @@ const SessionWorkoutIdRoute = SessionWorkoutIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai-dev': typeof AiDevRoute
+  '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-dev': typeof AiDevRoute
+  '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/ai-dev': typeof AiDevRoute
+  '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ai-dev' | '/session/$workoutId'
+  fullPaths: '/' | '/ai-dev' | '/status' | '/session/$workoutId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ai-dev' | '/session/$workoutId'
-  id: '__root__' | '/' | '/ai-dev' | '/session/$workoutId'
+  to: '/' | '/ai-dev' | '/status' | '/session/$workoutId'
+  id: '__root__' | '/' | '/ai-dev' | '/status' | '/session/$workoutId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AiDevRoute: typeof AiDevRoute
+  StatusRoute: typeof StatusRoute
   SessionWorkoutIdRoute: typeof SessionWorkoutIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-dev': {
       id: '/ai-dev'
       path: '/ai-dev'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AiDevRoute: AiDevRoute,
+  StatusRoute: StatusRoute,
   SessionWorkoutIdRoute: SessionWorkoutIdRoute,
 }
 export const routeTree = rootRouteImport
