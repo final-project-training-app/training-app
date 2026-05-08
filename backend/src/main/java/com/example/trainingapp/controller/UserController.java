@@ -127,4 +127,15 @@ public class UserController {
 
         return ResponseEntity.ok(toResponse(currentUser));
     }
+
+    @GetMapping("/{userId}/progress")
+    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId) {
+        return ResponseEntity.ok(activityLogService.getUserProgress(userId));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return ResponseEntity.ok(toResponse(user));
+    }
 }
