@@ -1,5 +1,6 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.dto.UserRequestDTO;
 import com.example.trainingapp.entity.User;
 import com.example.trainingapp.service.ActivityLogService;
 import com.example.trainingapp.service.UserService;
@@ -34,7 +35,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<User> createUser(@RequestBody UserRequestDTO user) {
         User createdUser = userService.createUser(user);
         return ResponseEntity.ok().body(createdUser);
     }
