@@ -15,7 +15,7 @@ const CHUNK_SAMPLES = 2560; // 160 ms @ 16 kHz
 const AI_SAMPLE_RATE = 24000;
 const INTERRUPT_THRESHOLD = 0.25; // RMS required to interrupt Gemini mid-response
 const PLAYBACK_TAIL_MS = 200; // extra gate time after playback ends (speaker reverb)
-const LIVE_MODEL = "gemini-2.5-flash-native-audio-latest";
+const LIVE_MODEL = "gemini-3.1-flash-live-preview";
 
 interface UseGeminiLiveProps {
   token: string;
@@ -137,7 +137,7 @@ export const useGeminiLive = ({
             : undefined,
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: "Zephyr" },
+              prebuiltVoiceConfig: { voiceName: "Kore" },
             },
           },
         },
@@ -206,7 +206,9 @@ export const useGeminiLive = ({
             setIsActive(false);
             sessionRef.current = null;
             if (e.code !== 1000) {
-              setConnectionError(e.reason || `Gemini Live closed with code ${e.code}.`);
+              setConnectionError(
+                e.reason || `Gemini Live closed with code ${e.code}.`,
+              );
             }
           },
         },
@@ -217,7 +219,9 @@ export const useGeminiLive = ({
     } catch (error) {
       console.error("[GeminiLive] Failed to connect:", error);
       setIsActive(false);
-      setConnectionError(error instanceof Error ? error.message : "Gemini Live connect failed.");
+      setConnectionError(
+        error instanceof Error ? error.message : "Gemini Live connect failed.",
+      );
     }
   }
 
@@ -371,7 +375,11 @@ export const useGeminiLive = ({
       ) => {
         const { pcm16, rms } = event.data;
 
-        if (Date.now() < playingUntilWallMsRef.current && rms < INTERRUPT_THRESHOLD) return;
+        if (
+          Date.now() < playingUntilWallMsRef.current &&
+          rms < INTERRUPT_THRESHOLD
+        )
+          return;
 
         const base64 = pcm16ToBase64(pcm16);
 
@@ -414,7 +422,11 @@ export const useGeminiLive = ({
       return true;
     } catch (error) {
       console.error("[GeminiLive] audio capture setup failed:", error);
-      setConnectionError(error instanceof Error ? error.message : "Kunde inte starta mikrofonen.");
+      setConnectionError(
+        error instanceof Error
+          ? error.message
+          : "Kunde inte starta mikrofonen.",
+      );
       return false;
     }
   }
