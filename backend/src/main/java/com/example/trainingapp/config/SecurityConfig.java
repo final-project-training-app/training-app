@@ -35,6 +35,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/*", "/api/users/*/progress").permitAll()
                         .anyRequest().permitAll()
                 )
 
