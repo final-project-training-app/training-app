@@ -1,8 +1,7 @@
 import type { FunctionCall, FunctionResponse, ToolListUnion } from "@google/genai";
 import { progressTool } from "./progress/progressTool";
 import type { LiveToolDefinition } from "./shared/liveToolTypes";
-import { trainingContextTool } from "./trainingContext/trainingContextTool";
-import { userTool } from "./user/userTool";
+import { workoutCatalogTool } from "./workout/workoutCatalogTool";
 import { workoutTool } from "./workout/workoutTool";
 
 // Det här är den enda filen som kopplar ihop alla tools med Gemini Live.
@@ -11,10 +10,9 @@ import { workoutTool } from "./workout/workoutTool";
 // 2. Skapa declaration + handler + *Tool.ts i den mappen
 // 3. Lägg till tool-objektet i liveToolDefinitions nedan
 const liveToolDefinitions: LiveToolDefinition[] = [
-  userTool,
   progressTool,
+  workoutCatalogTool,
   workoutTool,
-  trainingContextTool,
 ];
 
 const liveToolHandlers = Object.fromEntries(
