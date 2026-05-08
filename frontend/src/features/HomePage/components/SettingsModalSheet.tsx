@@ -12,7 +12,7 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
-  const { data: user, isSuccess, isLoading } = useMyProfile();
+  const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
 
   return (
     <SettingsModalBody
@@ -21,6 +21,8 @@ export default function SettingsModalSheet({
       setOpen={setOpen}
       isSuccess={isSuccess}
       isLoading={isLoading}
+      isError={isError}
+      errorMessage={error instanceof Error ? error.message : null}
       userName={user?.name ?? ""}
       intensityLevel={user?.intensityLevel ?? 2}
       context={user?.context ?? ""}
@@ -33,6 +35,8 @@ function SettingsModalBody({
   setOpen,
   isSuccess,
   isLoading,
+  isError,
+  errorMessage,
   userName,
   intensityLevel: initialIntensityLevel,
   context: initialContext,
@@ -41,6 +45,8 @@ function SettingsModalBody({
   setOpen: (v: boolean) => void;
   isSuccess: boolean;
   isLoading: boolean;
+  isError: boolean;
+  errorMessage: string | null;
   userName: string;
   intensityLevel: number;
   context: string;
@@ -150,7 +156,9 @@ function SettingsModalBody({
                     ? fullName
                       ? "Namnet är hämtat från Clerk-profilen."
                       : "Ingen Clerk-namnuppgift fanns, så fältet är tomt."
-                    : ""}
+                    : isError
+                      ? (errorMessage ?? "Kunde inte hämta profilen.")
+                      : ""}
               </p>
             </div>
           </section>
@@ -179,6 +187,7 @@ function SettingsModalBody({
                   },
                   {
                     onSuccess: () => showToast("Inställningar sparade ✓"),
+                    onError: () => showToast("Kunde inte spara ändringarna"),
                   },
                 );
               }}
