@@ -12,6 +12,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final int STARTING_INTENSITY = 2;
+
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -19,7 +21,7 @@ public class UserService {
 
     public User createUser(String clerkId, String name) {
 
-        return userRepository.save(new User(clerkId, name));
+        return userRepository.save(new User(name, STARTING_INTENSITY,"",clerkId));
     }
 
     public User getUserById(Long id) {
