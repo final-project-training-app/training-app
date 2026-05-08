@@ -42,25 +42,18 @@ public class UserController {
     }
 
     private String resolveDisplayName(Jwt jwt) {
-        String name = jwt.getClaimAsString("name");
-        if (name != null && !name.isBlank()) return name;
-
-        String firstName = jwt.getClaimAsString("given_name");
-        String lastName = jwt.getClaimAsString("family_name");
-
-        if ((firstName != null && !firstName.isBlank()) ||
-                (lastName != null && !lastName.isBlank())) {
-            return ((firstName != null ? firstName : "") + " " +
-                    (lastName != null ? lastName : "")).trim();
+        // Try common claim keys that Clerk/OpenID might provide for a user's name.
+        String[] claimKeys = new String[]{"name", "full_name", "given_name", "first_name", "preferred_username"};
+        for (String key : claimKeys) {
+            Object claimVal = jwt.getClaims().get(key);
+            if (claimVal instanceof String) {
+                String s = ((String) claimVal).trim();
+                if (!s.isEmpty()) return s;
+            }
         }
 
-        String email = jwt.getClaimAsString("email");
-        if (email != null && !email.isBlank()) {
-            int atIndex = email.indexOf("@");
-            return atIndex > 0 ? email.substring(0, atIndex) : email;
-        }
-
-        return "User";
+        // If Clerk does not provide a name claim, store an empty string.
+        return "";
     }
 
     private UserResponseDTO toResponse(User user) {
@@ -81,6 +74,21 @@ public class UserController {
         );
 
         return ResponseEntity.ok(toResponse(created));
+    }
+
+    @PutMapping("/me/profile")
+    public ResponseEntity<UserResponseDTO> updateCurrentUserProfile(
+            @RequestBody UserRequestDTO userRequest,
+            Authentication authentication
+    ) {
+        User updated = userService.updateUserPreferencesByClerkId(
+                getClerkId(authentication),
+                userRequest.name(),
+                userRequest.intensityLevel(),
+                userRequest.context()
+        );
+
+        return ResponseEntity.ok(toResponse(updated));
     }
 
     @PutMapping("/{id}")

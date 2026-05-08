@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import { useToast } from "../../../hooks/useToast";
+import { useMyProfile } from "../../../hooks/useMyProfile";
+import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
 
 export default function SettingsModalSheet({
   open,
@@ -9,6 +11,39 @@ export default function SettingsModalSheet({
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
+}) {
+  const { data: user, isSuccess, isLoading } = useMyProfile();
+
+  return (
+    <SettingsModalBody
+      key={`${open}-${user?.name ?? ""}-${user?.intensityLevel ?? 2}-${user?.context ?? ""}`}
+      open={open}
+      setOpen={setOpen}
+      isSuccess={isSuccess}
+      isLoading={isLoading}
+      userName={user?.name ?? ""}
+      intensityLevel={user?.intensityLevel ?? 2}
+      context={user?.context ?? ""}
+    />
+  );
+}
+
+function SettingsModalBody({
+  open,
+  setOpen,
+  isSuccess,
+  isLoading,
+  userName,
+  intensityLevel: initialIntensityLevel,
+  context: initialContext,
+}: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  isSuccess: boolean;
+  isLoading: boolean;
+  userName: string;
+  intensityLevel: number;
+  context: string;
 }) {
   const DEFAULT_HEIGHT = 96;
   const MIN_HEIGHT = 68;
@@ -20,13 +55,10 @@ export default function SettingsModalSheet({
   const startHeight = useRef(DEFAULT_HEIGHT);
   const isDragging = useRef(false);
   const { toast, showToast } = useToast();
-
-  useEffect(() => {
-    if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSheetHeight(DEFAULT_HEIGHT);
-    }
-  }, [open]);
+  const [fullName, setFullName] = useState(userName);
+  const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
+  const [context, setContext] = useState(initialContext);
+  const updateProfile = useUpdateProfile();
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
@@ -107,26 +139,48 @@ export default function SettingsModalSheet({
               <input
                 id="fullName"
                 type="text"
-                placeholder="T.ex. John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 className="mt-3 w-full rounded-xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-[clamp(1.15rem,3vw,1.85rem)] text-[#3f2a7a] outline-none focus:ring-2 focus:ring-[#c8bfeb]"
               />
+              <p className="mt-2 text-sm font-medium text-[#6b59b2]">
+                {isLoading
+                  ? "Hämtar namn från din profil..."
+                  : isSuccess
+                    ? fullName
+                      ? "Namnet är hämtat från Clerk-profilen."
+                      : "Ingen Clerk-namnuppgift fanns, så fältet är tomt."
+                    : ""}
+              </p>
             </div>
           </section>
 
           <section className="mt-8">
-            <IntensitySlider />
+            <IntensitySlider
+              value={intensityLevel}
+              onChange={setIntensityLevel}
+            />
           </section>
 
           <section className="mt-7">
-            <ContextModel />
+            <ContextModel value={context} onChange={setContext} />
           </section>
 
           <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
             <button
               className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
+              disabled={updateProfile.isPending}
               onClick={() => {
-                console.log("saved");
-                showToast("Inställningar sparade ✓");
+                updateProfile.mutate(
+                  {
+                    name: fullName,
+                    intensityLevel,
+                    context,
+                  },
+                  {
+                    onSuccess: () => showToast("Inställningar sparade ✓"),
+                  },
+                );
               }}
             >
               Spara ändringar
