@@ -23,13 +23,13 @@ function stringifyMessage(value: unknown) {
   }
 }
 
-
 export function GeminiLiveTest() {
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [audioCapturing, setAudioCapturing] = useState(false);
   const [toolEvents, setToolEvents] = useState<ToolEvent[]>([]);
   const [endpointTestLoading, setEndpointTestLoading] = useState(false);
-  const [selectedWorkout, setSelectedWorkout] = useState<SelectedWorkout | null>(null);
+  const [selectedWorkout, setSelectedWorkout] =
+    useState<SelectedWorkout | null>(null);
 
   const audioCapturingRef = useRef(false);
   const introStartedRef = useRef(false);
@@ -59,7 +59,10 @@ export function GeminiLiveTest() {
     onMessage: (message) => {
       setLastMessage(stringifyMessage(message));
 
-      if (pendingSelectedWorkoutRef.current && message.serverContent?.turnComplete) {
+      if (
+        pendingSelectedWorkoutRef.current &&
+        message.serverContent?.turnComplete
+      ) {
         geminiDisconnect();
         setAudioCapturing(false);
       }
@@ -91,11 +94,16 @@ export function GeminiLiveTest() {
     }
 
     const responseBody = response.response;
-    if (!responseBody || typeof responseBody !== "object" || !("output" in responseBody)) {
+    if (
+      !responseBody ||
+      typeof responseBody !== "object" ||
+      !("output" in responseBody)
+    ) {
       return null;
     }
 
-    const output = (responseBody as { output?: Record<string, unknown> }).output;
+    const output = (responseBody as { output?: Record<string, unknown> })
+      .output;
     if (!output || typeof output !== "object") {
       return null;
     }
@@ -125,15 +133,19 @@ export function GeminiLiveTest() {
     };
   }
 
-  function addToolEvent(response: Awaited<ReturnType<typeof executeLiveToolCall>>) {
-    setToolEvents((events) => [
-      {
-        id: response.id ?? crypto.randomUUID(),
-        name: response.name ?? "unknown_tool",
-        response: response.response,
-      },
-      ...events,
-    ].slice(0, 8));
+  function addToolEvent(
+    response: Awaited<ReturnType<typeof executeLiveToolCall>>,
+  ) {
+    setToolEvents((events) =>
+      [
+        {
+          id: response.id ?? crypto.randomUUID(),
+          name: response.name ?? "unknown_tool",
+          response: response.response,
+        },
+        ...events,
+      ].slice(0, 8),
+    );
   }
 
   async function handleConnect() {
@@ -211,7 +223,9 @@ export function GeminiLiveTest() {
             Workout Start Intro
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-(--brand-muted)">
-            Låst intro-läge för att välja träningspass. Mic startar ett kort AI-intro, använder fast user {fixedLiveUserId} i dev och stänger sedan ner sig själv efter valt workout.
+            Låst intro-läge för att välja träningspass. Mic startar ett kort
+            AI-intro, använder fast user {fixedLiveUserId} i dev och stänger
+            sedan ner sig själv efter valt workout.
           </p>
         </div>
 
@@ -298,26 +312,36 @@ export function GeminiLiveTest() {
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         <div className="rounded-xl bg-(--brand-soft) p-4">
           <p className="text-sm font-bold text-(--brand-muted)">Token</p>
-          <p className="mt-1 font-bold text-(--brand-ink)">{token ? "Loaded" : "Missing"}</p>
+          <p className="mt-1 font-bold text-(--brand-ink)">
+            {token ? "Loaded" : "Missing"}
+          </p>
         </div>
         <div className="rounded-xl bg-(--brand-soft) p-4">
           <p className="text-sm font-bold text-(--brand-muted)">Dev user</p>
           <p className="mt-1 font-bold text-(--brand-ink)">{fixedLiveUserId}</p>
         </div>
         <div className="rounded-xl bg-(--brand-soft) p-4">
-          <p className="text-sm font-bold text-(--brand-muted)">Audio capture</p>
-          <p className="mt-1 font-bold text-(--brand-ink)">{audioCapturing ? "On" : "Off"}</p>
+          <p className="text-sm font-bold text-(--brand-muted)">
+            Audio capture
+          </p>
+          <p className="mt-1 font-bold text-(--brand-ink)">
+            {audioCapturing ? "On" : "Off"}
+          </p>
         </div>
         <div className="rounded-xl bg-(--brand-soft) p-4">
           <p className="text-sm font-bold text-(--brand-muted)">Valt workout</p>
           <p className="mt-1 font-bold text-(--brand-ink)">
-            {selectedWorkout ? `${selectedWorkout.id} · ${selectedWorkout.name ?? "okänt namn"}` : "Inte valt ännu"}
+            {selectedWorkout
+              ? `${selectedWorkout.id} · ${selectedWorkout.name ?? "okänt namn"}`
+              : "Inte valt ännu"}
           </p>
         </div>
       </div>
 
       <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
-        Flöde: starta mikrofon → AI säger kort hej → hämtar progress för user {fixedLiveUserId} → hämtar workout-katalog → väljer workout → kör get_workout_details → stoppar mic → avslutar Gemini Live.
+        Flöde: starta mikrofon → AI säger kort hej → hämtar progress för user{" "}
+        {fixedLiveUserId} → hämtar workout-katalog → väljer workout → kör
+        get_workout_details → stoppar mic → avslutar Gemini Live.
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -335,8 +359,13 @@ export function GeminiLiveTest() {
               <p className="text-sm text-(--brand-muted)">No tool calls yet.</p>
             ) : (
               toolEvents.map((event) => (
-                <div key={event.id} className="rounded-lg bg-(--brand-soft) p-3">
-                  <p className="text-sm font-bold text-(--brand-primary)">{event.name}</p>
+                <div
+                  key={event.id}
+                  className="rounded-lg bg-(--brand-soft) p-3"
+                >
+                  <p className="text-sm font-bold text-(--brand-primary)">
+                    {event.name}
+                  </p>
                   <pre className="mt-2 whitespace-pre-wrap text-xs text-(--brand-ink-soft)">
                     {JSON.stringify(event.response, null, 2)}
                   </pre>
