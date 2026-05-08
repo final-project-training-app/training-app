@@ -14,6 +14,8 @@ public class User {
     private String password;
     private Integer intensityLevel;
     private String context;
+    @Column(nullable = false, unique = true)
+    private String clerkId;
 
     public Long getId() {
         return id;
