@@ -86,11 +86,6 @@ public class UserController {
         return ResponseEntity.ok(toResponse(created));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUserPreferences(
             @PathVariable Long id,
@@ -105,19 +100,14 @@ public class UserController {
             return ResponseEntity.status(403).build();
         }
 
-        User updated = userService.updateUserPreferences(
-                id,
+        User updated = userService.updateUserPreferencesByClerkId(
+                getClerkId(authentication),
                 userRequest.name(),
                 userRequest.intensityLevel(),
                 userRequest.context()
         );
 
         return ResponseEntity.ok(toResponse(updated));
-    }
-
-    @GetMapping("/{userId}/progress")
-    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId) {
-        return ResponseEntity.ok(activityLogService.getUserProgress(userId));
     }
 
     @GetMapping("/me/progress")
