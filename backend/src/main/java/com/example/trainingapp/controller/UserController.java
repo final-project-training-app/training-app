@@ -113,7 +113,7 @@ public class UserController {
         return ResponseEntity.ok().body(activityLogService.getUserProgress(userId));
     }
 
-    @GetMapping("/me/profile")
+    @GetMapping("/myProfile")
     public ResponseEntity<Map<String, Object>> getCurrentUserProfile(JwtAuthenticationToken token) {
         User currentUser = requireCurrentUser(token);
 
