@@ -53,10 +53,31 @@ public class UserController {
                 .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "User not found"));
     }
 
+    private String resolveDisplayName(Jwt jwt) {
+        String name = jwt.getClaimAsString("name");
+        if (name != null && !name.isBlank()) {
+            return name;
+        }
+
+        String firstName = jwt.getClaimAsString("given_name");
+        String lastName = jwt.getClaimAsString("family_name");
+        if ((firstName != null && !firstName.isBlank()) || (lastName != null && !lastName.isBlank())) {
+            return ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();
+        }
+
+        String email = jwt.getClaimAsString("email");
+        if (email != null && !email.isBlank()) {
+            int atIndex = email.indexOf("@");
+            return atIndex > 0 ? email.substring(0, atIndex) : email;
+        }
+
+        return "User";
+    }
+
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody UserRequestDTO userRequest, JwtAuthenticationToken token) {
+    public ResponseEntity<User> createUser(JwtAuthenticationToken token) {
         Jwt jwt = requireJwt(token);
-        User createdUser = userService.createUser(jwt.getSubject(), userRequest.name());
+        User createdUser = userService.createUser(jwt.getSubject(), resolveDisplayName(jwt));
         return ResponseEntity.ok().body(createdUser);
     }
 
@@ -78,8 +99,7 @@ public class UserController {
         if (!currentUser.getId().equals(id)) {
             return ResponseEntity.status(403).build();
         }
-
-        return ResponseEntity.ok().body(userService.updateUserPreferences(id, userRequest));
+        return ResponseEntity.ok().body(userService.updateUserPreferences(id, userRequest.name(), userRequest.intensityLevel(), userRequest.context()));
     }
 
     @GetMapping("/{userId}/progress")

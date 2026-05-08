@@ -22,8 +22,7 @@ public class UserService {
     }
 
     public User createUser(String clerkId, String name) {
-
-        return userRepository.save(new User(name, STARTING_INTENSITY,"",clerkId));
+        return userRepository.save(new User(name, STARTING_INTENSITY, "", clerkId));
     }
 
     public Optional<User> findByClerkId(String clerkId) {
@@ -35,12 +34,13 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
     }
 
-    public User updateUserPreferences(Long id, User userRequest) {
+    public User updateUserPreferences(Long id, String name, int intensityLevel, String context) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
 
-        existingUser.setIntensityLevel(userRequest.getIntensityLevel());
-        existingUser.setContext(userRequest.getContext());
+        existingUser.setName(name);
+        existingUser.setIntensityLevel(intensityLevel);
+        existingUser.setContext(context);
 
         return userRepository.save(existingUser);
     }
