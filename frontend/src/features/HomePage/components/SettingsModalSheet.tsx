@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import { useToast } from "../../../hooks/useToast";
+import { useMyProfile } from "../../../hooks/useMyProfile";
 
 export default function SettingsModalSheet({
   open,
@@ -20,6 +21,9 @@ export default function SettingsModalSheet({
   const startHeight = useRef(DEFAULT_HEIGHT);
   const isDragging = useRef(false);
   const { toast, showToast } = useToast();
+  const { data: user, isSuccess, isLoading } = useMyProfile();
+
+  const fullName = user?.name ?? "";
 
   useEffect(() => {
     if (open) {
@@ -107,9 +111,20 @@ export default function SettingsModalSheet({
               <input
                 id="fullName"
                 type="text"
-                placeholder="T.ex. John Doe"
+                value={fullName}
+                placeholder=""
                 className="mt-3 w-full rounded-xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-[clamp(1.15rem,3vw,1.85rem)] text-[#3f2a7a] outline-none focus:ring-2 focus:ring-[#c8bfeb]"
+                readOnly
               />
+              <p className="mt-2 text-sm font-medium text-[#6b59b2]">
+                {isLoading
+                  ? "Hämtar namn från din profil..."
+                  : isSuccess
+                    ? fullName
+                      ? "Namnet är hämtat från Clerk-profilen."
+                      : "Ingen Clerk-namnuppgift fanns, så fältet är tomt."
+                    : ""}
+              </p>
             </div>
           </section>
 

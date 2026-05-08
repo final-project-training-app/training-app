@@ -43,7 +43,7 @@ public class UserController {
 
     private String resolveDisplayName(Jwt jwt) {
         // Try common claim keys that Clerk/OpenID might provide for a user's name.
-        String[] claimKeys = new String[]{"name", "full_name", "given_name", "first_name", "preferred_username", "email"};
+        String[] claimKeys = new String[]{"name", "full_name", "given_name", "first_name", "preferred_username"};
         for (String key : claimKeys) {
             Object claimVal = jwt.getClaims().get(key);
             if (claimVal instanceof String) {
@@ -52,8 +52,8 @@ public class UserController {
             }
         }
 
-        // Fallback to subject (Clerk ID) if no name-like claim is present
-        return jwt.getSubject();
+        // If Clerk does not provide a name claim, store an empty string.
+        return "";
     }
 
     private UserResponseDTO toResponse(User user) {
