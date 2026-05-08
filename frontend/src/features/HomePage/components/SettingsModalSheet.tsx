@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
-import { useToast } from "../../../hooks/useToast";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
 
@@ -60,7 +59,6 @@ function SettingsModalBody({
   const startY = useRef(0);
   const startHeight = useRef(DEFAULT_HEIGHT);
   const isDragging = useRef(false);
-  const { toast, showToast } = useToast();
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
@@ -190,11 +188,9 @@ function SettingsModalBody({
                   {
                     onSuccess: () => {
                       setSaveFeedback("Inställningar sparade ✓");
-                      showToast("Inställningar sparade ✓");
                     },
                     onError: () => {
                       setSaveFeedback("Kunde inte spara ändringarna");
-                      showToast("Kunde inte spara ändringarna");
                     },
                   },
                 );
@@ -217,12 +213,6 @@ function SettingsModalBody({
             >
               Avbryt
             </button>
-            {toast && (
-              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 rounded-2xl bg-[#f1ecff] text-[#3f2a7a] px-6 py-3 text-[1.2rem] font-semibold shadow-lg border border-[#ddd2ff]">
-                {" "}
-                {toast}
-              </div>
-            )}
           </section>
         </div>
       </div>

@@ -8,15 +8,12 @@ import { coachCallSessionQueryOptions } from "../session/query";
 import type { CoachCallSession } from "../session/types";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
-import { useCreateCurrentUserProfile } from "../auth/useCreateCurrentUserProfile";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const { isLoaded, isSignedIn } = useAuth();
-
-  useCreateCurrentUserProfile();
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
