@@ -95,6 +95,10 @@ export default function SettingsModalSheet({
             Installningar
           </h1>
 
+          <section className="mt-9">
+            <IntensitySlider />
+          </section>
+
           <section className="mt-8">
             <IntensitySlider />
           </section>
