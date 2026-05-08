@@ -74,7 +74,7 @@ public class UserController {
         return "User";
     }
 
-    @PostMapping
+    @PostMapping(value = {"", "/me/profile"})
     public ResponseEntity<User> createUser(JwtAuthenticationToken token) {
         Jwt jwt = requireJwt(token);
         User createdUser = userService.createUser(jwt.getSubject(), resolveDisplayName(jwt));
@@ -113,7 +113,13 @@ public class UserController {
         return ResponseEntity.ok().body(activityLogService.getUserProgress(userId));
     }
 
-    @GetMapping("/myProfile")
+    @GetMapping("/me/progress")
+    public ResponseEntity<Map<String, Object>> getMyProgress(JwtAuthenticationToken token) {
+        User currentUser = requireCurrentUser(token);
+        return ResponseEntity.ok().body(activityLogService.getUserProgress(currentUser.getId()));
+    }
+
+    @GetMapping("/me/profile")
     public ResponseEntity<Map<String, Object>> getCurrentUserProfile(JwtAuthenticationToken token) {
         User currentUser = requireCurrentUser(token);
 

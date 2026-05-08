@@ -8,11 +8,14 @@ import { coachCallSessionQueryOptions } from "../session/query";
 import type { CoachCallSession } from "../session/types";
 import { Show, SignInButton, SignOutButton } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
+import { useCreateCurrentUserProfile } from "../auth/useCreateCurrentUserProfile";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+
+  useCreateCurrentUserProfile();
 
   useEffect(() => {
     void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
