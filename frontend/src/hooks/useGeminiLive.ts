@@ -9,7 +9,9 @@ import {
 
 const SAMPLE_RATE = 16000;
 const CHUNK_SAMPLES = 2560; // 160 ms @ 16 kHz
+const AI_SAMPLE_RATE = 24000;
 const INTERRUPT_THRESHOLD = 0.25; // RMS required to interrupt Gemini mid-response
+const PLAYBACK_TAIL_MS = 200; // extra gate time after playback ends (speaker reverb)
 
 interface UseGeminiLiveProps {
   token: string;
@@ -47,7 +49,9 @@ export const useGeminiLive = ({
 }: UseGeminiLiveProps) => {
   const [isActive, setIsActive] = useState(false);
   const [currentTurn, setCurrentTurn] = useState<Turn>("idle");
-  const geminiSpeakingRef = useRef(false);
+  const aiAudioCtxRef = useRef<AudioContext | null>(null);
+  const aiPlayheadRef = useRef(0);
+  const playingUntilWallMsRef = useRef(0);
   const sessionRef = useRef<Session | null>(null);
   const tokenRef = useRef(token);
   const onAudioRef = useRef(onAudioData);
@@ -116,12 +120,12 @@ export const useGeminiLive = ({
                 bytes.byteLength,
               );
               onAudioRef.current?.(bytes.buffer);
+              void playAiPcm16(bytes.buffer);
               audioParts++;
             }
 
             if (audioParts > 0) {
               setCurrentTurn("gemini");
-              geminiSpeakingRef.current = true;
             } else if (audioParts === 0 && parts.length > 0) {
               console.log(
                 "[GeminiLive] modelTurn had parts, but no inline audio data",
@@ -130,7 +134,6 @@ export const useGeminiLive = ({
 
             if (message.serverContent?.turnComplete) {
               setCurrentTurn("user");
-              geminiSpeakingRef.current = false;
             }
 
             const text = parts
@@ -170,11 +173,41 @@ export const useGeminiLive = ({
     sessionRef.current = null;
     setIsActive(false);
     setCurrentTurn("idle");
-    geminiSpeakingRef.current = false;
+    aiAudioCtxRef.current?.close();
+    aiAudioCtxRef.current = null;
+    aiPlayheadRef.current = 0;
+    playingUntilWallMsRef.current = 0;
   }
 
   function getSession() {
     return sessionRef.current;
+  }
+
+  async function playAiPcm16(buffer: ArrayBuffer) {
+    if (!aiAudioCtxRef.current) {
+      aiAudioCtxRef.current = new AudioContext({ sampleRate: AI_SAMPLE_RATE });
+    }
+    const ctx = aiAudioCtxRef.current;
+    if (ctx.state === "suspended") await ctx.resume();
+
+    const pcm16 = new Int16Array(buffer);
+    const f32 = new Float32Array(pcm16.length);
+    for (let i = 0; i < pcm16.length; i++) f32[i] = pcm16[i] / 32768;
+
+    const audioBuffer = ctx.createBuffer(1, f32.length, AI_SAMPLE_RATE);
+    audioBuffer.getChannelData(0).set(f32);
+
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuffer;
+    src.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+    const startAt = Math.max(now, aiPlayheadRef.current);
+    src.start(startAt);
+    aiPlayheadRef.current = startAt + audioBuffer.duration;
+
+    const remainingMs = (aiPlayheadRef.current - ctx.currentTime) * 1000;
+    playingUntilWallMsRef.current = Date.now() + remainingMs + PLAYBACK_TAIL_MS;
   }
 
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -280,7 +313,7 @@ export const useGeminiLive = ({
       ) => {
         const { pcm16, rms } = event.data;
 
-        if (geminiSpeakingRef.current && rms < INTERRUPT_THRESHOLD) return;
+        if (Date.now() < playingUntilWallMsRef.current && rms < INTERRUPT_THRESHOLD) return;
 
         const base64 = pcm16ToBase64(pcm16);
 

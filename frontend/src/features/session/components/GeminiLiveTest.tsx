@@ -73,42 +73,11 @@ export default function GeminiLiveTest() {
     }
   }
 
-  const aiAudioCtxRef = useRef<AudioContext | null>(null);
-  const playheadRef = useRef(0);
-
-  const playAiPcm16 = async (buffer: ArrayBuffer) => {
-    const sampleRate = 24000;
-
-    if (!aiAudioCtxRef.current) {
-      aiAudioCtxRef.current = new AudioContext({ sampleRate });
-    }
-    const ctx = aiAudioCtxRef.current;
-    if (ctx.state === "suspended") await ctx.resume();
-
-    const pcm16 = new Int16Array(buffer);
-    const f32 = new Float32Array(pcm16.length);
-    for (let i = 0; i < pcm16.length; i++) f32[i] = pcm16[i] / 32768;
-
-    const audioBuffer = ctx.createBuffer(1, f32.length, sampleRate);
-    audioBuffer.getChannelData(0).set(f32);
-
-    const src = ctx.createBufferSource();
-    src.buffer = audioBuffer;
-    src.connect(ctx.destination);
-
-    const now = ctx.currentTime;
-    const startAt = Math.max(now, playheadRef.current);
-    src.start(startAt);
-    playheadRef.current = startAt + audioBuffer.duration;
-  };
-
   const { geminiConnect, geminiDisconnect, startAudioCapture, stopAudioCapture, endUserTurn, isActive, currentTurn, getSession } =
     useGeminiLive({
       token,
       onAudioData: (data) => {
-        console.log("[AI audio] received bytes:", data.byteLength);
         setTotalAudioBytes((b) => b + (data?.byteLength ?? 0));
-        void playAiPcm16(data);
       },
       onMessage: (msg) => {
         try {
@@ -124,13 +93,6 @@ export default function GeminiLiveTest() {
     if (typeof geminiConnect !== "function") {
       console.error("geminiConnect is not a function:", geminiConnect);
       return;
-    }
-
-    // Reset playhead so buffered audio from a previous session doesn't delay new audio
-    playheadRef.current = 0;
-    if (aiAudioCtxRef.current) {
-      await aiAudioCtxRef.current.close();
-      aiAudioCtxRef.current = null;
     }
 
     // Always fetch a fresh token before each connection and pass it directly
