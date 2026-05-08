@@ -91,7 +91,7 @@ const targets: CheckTarget[] = [
     desk: "AUTH",
     name: "User profile",
     tagline: "Skyddad. 401/403 = vakten gör sitt jobb. Inte nere.",
-    url: "https://backend-training.up.railway.app/api/users/1",
+    url: "https://backend-training.up.railway.app/api/users/2",
     shortPath: "/api/users/:id",
     method: "GET",
     expectedStatuses: [200],
