@@ -1,6 +1,12 @@
-export default async function fetchMyProfile() {
-  const res = await fetch("/api/users/me/profile", {
-    credentials: "include",
+const API_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:8080"
+).replace(/\/$/, "");
+
+export default async function fetchMyProfile(token: string) {
+  const res = await fetch(`${API_URL}/api/users/me/profile`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   if (!res.ok) {

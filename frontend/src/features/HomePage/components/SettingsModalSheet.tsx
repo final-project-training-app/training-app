@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
-import { useToast } from "../../../hooks/useToast";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
+
+const DEFAULT_DISPLAY_NAME = "No name entered";
 
 export default function SettingsModalSheet({
   open,
@@ -12,16 +13,18 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
-  const { data: user, isSuccess, isLoading } = useMyProfile();
+  const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
 
   return (
     <SettingsModalBody
-      key={`${open}-${user?.name ?? ""}-${user?.intensityLevel ?? 2}-${user?.context ?? ""}`}
+      key={open ? "open" : "closed"}
       open={open}
       setOpen={setOpen}
       isSuccess={isSuccess}
       isLoading={isLoading}
-      userName={user?.name ?? ""}
+      isError={isError}
+      errorMessage={error instanceof Error ? error.message : null}
+      userName={user?.name?.trim() ? user.name : DEFAULT_DISPLAY_NAME}
       intensityLevel={user?.intensityLevel ?? 2}
       context={user?.context ?? ""}
     />
@@ -33,6 +36,8 @@ function SettingsModalBody({
   setOpen,
   isSuccess,
   isLoading,
+  isError,
+  errorMessage,
   userName,
   intensityLevel: initialIntensityLevel,
   context: initialContext,
@@ -41,6 +46,8 @@ function SettingsModalBody({
   setOpen: (v: boolean) => void;
   isSuccess: boolean;
   isLoading: boolean;
+  isError: boolean;
+  errorMessage: string | null;
   userName: string;
   intensityLevel: number;
   context: string;
@@ -54,10 +61,10 @@ function SettingsModalBody({
   const startY = useRef(0);
   const startHeight = useRef(DEFAULT_HEIGHT);
   const isDragging = useRef(false);
-  const { toast, showToast } = useToast();
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
+  const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const updateProfile = useUpdateProfile();
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -147,10 +154,12 @@ function SettingsModalBody({
                 {isLoading
                   ? "Hämtar namn från din profil..."
                   : isSuccess
-                    ? fullName
-                      ? "Namnet är hämtat från Clerk-profilen."
-                      : "Ingen Clerk-namnuppgift fanns, så fältet är tomt."
-                    : ""}
+                    ? fullName === DEFAULT_DISPLAY_NAME
+                      ? "Ingen Clerk-namnuppgift hittades. Standardsnamn används."
+                      : "Namnet är hämtat från din profil."
+                    : isError
+                      ? (errorMessage ?? "Kunde inte hämta profilen.")
+                      : ""}
               </p>
             </div>
           </section>
@@ -171,20 +180,32 @@ function SettingsModalBody({
               className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
               disabled={updateProfile.isPending}
               onClick={() => {
+                setSaveFeedback(null);
                 updateProfile.mutate(
                   {
-                    name: fullName,
+                    name: fullName.trim() || DEFAULT_DISPLAY_NAME,
                     intensityLevel,
                     context,
                   },
                   {
-                    onSuccess: () => showToast("Inställningar sparade ✓"),
+                    onSuccess: () => {
+                      setSaveFeedback("Inställningar sparade ✓");
+                    },
+                    onError: () => {
+                      setSaveFeedback("Kunde inte spara ändringarna");
+                    },
                   },
                 );
               }}
             >
-              Spara ändringar
+              {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
             </button>
+
+            {saveFeedback ? (
+              <div className="rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-center text-[1.05rem] font-semibold text-[#3f2a7a] shadow-sm">
+                {saveFeedback}
+              </div>
+            ) : null}
 
             <button
               className="w-full rounded-xl px-4 py-3 text-[clamp(1.24rem,3.5vw,1.95rem)] font-semibold text-[#4d2a7a] transition-all duration-150
@@ -194,12 +215,6 @@ function SettingsModalBody({
             >
               Avbryt
             </button>
-            {toast && (
-              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 rounded-2xl bg-[#f1ecff] text-[#3f2a7a] px-6 py-3 text-[1.2rem] font-semibold shadow-lg border border-[#ddd2ff]">
-                {" "}
-                {toast}
-              </div>
-            )}
           </section>
         </div>
       </div>

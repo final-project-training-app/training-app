@@ -16,9 +16,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.util.Map;
+
+record CreateUserRequest(String displayName) {}
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,6 +28,8 @@ import java.util.Map;
         "https://frontend-training.up.railway.app"
 })
 public class UserController {
+
+    private static final String DEFAULT_DISPLAY_NAME = "No name entered";
 
     private final UserService userService;
     private final ActivityLogService activityLogService;
@@ -43,7 +46,7 @@ public class UserController {
 
     private String resolveDisplayName(Jwt jwt) {
         // Try common claim keys that Clerk/OpenID might provide for a user's name.
-        String[] claimKeys = new String[]{"name", "full_name", "given_name", "first_name", "preferred_username"};
+        String[] claimKeys = new String[]{"name", "full_name", "preferred_username"};
         for (String key : claimKeys) {
             Object claimVal = jwt.getClaims().get(key);
             if (claimVal instanceof String) {
@@ -52,8 +55,25 @@ public class UserController {
             }
         }
 
-        // If Clerk does not provide a name claim, store an empty string.
-        return "";
+        String givenName = jwt.getClaimAsString("given_name");
+        String familyName = jwt.getClaimAsString("family_name");
+        String fullName = String.join(" ",
+                java.util.Arrays.asList(givenName, familyName).stream()
+                        .filter(part -> part != null && !part.isBlank())
+                        .toList()
+        ).trim();
+
+        if (!fullName.isEmpty()) {
+            return fullName;
+        }
+
+        String email = jwt.getClaimAsString("email");
+        if (email != null && !email.isBlank()) {
+            return email.trim();
+        }
+
+        // If Clerk does not provide a name claim, store a readable placeholder.
+        return DEFAULT_DISPLAY_NAME;
     }
 
     private UserResponseDTO toResponse(User user) {
@@ -65,12 +85,18 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDTO> createUser(Authentication authentication) {
+        public ResponseEntity<UserResponseDTO> createUser(
+            @RequestBody(required = false) CreateUserRequest request,
+            Authentication authentication
+        ) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
+        String requestedName = request != null ? request.displayName() : null;
 
         User created = userService.createUser(
                 jwt.getSubject(),
-                resolveDisplayName(jwt)
+            requestedName != null && !requestedName.isBlank()
+                ? requestedName
+                : resolveDisplayName(jwt)
         );
 
         return ResponseEntity.ok(toResponse(created));
@@ -126,9 +152,7 @@ public class UserController {
     @GetMapping("/me/profile")
     public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
 
-        User currentUser = userService.findByClerkId(
-                ((Jwt) authentication.getPrincipal()).getSubject()
-        ).orElseThrow();
+        User currentUser = userService.getByClerkIdOrThrow(getClerkId(authentication));
 
         return ResponseEntity.ok(toResponse(currentUser));
     }
