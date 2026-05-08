@@ -118,11 +118,9 @@ public class UserController {
         User currentUser = requireCurrentUser(token);
 
         return ResponseEntity.ok().body(Map.of(
-                "id", currentUser.getId(),
                 "name", currentUser.getName(),
                 "intensityLevel", currentUser.getIntensityLevel(),
-                "context", currentUser.getContext(),
-                "clerkId", currentUser.getClerkId()
+                "context", currentUser.getContext()
         ));
     }
 }
