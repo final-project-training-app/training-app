@@ -22,7 +22,8 @@ public class UserService {
     }
 
     public User createUser(String clerkId, String name) {
-        return userRepository.save(new User(name, STARTING_INTENSITY, "", clerkId));
+        return userRepository.findByClerkId(clerkId)
+                .orElseGet(() -> userRepository.save(new User(name, STARTING_INTENSITY, "", clerkId)));
     }
 
     public Optional<User> findByClerkId(String clerkId) {
