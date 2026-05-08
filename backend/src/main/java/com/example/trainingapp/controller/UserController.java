@@ -5,6 +5,7 @@ import com.example.trainingapp.entity.User;
 import com.example.trainingapp.service.ActivityLogService;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -27,7 +28,6 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
         "http://localhost:5173",
         "https://frontend-training.up.railway.app"
 })
-//a comment to trigger redeploy
 public class UserController {
 
     private final UserService userService;
@@ -38,32 +38,22 @@ public class UserController {
         this.activityLogService = activityLogService;
     }
 
-    private Jwt requireJwt(JwtAuthenticationToken token) {
-        if (token == null || token.getToken() == null) {
-            throw new ResponseStatusException(UNAUTHORIZED, "Missing Clerk token");
-        }
-
-        return token.getToken();
-    }
-
-    private User requireCurrentUser(JwtAuthenticationToken token) {
-        Jwt jwt = requireJwt(token);
-        String clerkId = jwt.getSubject();
-
-        return userService.findByClerkId(clerkId)
-                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "User not found"));
+    private String getClerkId(Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getSubject();
     }
 
     private String resolveDisplayName(Jwt jwt) {
         String name = jwt.getClaimAsString("name");
-        if (name != null && !name.isBlank()) {
-            return name;
-        }
+        if (name != null && !name.isBlank()) return name;
 
         String firstName = jwt.getClaimAsString("given_name");
         String lastName = jwt.getClaimAsString("family_name");
-        if ((firstName != null && !firstName.isBlank()) || (lastName != null && !lastName.isBlank())) {
-            return ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();
+
+        if ((firstName != null && !firstName.isBlank()) ||
+                (lastName != null && !lastName.isBlank())) {
+            return ((firstName != null ? firstName : "") + " " +
+                    (lastName != null ? lastName : "")).trim();
         }
 
         String email = jwt.getClaimAsString("email");
@@ -75,44 +65,65 @@ public class UserController {
         return "User";
     }
 
-    @PostMapping(value = {"", "/me/profile"})
-    public ResponseEntity<User> createUser(JwtAuthenticationToken token) {
-        Jwt jwt = requireJwt(token);
-        User createdUser = userService.createUser(jwt.getSubject(), resolveDisplayName(jwt));
-        return ResponseEntity.ok().body(createdUser);
+    @PostMapping
+    public ResponseEntity<User> createUser(Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+
+        User createdUser = userService.createUser(
+                jwt.getSubject(),
+                resolveDisplayName(jwt)
+        );
+
+        return ResponseEntity.ok(createdUser);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok().body(userService.getUserById(id));
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUserPreferences(@PathVariable Long id, @RequestBody UserRequestDTO userRequest, JwtAuthenticationToken token) {
-        User currentUser = requireCurrentUser(token);
+    public ResponseEntity<User> updateUserPreferences(
+            @PathVariable Long id,
+            @RequestBody UserRequestDTO userRequest,
+            Authentication authentication
+    ) {
+        User currentUser = userService.findByClerkId(getClerkId(authentication))
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!currentUser.getId().equals(id)) {
             return ResponseEntity.status(403).build();
         }
-        return ResponseEntity.ok().body(userService.updateUserPreferences(id, userRequest.name(), userRequest.intensityLevel(), userRequest.context()));
+
+        return ResponseEntity.ok(
+                userService.updateUserPreferences(
+                        id,
+                        userRequest.name(),
+                        userRequest.intensityLevel(),
+                        userRequest.context()
+                )
+        );
     }
 
     @GetMapping("/{userId}/progress")
     public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId) {
-        return ResponseEntity.ok().body(activityLogService.getUserProgress(userId));
+        return ResponseEntity.ok(activityLogService.getUserProgress(userId));
     }
 
     @GetMapping("/me/progress")
-    public ResponseEntity<Map<String, Object>> getMyProgress(JwtAuthenticationToken token) {
-        User currentUser = requireCurrentUser(token);
-        return ResponseEntity.ok().body(activityLogService.getUserProgress(currentUser.getId()));
+    public ResponseEntity<Map<String, Object>> getMyProgress(Authentication authentication) {
+        User currentUser = userService.findByClerkId(getClerkId(authentication))
+                .orElseThrow();
+
+        return ResponseEntity.ok(activityLogService.getUserProgress(currentUser.getId()));
     }
 
     @GetMapping("/me/profile")
-    public ResponseEntity<Map<String, Object>> getCurrentUserProfile(JwtAuthenticationToken token) {
-        User currentUser = requireCurrentUser(token);
+    public ResponseEntity<Map<String, Object>> getCurrentUserProfile(Authentication authentication) {
+        User currentUser = userService.findByClerkId(getClerkId(authentication))
+                .orElseThrow();
 
-        return ResponseEntity.ok().body(Map.of(
+        return ResponseEntity.ok(Map.of(
                 "name", currentUser.getName(),
                 "intensityLevel", currentUser.getIntensityLevel(),
                 "context", currentUser.getContext()
