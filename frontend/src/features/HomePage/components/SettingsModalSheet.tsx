@@ -16,7 +16,7 @@ export default function SettingsModalSheet({
 
   return (
     <SettingsModalBody
-      key={`${open}-${user?.name ?? ""}-${user?.intensityLevel ?? 2}-${user?.context ?? ""}`}
+      key={open ? "open" : "closed"}
       open={open}
       setOpen={setOpen}
       isSuccess={isSuccess}
@@ -64,6 +64,7 @@ function SettingsModalBody({
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
+  const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const updateProfile = useUpdateProfile();
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -179,6 +180,7 @@ function SettingsModalBody({
               className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
               disabled={updateProfile.isPending}
               onClick={() => {
+                setSaveFeedback(null);
                 updateProfile.mutate(
                   {
                     name: fullName,
@@ -186,14 +188,26 @@ function SettingsModalBody({
                     context,
                   },
                   {
-                    onSuccess: () => showToast("Inställningar sparade ✓"),
-                    onError: () => showToast("Kunde inte spara ändringarna"),
+                    onSuccess: () => {
+                      setSaveFeedback("Inställningar sparade ✓");
+                      showToast("Inställningar sparade ✓");
+                    },
+                    onError: () => {
+                      setSaveFeedback("Kunde inte spara ändringarna");
+                      showToast("Kunde inte spara ändringarna");
+                    },
                   },
                 );
               }}
             >
-              Spara ändringar
+              {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
             </button>
+
+            {saveFeedback ? (
+              <div className="rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-center text-[1.05rem] font-semibold text-[#3f2a7a] shadow-sm">
+                {saveFeedback}
+              </div>
+            ) : null}
 
             <button
               className="w-full rounded-xl px-4 py-3 text-[clamp(1.24rem,3.5vw,1.95rem)] font-semibold text-[#4d2a7a] transition-all duration-150

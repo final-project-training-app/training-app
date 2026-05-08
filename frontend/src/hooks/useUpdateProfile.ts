@@ -43,7 +43,10 @@ export function useUpdateProfile() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["myProfile"], data);
-      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+      queryClient.invalidateQueries({
+        queryKey: ["myProfile"],
+        refetchType: "active",
+      });
     },
   });
 }
