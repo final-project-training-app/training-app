@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -56,5 +58,28 @@ public class WorkoutService {
         }
 
         return workout;
+    }
+
+    public Long recommendWorkout(Map<String, Object> filters) {
+        List<Workout> workouts = workoutRepository.findAll();
+
+        Integer level = filters.get("level") != null
+                ? (Integer) filters.get("level")
+                : null;
+
+        Boolean kneeFriendly = (Boolean) filters.get("kneeFriendly");
+        Boolean lowImpact = (Boolean) filters.get("lowImpact");
+        Boolean seated = (Boolean) filters.get("seated");
+        Boolean beginnerFriendly = (Boolean) filters.get("beginnerFriendly");
+
+        return workouts.stream()
+                .filter(w -> level == null || w.getLevel() <= level)
+                .filter(w -> kneeFriendly == null || kneeFriendly.equals(w.getKneeFriendly()))
+                .filter(w -> lowImpact == null || lowImpact.equals(w.getLowImpact()))
+                .filter(w -> seated == null || seated.equals(w.getSeated()))
+                .filter(w -> beginnerFriendly == null || beginnerFriendly.equals(w.getBeginnerFriendly()))
+                .min(Comparator.comparing(Workout::getLevel))
+                .orElseThrow(() -> new RuntimeException("No matching workout found"))
+                .getId();
     }
 }
