@@ -14,6 +14,17 @@ public class User {
     private String password;
     private Integer intensityLevel;
     private String context;
+    private String clerkId;
+
+    public User() {
+    }
+
+    public User(String name, Integer intensityLevel, String context, String clerkId) {
+        this.name = name;
+        this.intensityLevel = intensityLevel;
+        this.context = context;
+        this.clerkId = clerkId;
+    }
 
     public Long getId() {
         return id;
@@ -61,5 +72,13 @@ public class User {
 
     public void setContext(String context) {
         this.context = context;
+    }
+
+    public String getClerkId() {
+        return clerkId;
+    }
+
+    public void setClerkId(String clerkId) {
+        this.clerkId = clerkId;
     }
 }
