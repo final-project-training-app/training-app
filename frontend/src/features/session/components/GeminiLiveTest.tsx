@@ -1,102 +1,47 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { useGeminiLive } from "../../../hooks/useGeminiLive"; // must be a named import
+import { useState } from "react";
+import { useGeminiLive } from "../../../hooks/useGeminiLive";
+import { useLiveToken } from "../../../hooks/useLiveToken";
 
 // eslint-disable-next-line no-console
 console.log("useGeminiLive import:", typeof useGeminiLive, useGeminiLive);
 
 export default function GeminiLiveTest() {
-  
-  const [token, setToken] = useState("");
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [totalAudioBytes, setTotalAudioBytes] = useState(0);
-  const [tokenLoading, setTokenLoading] = useState(false);
-  const [tokenError, setTokenError] = useState<string | null>(null);
   const [audioCapturing, setAudioCapturing] = useState(false);
 
-  // prevent duplicate requests and allow abort on unmount
-  const inFlightRef = useRef(false);
-  const controllerRef = useRef<AbortController | null>(null);
-  useEffect(() => () => controllerRef.current?.abort(), []);
+  const { token, loadToken, tokenLoading, tokenError } = useLiveToken();
 
-  async function loadToken(): Promise<string | null> {
-    if (inFlightRef.current) return null;
-    inFlightRef.current = true;
-    controllerRef.current = new AbortController();
-    setTokenLoading(true);
-    setTokenError(null);
-
-    try {
-      const res = await fetch("http://localhost:8080/api/live-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uses: 10 }),
-        signal: controllerRef.current.signal,
-      });
-
-      if (!res.ok)
-        throw new Error(
-          `Token request failed: ${res.status} ${res.statusText}`,
-        );
-
-      const contentType = res.headers.get("content-type") ?? "";
-      let tokenValue: string | null = null;
-      if (contentType.includes("application/json")) {
-        interface AuthTokenResponse {
-          name?: string;
-          token?: string;
-          expireTime?: string;
-        }
-        const data = (await res.json()) as AuthTokenResponse;
-        console.log("[Token] full response:", data);
-        if (data.expireTime) {
-          console.log("[Token] expires at:", new Date(data.expireTime).toISOString());
-        }
-        tokenValue = data.token ?? data.name ?? null;
-        if (!tokenValue) throw new Error("Token missing in response");
-      } else {
-        const text = await res.text();
-        if (!text) throw new Error("Empty token response");
-        tokenValue = text.trim();
+  const {
+    geminiConnect,
+    geminiDisconnect,
+    startAudioCapture,
+    stopAudioCapture,
+    endUserTurn,
+    isActive,
+    currentTurn,
+    getSession,
+  } = useGeminiLive({
+    token,
+    onAudioData: (data) => {
+      setTotalAudioBytes((b) => b + (data?.byteLength ?? 0));
+    },
+    onMessage: (msg) => {
+      try {
+        setLastMessage(typeof msg === "string" ? msg : JSON.stringify(msg));
+      } catch {
+        setLastMessage(String(msg));
       }
-      setToken(tokenValue);
-      return tokenValue;
-    } catch (error) {
-      if ((error as Error).name !== "AbortError") {
-        setTokenError((error as Error).message);
-      }
-      return null;
-    } finally {
-      inFlightRef.current = false;
-      controllerRef.current = null;
-      setTokenLoading(false);
-    }
-  }
+    },
+  });
 
-  const { geminiConnect, geminiDisconnect, startAudioCapture, stopAudioCapture, endUserTurn, isActive, currentTurn, getSession } =
-    useGeminiLive({
-      token,
-      onAudioData: (data) => {
-        setTotalAudioBytes((b) => b + (data?.byteLength ?? 0));
-      },
-      onMessage: (msg) => {
-        try {
-          setLastMessage(typeof msg === "string" ? msg : JSON.stringify(msg));
-        } catch {
-          setLastMessage(String(msg));
-        }
-      },
-    });
-
-  // guard against invalid imports/exports and provide diagnostic logging
   const onConnect = async () => {
     if (typeof geminiConnect !== "function") {
       console.error("geminiConnect is not a function:", geminiConnect);
       return;
     }
 
-    // Always fetch a fresh token before each connection and pass it directly
-    // to avoid the useEffect timing gap where tokenRef may still hold the old value
     const freshToken = await loadToken();
     if (!freshToken) return;
 
@@ -140,7 +85,6 @@ export default function GeminiLiveTest() {
       console.error("endUserTurn() failed:", e);
     }
   };
-
 
   const turnLabel =
     currentTurn === "user"
@@ -199,13 +143,7 @@ export default function GeminiLiveTest() {
 
       <div style={{ marginBottom: 8 }}>
         <strong>Token status:</strong>{" "}
-        {tokenLoading
-          ? "Loading..."
-          : tokenError
-            ? "Error"
-            : token
-              ? "Loaded"
-              : "Missing"}
+        {tokenLoading ? "Loading..." : tokenError ? "Error" : token ? "Loaded" : "Missing"}
       </div>
 
       {token && (
@@ -242,7 +180,10 @@ export default function GeminiLiveTest() {
         </button>
 
         <button
-          onClick={() => { geminiDisconnect(); setAudioCapturing(false); }}
+          onClick={() => {
+            geminiDisconnect();
+            setAudioCapturing(false);
+          }}
           disabled={!isActive}
           style={{ marginRight: 8 }}
         >
@@ -281,9 +222,7 @@ export default function GeminiLiveTest() {
         <button
           onClick={() => {
             console.log("session", getSession());
-            alert(
-              getSession() ? "Session present — check console" : "No session",
-            );
+            alert(getSession() ? "Session present — check console" : "No session");
           }}
           style={{ marginLeft: 8 }}
         >
