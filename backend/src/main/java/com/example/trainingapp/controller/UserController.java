@@ -1,6 +1,7 @@
 package com.example.trainingapp.controller;
 
 import com.example.trainingapp.dto.UserRequestDTO;
+import com.example.trainingapp.dto.UserResponseDTO;
 import com.example.trainingapp.entity.User;
 import com.example.trainingapp.service.ActivityLogService;
 import com.example.trainingapp.service.UserService;
@@ -65,16 +66,24 @@ public class UserController {
         return "User";
     }
 
+    private UserResponseDTO toResponse(User user) {
+        return new UserResponseDTO(
+                user.getName(),
+                user.getIntensityLevel(),
+                user.getContext()
+        );
+    }
+
     @PostMapping
-    public ResponseEntity<User> createUser(Authentication authentication) {
+    public ResponseEntity<UserResponseDTO> createUser(Authentication authentication) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
 
-        User createdUser = userService.createUser(
+        User created = userService.createUser(
                 jwt.getSubject(),
                 resolveDisplayName(jwt)
         );
 
-        return ResponseEntity.ok(createdUser);
+        return ResponseEntity.ok(toResponse(created));
     }
 
     @GetMapping("/{id}")
@@ -83,26 +92,27 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUserPreferences(
+    public ResponseEntity<UserResponseDTO> updateUserPreferences(
             @PathVariable Long id,
             @RequestBody UserRequestDTO userRequest,
             Authentication authentication
     ) {
-        User currentUser = userService.findByClerkId(getClerkId(authentication))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = userService.findByClerkId(
+                ((Jwt) authentication.getPrincipal()).getSubject()
+        ).orElseThrow();
 
         if (!currentUser.getId().equals(id)) {
             return ResponseEntity.status(403).build();
         }
 
-        return ResponseEntity.ok(
-                userService.updateUserPreferences(
-                        id,
-                        userRequest.name(),
-                        userRequest.intensityLevel(),
-                        userRequest.context()
-                )
+        User updated = userService.updateUserPreferences(
+                id,
+                userRequest.name(),
+                userRequest.intensityLevel(),
+                userRequest.context()
         );
+
+        return ResponseEntity.ok(toResponse(updated));
     }
 
     @GetMapping("/{userId}/progress")
@@ -119,14 +129,12 @@ public class UserController {
     }
 
     @GetMapping("/me/profile")
-    public ResponseEntity<Map<String, Object>> getCurrentUserProfile(Authentication authentication) {
-        User currentUser = userService.findByClerkId(getClerkId(authentication))
-                .orElseThrow();
+    public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
 
-        return ResponseEntity.ok(Map.of(
-                "name", currentUser.getName(),
-                "intensityLevel", currentUser.getIntensityLevel(),
-                "context", currentUser.getContext()
-        ));
+        User currentUser = userService.findByClerkId(
+                ((Jwt) authentication.getPrincipal()).getSubject()
+        ).orElseThrow();
+
+        return ResponseEntity.ok(toResponse(currentUser));
     }
 }
