@@ -1,7 +1,10 @@
 import { Settings } from "lucide-react";
-import { useState } from "react";
+type IntensitySliderProps = {
+  value: number;
+  onChange: (value: number) => void;
+};
 
-const IntensitySlider = () => {
+const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
   const steps = [
     "Mycket lätt",
     "Lätt",
@@ -9,8 +12,6 @@ const IntensitySlider = () => {
     "Intensiv",
     "Mycket intensiv",
   ];
-
-  const [value, setValue] = useState(2);
   const progress = (value / (steps.length - 1)) * 100;
 
   return (
@@ -40,7 +41,7 @@ const IntensitySlider = () => {
             min="0"
             max={steps.length - 1}
             value={value}
-            onChange={(e) => setValue(parseInt(e.target.value, 10))}
+            onChange={(e) => onChange(parseInt(e.target.value, 10))}
             className="absolute inset-x-0 top-0 z-20 h-10 w-full cursor-pointer opacity-0"
             aria-label="Valj intensitet"
           />
@@ -50,7 +51,7 @@ const IntensitySlider = () => {
               <button
                 key={label}
                 type="button"
-                onClick={() => setValue(index)}
+                onClick={() => onChange(index)}
                 className="-mx-2 px-2"
                 aria-label={`Valj ${label}`}
               >

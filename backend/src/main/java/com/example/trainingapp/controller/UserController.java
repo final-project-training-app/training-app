@@ -76,6 +76,21 @@ public class UserController {
         return ResponseEntity.ok(toResponse(created));
     }
 
+    @PutMapping("/me/profile")
+    public ResponseEntity<UserResponseDTO> updateCurrentUserProfile(
+            @RequestBody UserRequestDTO userRequest,
+            Authentication authentication
+    ) {
+        User updated = userService.updateUserPreferencesByClerkId(
+                getClerkId(authentication),
+                userRequest.name(),
+                userRequest.intensityLevel(),
+                userRequest.context()
+        );
+
+        return ResponseEntity.ok(toResponse(updated));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUserPreferences(
             @PathVariable Long id,
