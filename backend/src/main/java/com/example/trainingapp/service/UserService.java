@@ -17,8 +17,9 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User createUser(UserRequestDTO user) {
-        return userRepository.save(user);
+    public User createUser(String clerkId, String name) {
+
+        return userRepository.save(new User(clerkId, name));
     }
 
     public User getUserById(Long id) {

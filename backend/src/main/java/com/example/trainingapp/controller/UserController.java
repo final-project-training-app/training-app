@@ -39,15 +39,13 @@ public class UserController {
         if (user.token() == null) {
             return ResponseEntity.status(401).build();
         }
-
         Jwt jwt = (Jwt) user.token().getPrincipal();
 
         String clerkId = jwt.getSubject();
         String name = jwt.getClaimAsString("name");
 
         User createdUser = userService.createUser(clerkId, name);
-
-        return ResponseEntity.ok(createdUser);
+        return ResponseEntity.ok().body(createdUser);
     }
 
     @GetMapping("/{id}")
@@ -70,15 +68,15 @@ public class UserController {
         if (token == null) {
             return ResponseEntity.status(401).build();
         }
-        
+
         Jwt jwt = (Jwt) token.getPrincipal();
         String userId = jwt.getClaimAsString("sub");
         String email = jwt.getClaimAsString("email");
-        
+
         return ResponseEntity.ok().body(Map.of(
-            "userId", userId,
-            "email", email,
-            "claims", jwt.getClaims()
+                "userId", userId,
+                "email", email,
+                "claims", jwt.getClaims()
         ));
     }
 }
