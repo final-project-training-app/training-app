@@ -18,9 +18,11 @@ public class User {
     public User() {
     }
 
-    public User(String clerkId, String name) {
-        this.clerkId = clerkId;
+    public User(String name, Integer intensityLevel, String context, String clerkId) {
         this.name = name;
+        this.intensityLevel = intensityLevel;
+        this.context = context;
+        this.clerkId = clerkId;
     }
 
     public Long getId() {
