@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.util.Map;
 
@@ -153,9 +152,7 @@ public class UserController {
     @GetMapping("/me/profile")
     public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
 
-        User currentUser = userService.findByClerkId(
-                ((Jwt) authentication.getPrincipal()).getSubject()
-        ).orElseThrow();
+        User currentUser = userService.getByClerkIdOrThrow(getClerkId(authentication));
 
         return ResponseEntity.ok(toResponse(currentUser));
     }

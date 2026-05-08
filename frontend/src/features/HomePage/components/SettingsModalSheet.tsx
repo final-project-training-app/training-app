@@ -4,6 +4,8 @@ import ContextModel from "./ContextModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
 
+const DEFAULT_DISPLAY_NAME = "No name entered";
+
 export default function SettingsModalSheet({
   open,
   setOpen,
@@ -22,7 +24,7 @@ export default function SettingsModalSheet({
       isLoading={isLoading}
       isError={isError}
       errorMessage={error instanceof Error ? error.message : null}
-      userName={user?.name ?? ""}
+      userName={user?.name?.trim() ? user.name : DEFAULT_DISPLAY_NAME}
       intensityLevel={user?.intensityLevel ?? 2}
       context={user?.context ?? ""}
     />
@@ -152,9 +154,9 @@ function SettingsModalBody({
                 {isLoading
                   ? "Hämtar namn från din profil..."
                   : isSuccess
-                    ? fullName
-                      ? "Namnet är hämtat från Clerk-profilen."
-                      : "Ingen Clerk-namnuppgift fanns, så fältet är tomt."
+                    ? fullName === DEFAULT_DISPLAY_NAME
+                      ? "Ingen Clerk-namnuppgift hittades. Standardsnamn används."
+                      : "Namnet är hämtat från din profil."
                     : isError
                       ? (errorMessage ?? "Kunde inte hämta profilen.")
                       : ""}
@@ -181,7 +183,7 @@ function SettingsModalBody({
                 setSaveFeedback(null);
                 updateProfile.mutate(
                   {
-                    name: fullName,
+                    name: fullName.trim() || DEFAULT_DISPLAY_NAME,
                     intensityLevel,
                     context,
                   },

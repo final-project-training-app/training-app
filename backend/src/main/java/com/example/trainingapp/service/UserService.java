@@ -21,14 +21,31 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User createUser(String clerkId, String name) {
-        String displayName = (name == null || name.isBlank())
+    private String sanitizeDisplayName(String name) {
+        return (name == null || name.isBlank())
                 ? DEFAULT_DISPLAY_NAME
                 : name.trim();
+    }
+
+    private User normalizeDisplayNameIfMissing(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(DEFAULT_DISPLAY_NAME);
+            return userRepository.save(user);
+        }
+
+        return user;
+    }
+
+    public User createUser(String clerkId, String name) {
+        String displayName = sanitizeDisplayName(name);
+        boolean hasRealDisplayName = !DEFAULT_DISPLAY_NAME.equals(displayName);
 
         return userRepository.findByClerkId(clerkId)
                 .map(existingUser -> {
-                    if (existingUser.getName() == null || existingUser.getName().isBlank()) {
+                    boolean missingName = existingUser.getName() == null || existingUser.getName().isBlank();
+                    boolean hasPlaceholder = DEFAULT_DISPLAY_NAME.equals(existingUser.getName());
+
+                    if (missingName || (hasPlaceholder && hasRealDisplayName)) {
                         existingUser.setName(displayName);
                         return userRepository.save(existingUser);
                     }
@@ -46,6 +63,7 @@ public class UserService {
 
     public User getByClerkIdOrThrow(String clerkId) {
         return userRepository.findByClerkId(clerkId)
+            .map(this::normalizeDisplayNameIfMissing)
                 .orElseThrow(() ->
                         new ResponseStatusException(NOT_FOUND, "User not found")
                 );
@@ -59,7 +77,7 @@ public class UserService {
     ) {
         User user = getByClerkIdOrThrow(clerkId);
 
-        user.setName(name);
+        user.setName(sanitizeDisplayName(name));
         user.setIntensityLevel(intensityLevel);
         user.setContext(context);
 
