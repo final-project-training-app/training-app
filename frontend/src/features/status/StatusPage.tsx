@@ -122,7 +122,11 @@ async function checkTarget(target: CheckTarget): Promise<CheckResult> {
     const latencyMs = Math.round(performance.now() - startedAt);
 
     if (target.fetchMode === "no-cors") {
-      return { status: "online", checkedAt: new Date().toISOString(), latencyMs };
+      return {
+        status: "online",
+        checkedAt: new Date().toISOString(),
+        latencyMs,
+      };
     }
 
     if (target.protectedStatuses?.includes(response.status)) {
@@ -201,21 +205,28 @@ function getStatusStyle(status: RuntimeStatus) {
 
 function getDeskStyle(desk: Desk) {
   switch (desk) {
-    case "FE":   return "border-sky-300/40 bg-sky-300/10 text-sky-100";
-    case "API":  return "border-emerald-300/40 bg-emerald-300/10 text-emerald-100";
-    case "TOOL": return "border-fuchsia-300/40 bg-fuchsia-300/10 text-fuchsia-100";
-    case "AUTH": return "border-amber-300/40 bg-amber-300/10 text-amber-100";
+    case "FE":
+      return "border-sky-300/40 bg-sky-300/10 text-sky-100";
+    case "API":
+      return "border-emerald-300/40 bg-emerald-300/10 text-emerald-100";
+    case "TOOL":
+      return "border-fuchsia-300/40 bg-fuchsia-300/10 text-fuchsia-100";
+    case "AUTH":
+      return "border-amber-300/40 bg-amber-300/10 text-amber-100";
   }
 }
 
 function deltaForResult(result: CheckResult): { label: string; tone: string } {
-  if (result.status === "offline")  return { label: "-99.9%", tone: "text-red-300" };
-  if (result.status === "checking") return { label: "...", tone: "text-amber-200" };
+  if (result.status === "offline")
+    return { label: "-99.9%", tone: "text-red-300" };
+  if (result.status === "checking")
+    return { label: "...", tone: "text-amber-200" };
 
   const latency = result.latencyMs ?? 0;
   // Lägre latency = större inbillad vinst. Ren kontorshumor.
   const num = Math.max(-4, 12 - latency / 80);
-  if (num >= 0) return { label: `+${num.toFixed(2)}%`, tone: "text-emerald-300" };
+  if (num >= 0)
+    return { label: `+${num.toFixed(2)}%`, tone: "text-emerald-300" };
   return { label: `${num.toFixed(2)}%`, tone: "text-red-300" };
 }
 
@@ -242,8 +253,8 @@ const SCAN_QUIPS = [
 ];
 
 export function StatusPage() {
-  const [results, setResults] = useState<Record<string, CheckResult>>(
-    () => getInitialResults(),
+  const [results, setResults] = useState<Record<string, CheckResult>>(() =>
+    getInitialResults(),
   );
   const [now, setNow] = useState(() => new Date());
   const seenIdsRef = useRef<Set<string>>(new Set());
@@ -278,7 +289,10 @@ export function StatusPage() {
     }
 
     void runChecks();
-    const intervalId = window.setInterval(() => void runChecks(), REFRESH_INTERVAL_MS);
+    const intervalId = window.setInterval(
+      () => void runChecks(),
+      REFRESH_INTERVAL_MS,
+    );
     return () => {
       isCancelled = true;
       window.clearInterval(intervalId);
@@ -315,10 +329,14 @@ export function StatusPage() {
   const headline = isDown
     ? DOWN_QUIPS[Math.floor(now.getSeconds() / 15) % DOWN_QUIPS.length]
     : isScanning
-    ? SCAN_QUIPS[quipIndex % SCAN_QUIPS.length]
-    : HEALTHY_QUIPS[quipIndex % HEALTHY_QUIPS.length];
+      ? SCAN_QUIPS[quipIndex % SCAN_QUIPS.length]
+      : HEALTHY_QUIPS[quipIndex % HEALTHY_QUIPS.length];
 
-  const headlineTone = isDown ? "text-red-200" : isScanning ? "text-amber-200" : "text-emerald-200";
+  const headlineTone = isDown
+    ? "text-red-200"
+    : isScanning
+      ? "text-amber-200"
+      : "text-emerald-200";
 
   return (
     <main className="min-h-dvh bg-[#05070d] text-white">
@@ -364,10 +382,15 @@ export function StatusPage() {
         <div className="ticker-track flex w-max gap-10 whitespace-nowrap py-3 font-mono text-sm font-bold uppercase tracking-[0.18em]">
           {[...targets, ...targets].map((target, idx) => {
             const result = results[target.id];
-            const style  = getStatusStyle(result?.status ?? "checking");
-            const delta  = result ? deltaForResult(result) : { label: "...", tone: "text-amber-200" };
+            const style = getStatusStyle(result?.status ?? "checking");
+            const delta = result
+              ? deltaForResult(result)
+              : { label: "...", tone: "text-amber-200" };
             return (
-              <span key={`${target.id}-${idx}`} className="flex items-center gap-3 text-slate-300">
+              <span
+                key={`${target.id}-${idx}`}
+                className="flex items-center gap-3 text-slate-300"
+              >
                 <span className="text-slate-600">●</span>
                 <span className="text-white">{target.ticker}</span>
                 <span className={style.text}>{style.label}</span>
@@ -379,14 +402,15 @@ export function StatusPage() {
       </div>
 
       <section className="mx-auto flex max-w-400 flex-col gap-6 px-8 py-6">
-
         {/* HEADER */}
         <header className="grid gap-5 lg:grid-cols-[1.4fr_1fr] lg:items-end">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.4em] text-emerald-300">
               Training App :: Ops Ticker
             </p>
-            <h1 className={`mt-3 font-mono text-6xl font-black uppercase tracking-tight md:text-7xl ${headlineTone} ${isDown ? "alarm-pulse" : ""}`}>
+            <h1
+              className={`mt-3 font-mono text-6xl font-black uppercase tracking-tight md:text-7xl ${headlineTone} ${isDown ? "alarm-pulse" : ""}`}
+            >
               {headline}
             </h1>
           </div>
@@ -395,10 +419,24 @@ export function StatusPage() {
             <Stat
               label="OPS"
               value={indexLabel}
-              tone={isDown ? "text-red-200" : indexPct >= 0 ? "text-emerald-200" : "text-red-200"}
+              tone={
+                isDown
+                  ? "text-red-200"
+                  : indexPct >= 0
+                    ? "text-emerald-200"
+                    : "text-red-200"
+              }
             />
-            <Stat label="LIVE"  value={`${healthyCount}/${pingedCount}`} tone="text-white" />
-            <Stat label="AKUT"  value={String(tally.offline)} tone={isDown ? "text-red-200 alarm-pulse" : "text-slate-500"} />
+            <Stat
+              label="LIVE"
+              value={`${healthyCount}/${pingedCount}`}
+              tone="text-white"
+            />
+            <Stat
+              label="AKUT"
+              value={String(tally.offline)}
+              tone={isDown ? "text-red-200 alarm-pulse" : "text-slate-500"}
+            />
             <Stat label="KLOCKA" value={formatTime(now)} tone="text-white" />
           </div>
         </header>
@@ -410,14 +448,14 @@ export function StatusPage() {
               ⚠ AKUT :: AKUT :: AKUT ⚠
             </p>
             <p className="mt-1 font-mono text-2xl font-black uppercase tracking-widest text-white">
-              {tally.offline} endpoint{tally.offline === 1 ? "" : "s"} nere — någon måste resa sig.
+              {tally.offline} endpoint{tally.offline === 1 ? "" : "s"} nere —
+              någon måste resa sig.
             </p>
           </div>
         )}
 
         {/* MAIN TABLE */}
         <div className="scan-overlay relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_0_80px_rgba(16,185,129,0.06)]">
-
           {/* Column headers */}
           <div className="grid grid-cols-[130px_80px_60px_minmax(0,1.6fr)_130px_110px_130px_minmax(0,1.4fr)] items-center gap-4 border-b border-white/10 bg-white/5 px-6 py-3 font-mono text-[11px] font-black uppercase tracking-[0.26em] text-slate-500">
             <span>Ticker</span>
@@ -437,8 +475,8 @@ export function StatusPage() {
                 status: "checking" as RuntimeStatus,
                 checkedAt: new Date().toISOString(),
               };
-              const style   = getStatusStyle(result.status);
-              const delta   = deltaForResult(result);
+              const style = getStatusStyle(result.status);
+              const delta = deltaForResult(result);
               const isFresh = freshIds.has(target.id);
 
               return (
@@ -449,21 +487,27 @@ export function StatusPage() {
                     "items-center gap-4 border-b border-white/5 px-6 py-4 font-mono text-base",
                     "transition-colors duration-500",
                     isFresh ? "fresh-row" : "",
-                    result.status === "offline" ? "bg-red-500/10" : "hover:bg-white/2",
+                    result.status === "offline"
+                      ? "bg-red-500/10"
+                      : "hover:bg-white/2",
                   ]
                     .filter(Boolean)
                     .join(" ")}
                 >
                   {/* Ticker + dot */}
                   <div className="flex items-center gap-2.5">
-                    <span className={`h-2.5 w-2.5 flex-none rounded-full ${style.dot}`} />
+                    <span
+                      className={`h-2.5 w-2.5 flex-none rounded-full ${style.dot}`}
+                    />
                     <span className="text-base font-black tracking-widest text-white">
                       {target.ticker}
                     </span>
                   </div>
 
                   {/* Desk badge */}
-                  <span className={`inline-flex justify-center rounded-md border px-2 py-1 text-[11px] font-black uppercase tracking-[0.18em] ${getDeskStyle(target.desk)}`}>
+                  <span
+                    className={`inline-flex justify-center rounded-md border px-2 py-1 text-[11px] font-black uppercase tracking-[0.18em] ${getDeskStyle(target.desk)}`}
+                  >
                     {target.desk}
                   </span>
 
@@ -474,13 +518,19 @@ export function StatusPage() {
 
                   {/* Endpoint short path + name */}
                   <div className="min-w-0">
-                    <p className="truncate font-bold text-white">{target.shortPath}</p>
-                    <p className="truncate text-xs font-sans font-medium text-slate-500">{target.name}</p>
+                    <p className="truncate font-bold text-white">
+                      {target.shortPath}
+                    </p>
+                    <p className="truncate text-xs font-sans font-medium text-slate-500">
+                      {target.name}
+                    </p>
                   </div>
 
                   {/* Status chip + code */}
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.18em] ${style.chip} ${result.status === "offline" ? "alarm-pulse" : ""}`}>
+                    <span
+                      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.18em] ${style.chip} ${result.status === "offline" ? "alarm-pulse" : ""}`}
+                    >
                       {style.label}
                     </span>
                     {result.statusCode != null && (
@@ -491,12 +541,16 @@ export function StatusPage() {
                   </div>
 
                   {/* Latency */}
-                  <span className={`text-right font-bold tabular-nums ${style.text}`}>
+                  <span
+                    className={`text-right font-bold tabular-nums ${style.text}`}
+                  >
                     {result.latencyMs != null ? `${result.latencyMs} ms` : "—"}
                   </span>
 
                   {/* Delta */}
-                  <span className={`text-right text-lg font-black tabular-nums ${delta.tone}`}>
+                  <span
+                    className={`text-right text-lg font-black tabular-nums ${delta.tone}`}
+                  >
                     {delta.label}
                   </span>
 
@@ -513,24 +567,31 @@ export function StatusPage() {
         {/* FOOTER */}
         <footer className="flex flex-col gap-2 border-t border-white/10 pt-4 font-mono text-[11px] font-black uppercase tracking-[0.28em] text-slate-600 md:flex-row md:items-center md:justify-between">
           <p>
-            Auto-refresh var 30:e sek
-            &nbsp;//&nbsp;
-            Skyddade endpoints (401/403) räknas som friska
-            &nbsp;//&nbsp;
-            Ny endpoint? Lägg till i targets-arrayen — dyker upp nästa tick
+            Auto-refresh var 30:e sek &nbsp;//&nbsp; Skyddade endpoints
+            (401/403) räknas som friska &nbsp;//&nbsp; Ny endpoint? Lägg till i
+            targets-arrayen — dyker upp nästa tick
           </p>
           <p>Senaste tick: {formatTime(now)}</p>
         </footer>
-
       </section>
     </main>
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: string;
+}) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">{label}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+        {label}
+      </p>
       <p className={`mt-1 text-2xl font-black tabular-nums ${tone}`}>{value}</p>
     </div>
   );
