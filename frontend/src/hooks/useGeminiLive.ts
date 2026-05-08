@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  type FunctionCall,
+  type FunctionResponse,
   GoogleGenAI,
   MediaResolution,
   Modality,
   type LiveServerMessage,
   type Session,
+  type ToolListUnion,
 } from "@google/genai";
 
 const SAMPLE_RATE = 16000;
@@ -12,11 +15,15 @@ const CHUNK_SAMPLES = 2560; // 160 ms @ 16 kHz
 const AI_SAMPLE_RATE = 24000;
 const INTERRUPT_THRESHOLD = 0.25; // RMS required to interrupt Gemini mid-response
 const PLAYBACK_TAIL_MS = 200; // extra gate time after playback ends (speaker reverb)
+const LIVE_MODEL = "gemini-3.1-flash-live-preview";
 
 interface UseGeminiLiveProps {
   token: string;
+  tools?: ToolListUnion;
+  systemInstruction?: string;
   onAudioData?: (data: ArrayBuffer) => void;
   onMessage?: (message: LiveServerMessage) => void;
+  onToolCall?: (functionCall: FunctionCall) => Promise<FunctionResponse>;
 }
 
 interface DebugStats {
@@ -44,31 +51,80 @@ export type Turn = "user" | "gemini" | "idle";
 
 export const useGeminiLive = ({
   token,
+  tools,
+  systemInstruction,
   onAudioData,
   onMessage,
+  onToolCall,
 }: UseGeminiLiveProps) => {
   const [isActive, setIsActive] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [currentTurn, setCurrentTurn] = useState<Turn>("idle");
   const aiAudioCtxRef = useRef<AudioContext | null>(null);
   const aiPlayheadRef = useRef(0);
   const playingUntilWallMsRef = useRef(0);
   const sessionRef = useRef<Session | null>(null);
   const tokenRef = useRef(token);
+  const toolsRef = useRef(tools);
+  const systemInstructionRef = useRef(systemInstruction);
   const onAudioRef = useRef(onAudioData);
   const onMessageRef = useRef(onMessage);
+  const onToolCallRef = useRef(onToolCall);
 
   useEffect(() => {
     tokenRef.current = token;
+    toolsRef.current = tools;
+    systemInstructionRef.current = systemInstruction;
     onAudioRef.current = onAudioData;
     onMessageRef.current = onMessage;
-  }, [token, onAudioData, onMessage]);
+    onToolCallRef.current = onToolCall;
+  }, [token, tools, systemInstruction, onAudioData, onMessage, onToolCall]);
+
+  async function handleToolCalls(functionCalls: FunctionCall[]) {
+    const functionResponses = await Promise.all(
+      functionCalls.map(async (functionCall) => {
+        const name = functionCall.name ?? "unknown_tool";
+
+        try {
+          if (!onToolCallRef.current) {
+            return {
+              id: functionCall.id,
+              name,
+              response: {
+                error: `No frontend handler configured for live tool: ${name}`,
+              },
+            } satisfies FunctionResponse;
+          }
+
+          return await onToolCallRef.current(functionCall);
+        } catch (error) {
+          return {
+            id: functionCall.id,
+            name,
+            response: {
+              error:
+                error instanceof Error ? error.message : `Live tool failed: ${name}`,
+            },
+          } satisfies FunctionResponse;
+        }
+      }),
+    );
+
+    try {
+      sessionRef.current?.sendToolResponse({ functionResponses });
+    } catch (error) {
+      console.error("[GeminiLive] Failed to send tool response:", error);
+    }
+  }
 
   async function geminiConnect(overrideToken?: string) {
     console.log("[GeminiLive] connect pressed");
+    setConnectionError(null);
 
     const activeToken = overrideToken ?? tokenRef.current;
     if (!activeToken) {
       console.error("[GeminiLive] missing token");
+      setConnectionError("Live token saknas.");
       return;
     }
     // Keep ref in sync if an override was supplied before the useEffect fires
@@ -86,13 +142,17 @@ export const useGeminiLive = ({
       });
 
       const session = await ai.live.connect({
-        model: "models/gemini-3.1-flash-live-preview",
+        model: LIVE_MODEL,
         config: {
           responseModalities: [Modality.AUDIO],
           mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
+          tools: toolsRef.current,
+          systemInstruction: systemInstructionRef.current
+            ? { parts: [{ text: systemInstructionRef.current }] }
+            : undefined,
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: "Zephyr" },
+              prebuiltVoiceConfig: { voiceName: "Kore" },
             },
           },
         },
@@ -104,6 +164,11 @@ export const useGeminiLive = ({
           onmessage: (message: LiveServerMessage) => {
             console.log("[GeminiLive] message:", message);
             onMessageRef.current?.(message);
+
+            const functionCalls = message.toolCall?.functionCalls ?? [];
+            if (functionCalls.length > 0) {
+              void handleToolCalls(functionCalls);
+            }
 
             const parts = message.serverContent?.modelTurn?.parts ?? [];
             let audioParts = 0;
@@ -144,6 +209,7 @@ export const useGeminiLive = ({
           },
           onerror: (e: ErrorEvent) => {
             console.error("[GeminiLive] error:", e.message);
+            setConnectionError(e.message || "Gemini Live websocket error.");
           },
           onclose: (e: CloseEvent) => {
             console.log(
@@ -154,6 +220,11 @@ export const useGeminiLive = ({
             );
             setIsActive(false);
             sessionRef.current = null;
+            if (e.code !== 1000) {
+              setConnectionError(
+                e.reason || `Gemini Live closed with code ${e.code}.`,
+              );
+            }
           },
         },
       });
@@ -163,15 +234,21 @@ export const useGeminiLive = ({
     } catch (error) {
       console.error("[GeminiLive] Failed to connect:", error);
       setIsActive(false);
+      setConnectionError(
+        error instanceof Error ? error.message : "Gemini Live connect failed.",
+      );
     }
   }
 
   function geminiDisconnect() {
     console.log("[GeminiLive] disconnect pressed");
-    stopAudioCapture();
+    if (isCapturingRef.current) {
+      stopAudioCapture();
+    }
     sessionRef.current?.close();
     sessionRef.current = null;
     setIsActive(false);
+    setConnectionError(null);
     setCurrentTurn("idle");
     aiAudioCtxRef.current?.close();
     aiAudioCtxRef.current = null;
@@ -234,7 +311,7 @@ export const useGeminiLive = ({
       console.warn(
         "[GeminiLive] startAudioCapture() called while already capturing — ignored",
       );
-      return;
+      return true;
     }
 
     try {
@@ -313,7 +390,11 @@ export const useGeminiLive = ({
       ) => {
         const { pcm16, rms } = event.data;
 
-        if (Date.now() < playingUntilWallMsRef.current && rms < INTERRUPT_THRESHOLD) return;
+        if (
+          Date.now() < playingUntilWallMsRef.current &&
+          rms < INTERRUPT_THRESHOLD
+        )
+          return;
 
         const base64 = pcm16ToBase64(pcm16);
 
@@ -353,8 +434,15 @@ export const useGeminiLive = ({
         `[GeminiLive] audio capture started — mono PCM16 @ ${SAMPLE_RATE} Hz, ` +
           `chunk ${CHUNK_SAMPLES} samples / ${((CHUNK_SAMPLES / SAMPLE_RATE) * 1000).toFixed(0)} ms`,
       );
+      return true;
     } catch (error) {
       console.error("[GeminiLive] audio capture setup failed:", error);
+      setConnectionError(
+        error instanceof Error
+          ? error.message
+          : "Kunde inte starta mikrofonen.",
+      );
+      return false;
     }
   }
 
@@ -408,7 +496,9 @@ export const useGeminiLive = ({
 
   useEffect(() => {
     return () => {
-      stopAudioCapture();
+      if (isCapturingRef.current) {
+        stopAudioCapture();
+      }
       sessionRef.current?.close();
       sessionRef.current = null;
     };
@@ -421,6 +511,7 @@ export const useGeminiLive = ({
     stopAudioCapture,
     endUserTurn,
     isActive,
+    connectionError,
     currentTurn,
     getSession,
   };

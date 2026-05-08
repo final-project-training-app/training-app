@@ -1,10 +1,15 @@
 package com.example.trainingapp.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.trainingapp.entity.Workout;
 import com.example.trainingapp.service.WorkoutService;
@@ -41,14 +46,5 @@ public class WorkoutController {
     @PostMapping("/{id}/start")
     public ResponseEntity<Workout> startWorkout(@PathVariable Long id, @RequestParam(required = false) Long userId) {
         return ResponseEntity.ok().body(workoutService.startWorkout(id, userId));
-    }
-
-    @PostMapping("/recommendation")
-    public ResponseEntity<Map<String, Object>> recommendWorkout(@RequestBody Map<String, Object> filters) {
-        Long recommendedWorkoutId = workoutService.recommendWorkout(filters);
-
-        return ResponseEntity.ok(Map.of(
-                "recommendedWorkoutId", recommendedWorkoutId
-        ));
     }
 }

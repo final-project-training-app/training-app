@@ -1,6 +1,7 @@
 package com.example.trainingapp.dto;
 
-public record UserResponseDTO(String name,
-                              Integer intensityLevel,
-                              String context) {
-}
+public record UserResponseDTO(
+    String name,
+    int intensityLevel,
+    String context
+) {}

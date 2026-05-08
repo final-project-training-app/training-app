@@ -12,7 +12,7 @@ public class User {
     private String name;
     private Integer intensityLevel;
     private String context;
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String clerkId;
 
     public User() {
@@ -61,4 +61,7 @@ public class User {
         return clerkId;
     }
 
+    public void setClerkId(String clerkId) {
+        this.clerkId = clerkId;
+    }
 }

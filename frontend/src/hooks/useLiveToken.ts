@@ -6,6 +6,10 @@ interface AuthTokenResponse {
   expireTime?: string;
 }
 
+const API_URL = (
+  import.meta.env.VITE_API_URL ?? "https://backend-training.up.railway.app"
+).replace(/\/$/, "");
+
 export function useLiveToken() {
   const [token, setToken] = useState("");
   const [tokenLoading, setTokenLoading] = useState(false);
@@ -27,7 +31,7 @@ export function useLiveToken() {
     setTokenError(null);
 
     try {
-      const res = await fetch("http://localhost:8080/api/live-token", {
+      const res = await fetch(`${API_URL}/api/live-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uses: 10 }),
