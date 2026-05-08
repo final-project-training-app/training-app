@@ -20,9 +20,10 @@ public class SecurityConfig {
                 //.requestMatchers("/api/users/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwt -> {})
-            );
+            // Development convenience: permit all requests so frontend/ETeam can iterate
+            // without authentication while we continue integration work.
+            // NOTE: Re-enable `oauth2ResourceServer().jwt(...)` before deploying to staging/production.
+            ;
         
         return http.build();
     }
