@@ -22,6 +22,10 @@ public class Workout {
     private String workoutAudio;
     private String instructionsImage;
     private String workoutImage;
+    private Boolean kneeFriendly;
+    private Boolean lowImpact;
+    private Boolean seated;
+    private Boolean beginnerFriendly;
 
     public Long getId() {
         return id;
@@ -102,5 +106,37 @@ public class Workout {
 
     public void setWorkoutImage(String workoutImage) {
         this.workoutImage = workoutImage;
+    }
+
+    public Boolean getKneeFriendly() {
+        return kneeFriendly;
+    }
+
+    public void setKneeFriendly(Boolean kneeFriendly) {
+        this.kneeFriendly = kneeFriendly;
+    }
+
+    public Boolean getLowImpact() {
+        return lowImpact;
+    }
+
+    public void setLowImpact(Boolean lowImpact) {
+        this.lowImpact = lowImpact;
+    }
+
+    public Boolean getSeated() {
+        return seated;
+    }
+
+    public void setSeated(Boolean seated) {
+        this.seated = seated;
+    }
+
+    public Boolean getBeginnerFriendly() {
+        return beginnerFriendly;
+    }
+
+    public void setBeginnerFriendly(Boolean beginnerFriendly) {
+        this.beginnerFriendly = beginnerFriendly;
     }
 }
