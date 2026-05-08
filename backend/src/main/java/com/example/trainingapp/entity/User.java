@@ -15,6 +15,11 @@ public class User {
     @Column(nullable = false, unique = true)
     private String clerkId;
 
+    public User() {}
+    public User(String clerkId) {
+        this.clerkId = clerkId;
+    }
+
     public Long getId() {
         return id;
     }
@@ -46,4 +51,9 @@ public class User {
     public void setContext(String context) {
         this.context = context;
     }
+
+    public String getClerkId() {
+        return clerkId;
+    }
+
 }
