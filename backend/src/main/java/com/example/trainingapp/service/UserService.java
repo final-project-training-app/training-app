@@ -24,4 +24,14 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
     }
+
+    public User updateUserPreferences(Long id, User userRequest) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+
+        existingUser.setIntensityLevel(userRequest.getIntensityLevel());
+        existingUser.setContext(userRequest.getContext());
+
+        return userRepository.save(existingUser);
+    }
 }
