@@ -6,6 +6,8 @@ import com.example.trainingapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
+
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -22,6 +24,10 @@ public class UserService {
     public User createUser(String clerkId, String name) {
 
         return userRepository.save(new User(name, STARTING_INTENSITY,"",clerkId));
+    }
+
+    public Optional<User> findByClerkId(String clerkId) {
+        return userRepository.findByClerkId(clerkId);
     }
 
     public User getUserById(Long id) {
