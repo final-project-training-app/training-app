@@ -1,10 +1,12 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.dto.UserRequestDTO;
 import com.example.trainingapp.entity.User;
 import com.example.trainingapp.service.ActivityLogService;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.util.Map;
+
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,41 +37,90 @@ public class UserController {
         this.activityLogService = activityLogService;
     }
 
+    private Jwt requireJwt(JwtAuthenticationToken token) {
+        if (token == null || token.getToken() == null) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Missing Clerk token");
+        }
+
+        return token.getToken();
+    }
+
+    private User requireCurrentUser(JwtAuthenticationToken token) {
+        Jwt jwt = requireJwt(token);
+        String clerkId = jwt.getSubject();
+
+        return userService.findByClerkId(clerkId)
+                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "User not found"));
+    }
+
+    private String resolveDisplayName(Jwt jwt) {
+        String name = jwt.getClaimAsString("name");
+        if (name != null && !name.isBlank()) {
+            return name;
+        }
+
+        String firstName = jwt.getClaimAsString("given_name");
+        String lastName = jwt.getClaimAsString("family_name");
+        if ((firstName != null && !firstName.isBlank()) || (lastName != null && !lastName.isBlank())) {
+            return ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();
+        }
+
+        String email = jwt.getClaimAsString("email");
+        if (email != null && !email.isBlank()) {
+            int atIndex = email.indexOf("@");
+            return atIndex > 0 ? email.substring(0, atIndex) : email;
+        }
+
+        return "User";
+    }
+
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
+    public ResponseEntity<User> createUser(JwtAuthenticationToken token) {
+        Jwt jwt = requireJwt(token);
+        User createdUser = userService.createUser(jwt.getSubject(), resolveDisplayName(jwt));
         return ResponseEntity.ok().body(createdUser);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<User> getUserById(@PathVariable Long id, JwtAuthenticationToken token) {
+        User currentUser = requireCurrentUser(token);
+
+        if (!currentUser.getId().equals(id)) {
+            return ResponseEntity.status(403).build();
+        }
+
         return ResponseEntity.ok().body(userService.getUserById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUserPreferences(@PathVariable Long id, @RequestBody User userRequest) {
-        return ResponseEntity.ok().body(userService.updateUserPreferences(id, userRequest));
+    public ResponseEntity<User> updateUserPreferences(@PathVariable Long id, @RequestBody UserRequestDTO userRequest, JwtAuthenticationToken token) {
+        User currentUser = requireCurrentUser(token);
+
+        if (!currentUser.getId().equals(id)) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok().body(userService.updateUserPreferences(id, userRequest.name(), userRequest.intensityLevel(), userRequest.context()));
     }
 
     @GetMapping("/{userId}/progress")
-    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId) {
+    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId, JwtAuthenticationToken token) {
+        User currentUser = requireCurrentUser(token);
+
+        if (!currentUser.getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+
         return ResponseEntity.ok().body(activityLogService.getUserProgress(userId));
     }
 
-    @GetMapping("/me/profile")
+    @GetMapping("/myProfile")
     public ResponseEntity<Map<String, Object>> getCurrentUserProfile(JwtAuthenticationToken token) {
-        if (token == null) {
-            return ResponseEntity.status(401).build();
-        }
-        
-        Jwt jwt = (Jwt) token.getPrincipal();
-        String userId = jwt.getClaimAsString("sub");
-        String email = jwt.getClaimAsString("email");
-        
+        User currentUser = requireCurrentUser(token);
+
         return ResponseEntity.ok().body(Map.of(
-            "userId", userId,
-            "email", email,
-            "claims", jwt.getClaims()
+                "name", currentUser.getName(),
+                "intensityLevel", currentUser.getIntensityLevel(),
+                "context", currentUser.getContext()
         ));
     }
 }

@@ -10,10 +10,20 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private String email;
-    private String password;
     private Integer intensityLevel;
     private String context;
+    @Column(nullable = false, unique = true)
+    private String clerkId;
+
+    public User() {
+    }
+
+    public User(String name, Integer intensityLevel, String context, String clerkId) {
+        this.name = name;
+        this.intensityLevel = intensityLevel;
+        this.context = context;
+        this.clerkId = clerkId;
+    }
 
     public Long getId() {
         return id;
@@ -31,22 +41,6 @@ public class User {
         this.name = name;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public Integer getIntensityLevel() {
         return intensityLevel;
     }
@@ -62,4 +56,9 @@ public class User {
     public void setContext(String context) {
         this.context = context;
     }
+
+    public String getClerkId() {
+        return clerkId;
+    }
+
 }
