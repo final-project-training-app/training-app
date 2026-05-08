@@ -15,9 +15,12 @@ public class User {
     @Column(nullable = false, unique = true)
     private String clerkId;
 
-    public User() {}
-    public User(String clerkId) {
+    public User() {
+    }
+
+    public User(String clerkId, String name) {
         this.clerkId = clerkId;
+        this.name = name;
     }
 
     public Long getId() {
