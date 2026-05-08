@@ -9,7 +9,7 @@ const ContextModel = () => {
     <section>
       <div className="mb-3 flex items-center gap-3 text-[#2b2277]">
         <FileText className="text-[var(--brand-primary)]" size={28} />
-        <h2 className="text-[clamp(1.75rem,4.4vw,3rem)] font-bold leading-none tracking-tight">
+        <h2 className="text-[clamp(1.75rem,4.4vw,3rem)] text-[#4f3bb8] font-bold leading-none tracking-tight">
           Kontext
         </h2>
       </div>
