@@ -1,11 +1,10 @@
 import type { LiveToolArgs } from "../shared/liveToolTypes";
-import { readNumberArg } from "../shared/readNumberArg";
+import { fixedLiveUserId } from "../shared/liveIntroDefaults";
 import { getProgressEndpoint } from "./progressEndpoint";
 
-const defaultUserId = 1;
-
 export async function getProgressHandler(args: LiveToolArgs) {
-  const userId = readNumberArg(args, "userId", defaultUserId);
+  void args;
+  const userId = fixedLiveUserId;
   const progress = await getProgressEndpoint(userId);
 
   return {
