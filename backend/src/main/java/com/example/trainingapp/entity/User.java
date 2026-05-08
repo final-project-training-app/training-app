@@ -14,6 +14,7 @@ public class User {
     private String password;
     private Integer intensityLevel;
     private String context;
+    @Column(unique = true)
     private String clerkId;
 
     public User() {
