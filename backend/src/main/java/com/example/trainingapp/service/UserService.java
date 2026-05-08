@@ -12,6 +12,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Service
 public class UserService {
 
+    private static final String DEFAULT_DISPLAY_NAME = "No name entered";
+
     private final UserRepository userRepository;
     private final int STARTING_INTENSITY = 2;
 
@@ -20,9 +22,21 @@ public class UserService {
     }
 
     public User createUser(String clerkId, String name) {
+        String displayName = (name == null || name.isBlank())
+                ? DEFAULT_DISPLAY_NAME
+                : name.trim();
+
         return userRepository.findByClerkId(clerkId)
+                .map(existingUser -> {
+                    if (existingUser.getName() == null || existingUser.getName().isBlank()) {
+                        existingUser.setName(displayName);
+                        return userRepository.save(existingUser);
+                    }
+
+                    return existingUser;
+                })
                 .orElseGet(() -> userRepository.save(
-                        new User(name, STARTING_INTENSITY, "", clerkId)
+                        new User(displayName, STARTING_INTENSITY, "", clerkId)
                 ));
     }
 

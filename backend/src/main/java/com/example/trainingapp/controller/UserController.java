@@ -28,6 +28,8 @@ import java.util.Map;
 })
 public class UserController {
 
+    private static final String DEFAULT_DISPLAY_NAME = "No name entered";
+
     private final UserService userService;
     private final ActivityLogService activityLogService;
 
@@ -43,7 +45,7 @@ public class UserController {
 
     private String resolveDisplayName(Jwt jwt) {
         // Try common claim keys that Clerk/OpenID might provide for a user's name.
-        String[] claimKeys = new String[]{"name", "full_name", "given_name", "first_name", "preferred_username"};
+        String[] claimKeys = new String[]{"name", "full_name", "preferred_username"};
         for (String key : claimKeys) {
             Object claimVal = jwt.getClaims().get(key);
             if (claimVal instanceof String) {
@@ -52,8 +54,25 @@ public class UserController {
             }
         }
 
-        // If Clerk does not provide a name claim, store an empty string.
-        return "";
+        String givenName = jwt.getClaimAsString("given_name");
+        String familyName = jwt.getClaimAsString("family_name");
+        String fullName = String.join(" ",
+                java.util.Arrays.asList(givenName, familyName).stream()
+                        .filter(part -> part != null && !part.isBlank())
+                        .toList()
+        ).trim();
+
+        if (!fullName.isEmpty()) {
+            return fullName;
+        }
+
+        String email = jwt.getClaimAsString("email");
+        if (email != null && !email.isBlank()) {
+            return email.trim();
+        }
+
+        // If Clerk does not provide a name claim, store a readable placeholder.
+        return DEFAULT_DISPLAY_NAME;
     }
 
     private UserResponseDTO toResponse(User user) {
