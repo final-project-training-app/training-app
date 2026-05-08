@@ -20,6 +20,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 
 import java.util.Map;
 
+record CreateUserRequest(String displayName) {}
+
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = {
@@ -84,12 +86,18 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDTO> createUser(Authentication authentication) {
+        public ResponseEntity<UserResponseDTO> createUser(
+            @RequestBody(required = false) CreateUserRequest request,
+            Authentication authentication
+        ) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
+        String requestedName = request != null ? request.displayName() : null;
 
         User created = userService.createUser(
                 jwt.getSubject(),
-                resolveDisplayName(jwt)
+            requestedName != null && !requestedName.isBlank()
+                ? requestedName
+                : resolveDisplayName(jwt)
         );
 
         return ResponseEntity.ok(toResponse(created));
