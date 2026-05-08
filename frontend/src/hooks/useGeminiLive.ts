@@ -85,21 +85,36 @@ export const useGeminiLive = ({
       functionCalls.map(async (functionCall) => {
         const name = functionCall.name ?? "unknown_tool";
 
-        if (!onToolCallRef.current) {
+        try {
+          if (!onToolCallRef.current) {
+            return {
+              id: functionCall.id,
+              name,
+              response: {
+                error: `No frontend handler configured for live tool: ${name}`,
+              },
+            } satisfies FunctionResponse;
+          }
+
+          return await onToolCallRef.current(functionCall);
+        } catch (error) {
           return {
             id: functionCall.id,
             name,
             response: {
-              error: `No frontend handler configured for live tool: ${name}`,
+              error:
+                error instanceof Error ? error.message : `Live tool failed: ${name}`,
             },
           } satisfies FunctionResponse;
         }
-
-        return onToolCallRef.current(functionCall);
       }),
     );
 
-    sessionRef.current?.sendToolResponse({ functionResponses });
+    try {
+      sessionRef.current?.sendToolResponse({ functionResponses });
+    } catch (error) {
+      console.error("[GeminiLive] Failed to send tool response:", error);
+    }
   }
 
   async function geminiConnect(overrideToken?: string) {

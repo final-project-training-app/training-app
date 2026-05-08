@@ -1,6 +1,8 @@
 import type { FunctionCall, FunctionResponse, ToolListUnion } from "@google/genai";
 import { progressTool } from "./progress/progressTool";
 import type { LiveToolDefinition } from "./shared/liveToolTypes";
+import { trainingContextTool } from "./trainingContext/trainingContextTool";
+import { userTool } from "./user/userTool";
 import { workoutCatalogTool } from "./workout/workoutCatalogTool";
 import { workoutTool } from "./workout/workoutTool";
 
@@ -11,6 +13,8 @@ import { workoutTool } from "./workout/workoutTool";
 // 3. Lägg till tool-objektet i liveToolDefinitions nedan
 const liveToolDefinitions: LiveToolDefinition[] = [
   progressTool,
+  trainingContextTool,
+  userTool,
   workoutCatalogTool,
   workoutTool,
 ];
