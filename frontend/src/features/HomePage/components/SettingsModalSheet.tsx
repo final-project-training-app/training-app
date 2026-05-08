@@ -96,7 +96,21 @@ export default function SettingsModalSheet({
           </h1>
 
           <section className="mt-9">
-            <IntensitySlider />
+            <div>
+              <label
+                htmlFor="fullName"
+                className="text-[clamp(1.75rem,4.4vw,3rem)] text-[#4f3bb8] font-bold leading-none tracking-tight"
+              >
+                Full Name
+              </label>
+
+              <input
+                id="fullName"
+                type="text"
+                placeholder="T.ex. John Doe"
+                className="mt-3 w-full rounded-xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-[clamp(1.15rem,3vw,1.85rem)] text-[#3f2a7a] outline-none focus:ring-2 focus:ring-[#c8bfeb]"
+              />
+            </div>
           </section>
 
           <section className="mt-8">
