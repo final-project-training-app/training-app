@@ -82,13 +82,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id, JwtAuthenticationToken token) {
-        User currentUser = requireCurrentUser(token);
-
-        if (!currentUser.getId().equals(id)) {
-            return ResponseEntity.status(403).build();
-        }
-
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok().body(userService.getUserById(id));
     }
 
@@ -103,13 +97,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/progress")
-    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId, JwtAuthenticationToken token) {
-        User currentUser = requireCurrentUser(token);
-
-        if (!currentUser.getId().equals(userId)) {
-            return ResponseEntity.status(403).build();
-        }
-
+    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId) {
         return ResponseEntity.ok().body(activityLogService.getUserProgress(userId));
     }
 
