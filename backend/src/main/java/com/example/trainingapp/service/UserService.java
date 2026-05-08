@@ -1,5 +1,6 @@
 package com.example.trainingapp.service;
 
+import com.example.trainingapp.dto.UserRequestDTO;
 import com.example.trainingapp.entity.User;
 import com.example.trainingapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User createUser(User user) {
+    public User createUser(UserRequestDTO user) {
         return userRepository.save(user);
     }
 

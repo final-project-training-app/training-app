@@ -36,8 +36,18 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody UserRequestDTO user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.ok().body(createdUser);
+        if (user.token() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Jwt jwt = (Jwt) user.token().getPrincipal();
+
+        String clerkId = jwt.getSubject();
+        String name = jwt.getClaimAsString("name");
+
+        User createdUser = userService.createUser(clerkId, name);
+
+        return ResponseEntity.ok(createdUser);
     }
 
     @GetMapping("/{id}")
