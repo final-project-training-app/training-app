@@ -6,17 +6,25 @@ import coachHeroImage from "../../assets/image.png";
 import { startSessionAudio } from "../session/audio";
 import { coachCallSessionQueryOptions } from "../session/query";
 import type { CoachCallSession } from "../session/types";
-import { Show, SignInButton, SignOutButton } from "@clerk/react";
+import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
+import { useCreateCurrentUserProfile } from "../auth/useCreateCurrentUserProfile";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { isLoaded, isSignedIn } = useAuth();
+
+  useCreateCurrentUserProfile();
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      return;
+    }
+
     void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
-  }, [queryClient]);
+  }, [isLoaded, isSignedIn, queryClient]);
 
   async function handleStartCall() {
     const queryOptions = coachCallSessionQueryOptions("1");
@@ -42,21 +50,19 @@ export default function HomePage() {
   return (
     <main className="relative flex h-dvh items-center justify-center overflow-hidden bg-(--brand-page) text-(--brand-ink)">
       <div className="absolute right-3 top-[max(10px,env(safe-area-inset-top))] z-30">
-        <Show when="signed-in">
+        {isLoaded && isSignedIn ? (
           <SignOutButton>
             <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2.5 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
               Logga ut
             </button>
           </SignOutButton>
-        </Show>
-
-        <Show when="signed-out">
+        ) : (
           <SignInButton>
             <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3.5 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
               Logga in
             </button>
           </SignInButton>
-        </Show>
+        )}
       </div>
 
       <section className="flex h-full w-full max-w-[36rem] flex-col px-5 pt-[max(2px,env(safe-area-inset-top))] pb-[max(26px,env(safe-area-inset-bottom))] [@media(max-height:700px)]:pb-[max(18px,env(safe-area-inset-bottom))]">
@@ -80,7 +86,7 @@ export default function HomePage() {
             Ring tränaren
           </button>
 
-          <Show when="signed-in">
+          {isLoaded && isSignedIn ? (
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -89,11 +95,11 @@ export default function HomePage() {
               <Settings size={20} strokeWidth={2.55} />
               Inställningar
             </button>
-          </Show>
+          ) : null}
         </div>
-        <Show when="signed-in">
+        {isLoaded && isSignedIn ? (
           <SettingsModalSheet open={open} setOpen={setOpen} />
-        </Show>
+        ) : null}
       </section>
     </main>
   );

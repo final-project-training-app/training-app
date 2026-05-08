@@ -11,27 +11,47 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final int STARTING_INTENSITY = 2;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public User createUser(User user) {
+    public User createUser(String clerkId, String name) {
+        return userRepository.findByClerkId(clerkId)
+                .orElseGet(() -> userRepository.save(
+                        new User(name, STARTING_INTENSITY, "", clerkId)
+                ));
+    }
+
+    public Optional<User> findByClerkId(String clerkId) {
+        return userRepository.findByClerkId(clerkId);
+    }
+
+    public User getByClerkIdOrThrow(String clerkId) {
+        return userRepository.findByClerkId(clerkId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(NOT_FOUND, "User not found")
+                );
+    }
+
+    public User updateUserPreferencesByClerkId(
+            String clerkId,
+            String name,
+            int intensityLevel,
+            String context
+    ) {
+        User user = getByClerkIdOrThrow(clerkId);
+
+        user.setName(name);
+        user.setIntensityLevel(intensityLevel);
+        user.setContext(context);
+
         return userRepository.save(user);
     }
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
-    }
-
-    public User updateUserPreferences(Long id, User userRequest) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
-
-        existingUser.setIntensityLevel(userRequest.getIntensityLevel());
-        existingUser.setContext(userRequest.getContext());
-
-        return userRepository.save(existingUser);
     }
 }
