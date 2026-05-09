@@ -66,4 +66,8 @@ public class User {
     public void setClerkId(String clerkId) {
         this.clerkId = clerkId;
     }
+
+    public String getRole() {
+        return role;
+    }
 }

@@ -21,6 +21,12 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    public boolean isAdmin(String clerkID){
+        return getByClerkIdOrThrow(clerkID)
+                .getRole()
+                .equals("ADMIN");
+
+    }
     private String sanitizeDisplayName(String name) {
         return (name == null || name.isBlank())
                 ? DEFAULT_DISPLAY_NAME
