@@ -14,7 +14,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, getToken } = useAuth();
   const { data: profile } = useMyProfile();
 
   useEffect(() => {
@@ -22,11 +22,21 @@ export default function HomePage() {
       return;
     }
 
-    void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
-  }, [isLoaded, isSignedIn, queryClient]);
+    (async () => {
+      const token = await getToken();
+      if (token) {
+        void queryClient.prefetchQuery(
+          coachCallSessionQueryOptions("1", token),
+        );
+      }
+    })();
+  }, [isLoaded, isSignedIn, queryClient, getToken]);
 
   async function handleStartCall() {
-    const queryOptions = coachCallSessionQueryOptions("1");
+    const token = await getToken();
+    if (!token) return;
+
+    const queryOptions = coachCallSessionQueryOptions("1", token);
     const cachedSession = queryClient.getQueryData<CoachCallSession>(
       queryOptions.queryKey,
     );
