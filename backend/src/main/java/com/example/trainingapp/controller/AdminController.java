@@ -35,8 +35,9 @@ public class AdminController {
         if (!service.isAdmin(clerkId)) {
             return ResponseEntity.status(403).body("Forbidden");
         }
+        final String name = service.getByClerkIdOrThrow(clerkId).getName();
 
-        return ResponseEntity.ok("Admin page");
+        return ResponseEntity.ok("Congrats, " + name + " — you're the admin. Try not to break everything. \uD83D\uDE0E");
     }
 
 }
