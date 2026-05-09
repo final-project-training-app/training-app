@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import fetchAdminPage from "../api/admins";
 
-export function useAdminPage() {
+export function useAdminPage(enabled: boolean) {
   const { getToken, isSignedIn } = useAuth();
 
   return useQuery({
@@ -13,6 +13,6 @@ export function useAdminPage() {
 
       return fetchAdminPage(token);
     },
-    enabled: !!isSignedIn, // only run if logged in
+    enabled: !!isSignedIn && enabled,
   });
 }
