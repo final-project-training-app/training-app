@@ -86,6 +86,15 @@ public class UserController {
         );
     }
 
+    private UserResponseDTO toResponse(User user) {
+        return new UserResponseDTO(
+                user.getName(),
+                user.getIntensityLevel(),
+                user.getContext(),
+                "ADMIN".equals(user.getRole())
+        );
+    }
+
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(
             @RequestBody(required = false) CreateUserRequest request,
@@ -165,8 +174,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
-        return ResponseEntity.ok(toResponse(user, getClerkId(authentication)));
+        return ResponseEntity.ok(toResponse(user));
     }
 }
