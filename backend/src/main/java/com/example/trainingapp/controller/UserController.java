@@ -19,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-record CreateUserRequest(String displayName) {}
+record CreateUserRequest(String displayName) {
+}
 
 @RestController
 @RequestMapping("/api/users")
@@ -85,18 +86,18 @@ public class UserController {
     }
 
     @PostMapping
-        public ResponseEntity<UserResponseDTO> createUser(
+    public ResponseEntity<UserResponseDTO> createUser(
             @RequestBody(required = false) CreateUserRequest request,
             Authentication authentication
-        ) {
+    ) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String requestedName = request != null ? request.displayName() : null;
 
         User created = userService.createUser(
                 jwt.getSubject(),
-            requestedName != null && !requestedName.isBlank()
-                ? requestedName
-                : resolveDisplayName(jwt)
+                requestedName != null && !requestedName.isBlank()
+                        ? requestedName
+                        : resolveDisplayName(jwt)
         );
 
         return ResponseEntity.ok(toResponse(created));
