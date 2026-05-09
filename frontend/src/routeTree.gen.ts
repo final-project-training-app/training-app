@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as AiDevRouteImport } from './routes/ai-dev'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionWorkoutIdRouteImport } from './routes/session.$workoutId'
 
@@ -22,6 +23,11 @@ const StatusRoute = StatusRouteImport.update({
 const AiDevRoute = AiDevRouteImport.update({
   id: '/ai-dev',
   path: '/ai-dev',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,12 +43,14 @@ const SessionWorkoutIdRoute = SessionWorkoutIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-dev': typeof AiDevRoute
   '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-dev': typeof AiDevRoute
   '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
@@ -50,20 +58,28 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-dev': typeof AiDevRoute
   '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ai-dev' | '/status' | '/session/$workoutId'
+  fullPaths: '/' | '/admin' | '/ai-dev' | '/status' | '/session/$workoutId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ai-dev' | '/status' | '/session/$workoutId'
-  id: '__root__' | '/' | '/ai-dev' | '/status' | '/session/$workoutId'
+  to: '/' | '/admin' | '/ai-dev' | '/status' | '/session/$workoutId'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/ai-dev'
+    | '/status'
+    | '/session/$workoutId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AiDevRoute: typeof AiDevRoute
   StatusRoute: typeof StatusRoute
   SessionWorkoutIdRoute: typeof SessionWorkoutIdRoute
@@ -85,6 +101,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiDevRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +127,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AiDevRoute: AiDevRoute,
   StatusRoute: StatusRoute,
   SessionWorkoutIdRoute: SessionWorkoutIdRoute,
