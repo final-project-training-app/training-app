@@ -25,8 +25,9 @@ type BackendUserResponse = {
   name: string;
   intensityLevel: number;
   context: string;
-  isAdmin: boolean;
 };
+
+const currentUserId = "1";
 
 function toDurationSeconds(durationMinutes?: number | null) {
   return durationMinutes ? durationMinutes * 60 : 0;
@@ -34,12 +35,11 @@ function toDurationSeconds(durationMinutes?: number | null) {
 
 export async function getCoachCallSession(
   workoutId: string,
-  token: string,
 ): Promise<CoachCallSession> {
   const [workout, progress, user] = await Promise.all([
     getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`),
-    getJson<BackendProgressResponse>(`/api/users/me/progress`, { token }),
-    getJson<BackendUserResponse>(`/api/users/me/profile`, { token }),
+    getJson<BackendProgressResponse>(`/api/users/${currentUserId}/progress`),
+    getJson<BackendUserResponse>(`/api/users/${currentUserId}`),
   ]);
 
   return {
