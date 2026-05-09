@@ -13,5 +13,5 @@ export default async function fetchAdminPage(token: string) {
     throw new Error("Not authorized");
   }
 
-  return res.json();
+  return res.text(); //for now it is text, but in the future it could be JSON or something else depending on what the admin page needs
 }
