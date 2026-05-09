@@ -1,26 +1,43 @@
 package com.example.trainingapp.controller;
 
-import com.example.trainingapp.entity.User;
+import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/admin")
 @CrossOrigin(origins = {
         "http://localhost:5173",
         "https://frontend-training.up.railway.app"
 })
 public class AdminController {
-//    @GetMapping("/{userId}/progress")
-//    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId) {
-//        return ResponseEntity.ok(activityLogService.getUserProgress(userId));
-//    }
-//    @GetMapping("/{id}")
-//    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-//        User user = userService.getUserById(id);
-//        return ResponseEntity.ok(toResponse(user));
-//    }
+    private UserService service;
+
+
+    public AdminController(UserService service) {
+        this.service = service;
+    }
+    private String getClerkId(Authentication authentication) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getSubject();
+    }
+
+    @GetMapping
+    public ResponseEntity<String> adminPage(Authentication authentication) {
+
+        String clerkId = getClerkId(authentication);
+
+        if (!service.isAdmin(clerkId)) {
+            return ResponseEntity.status(403).body("Forbidden");
+        }
+        final String name = service.getByClerkIdOrThrow(clerkId).getName();
+
+        return ResponseEntity.ok("Congrats, " + name + " — you're the admin. Try not to break everything. \uD83D\uDE0E");
+    }
 
 }

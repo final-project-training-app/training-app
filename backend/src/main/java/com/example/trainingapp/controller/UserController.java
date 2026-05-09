@@ -19,7 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-record CreateUserRequest(String displayName) {}
+record CreateUserRequest(String displayName) {
+}
 
 @RestController
 @RequestMapping("/api/users")
@@ -76,30 +77,31 @@ public class UserController {
         return DEFAULT_DISPLAY_NAME;
     }
 
-    private UserResponseDTO toResponse(User user) {
+    private UserResponseDTO toResponse(User user, String clerkId) {
         return new UserResponseDTO(
                 user.getName(),
                 user.getIntensityLevel(),
-                user.getContext()
+                user.getContext(),
+                userService.isAdmin(clerkId)
         );
     }
 
     @PostMapping
-        public ResponseEntity<UserResponseDTO> createUser(
+    public ResponseEntity<UserResponseDTO> createUser(
             @RequestBody(required = false) CreateUserRequest request,
             Authentication authentication
-        ) {
+    ) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String requestedName = request != null ? request.displayName() : null;
 
         User created = userService.createUser(
                 jwt.getSubject(),
-            requestedName != null && !requestedName.isBlank()
-                ? requestedName
-                : resolveDisplayName(jwt)
+                requestedName != null && !requestedName.isBlank()
+                        ? requestedName
+                        : resolveDisplayName(jwt)
         );
 
-        return ResponseEntity.ok(toResponse(created));
+        return ResponseEntity.ok(toResponse(created, jwt.getSubject()));
     }
 
     @PutMapping("/me/profile")
@@ -107,14 +109,15 @@ public class UserController {
             @RequestBody UserRequestDTO userRequest,
             Authentication authentication
     ) {
+        String clerkId = getClerkId(authentication);
         User updated = userService.updateUserPreferencesByClerkId(
-                getClerkId(authentication),
+                clerkId,
                 userRequest.name(),
                 userRequest.intensityLevel(),
                 userRequest.context()
         );
 
-        return ResponseEntity.ok(toResponse(updated));
+        return ResponseEntity.ok(toResponse(updated, clerkId));
     }
 
     @PutMapping("/{id}")
@@ -123,22 +126,21 @@ public class UserController {
             @RequestBody UserRequestDTO userRequest,
             Authentication authentication
     ) {
-        User currentUser = userService.findByClerkId(
-                ((Jwt) authentication.getPrincipal()).getSubject()
-        ).orElseThrow();
+        String clerkId = getClerkId(authentication);
+        User currentUser = userService.findByClerkId(clerkId).orElseThrow();
 
         if (!currentUser.getId().equals(id)) {
             return ResponseEntity.status(403).build();
         }
 
         User updated = userService.updateUserPreferencesByClerkId(
-                getClerkId(authentication),
+                clerkId,
                 userRequest.name(),
                 userRequest.intensityLevel(),
                 userRequest.context()
         );
 
-        return ResponseEntity.ok(toResponse(updated));
+        return ResponseEntity.ok(toResponse(updated, clerkId));
     }
 
     @GetMapping("/me/progress")
@@ -151,10 +153,10 @@ public class UserController {
 
     @GetMapping("/me/profile")
     public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
+        String clerkId = getClerkId(authentication);
+        User currentUser = userService.getByClerkIdOrThrow(clerkId);
 
-        User currentUser = userService.getByClerkIdOrThrow(getClerkId(authentication));
-
-        return ResponseEntity.ok(toResponse(currentUser));
+        return ResponseEntity.ok(toResponse(currentUser, clerkId));
     }
 
     @GetMapping("/{userId}/progress")
@@ -163,8 +165,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id, Authentication authentication) {
         User user = userService.getUserById(id);
-        return ResponseEntity.ok(toResponse(user));
+        return ResponseEntity.ok(toResponse(user, getClerkId(authentication)));
     }
 }

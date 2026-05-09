@@ -8,12 +8,14 @@ import { coachCallSessionQueryOptions } from "../session/query";
 import type { CoachCallSession } from "../session/types";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
+import { useMyProfile } from "../../hooks/useMyProfile";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const { isLoaded, isSignedIn } = useAuth();
+  const { data: profile } = useMyProfile();
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
@@ -46,13 +48,27 @@ export default function HomePage() {
 
   return (
     <main className="relative flex h-dvh items-center justify-center overflow-hidden bg-(--brand-page) text-(--brand-ink)">
-      <div className="absolute right-3 top-[max(10px,env(safe-area-inset-top))] z-30">
+      <div className="absolute right-3 top-[max(10px,env(safe-area-inset-top))] z-30 flex flex-col gap-2">
         {isLoaded && isSignedIn ? (
-          <SignOutButton>
-            <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2.5 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
-              Logga ut
-            </button>
-          </SignOutButton>
+          <>
+            {profile?.isAdmin && (
+              <button
+                onClick={() =>
+                  navigate({
+                    to: "/admin",
+                  })
+                }
+                className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3 py-1.5 text-xs font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95"
+              >
+                Admin page
+              </button>
+            )}
+            <SignOutButton>
+              <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2.5 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
+                Logga ut
+              </button>
+            </SignOutButton>
+          </>
         ) : (
           <SignInButton>
             <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3.5 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">

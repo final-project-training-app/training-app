@@ -14,6 +14,7 @@ public class User {
     private String context;
     @Column(unique = true)
     private String clerkId;
+    private String role;
 
     public User() {
     }
@@ -23,6 +24,7 @@ public class User {
         this.intensityLevel = intensityLevel;
         this.context = context;
         this.clerkId = clerkId;
+        this.role = "USER";
     }
 
     public Long getId() {
@@ -63,5 +65,9 @@ public class User {
 
     public void setClerkId(String clerkId) {
         this.clerkId = clerkId;
+    }
+
+    public String getRole() {
+        return role;
     }
 }
