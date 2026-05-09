@@ -37,7 +37,7 @@ public class AdminController {
         }
         final String name = service.getByClerkIdOrThrow(clerkId).getName();
 
-        return ResponseEntity.ok("Congrats, " + name + " — you're the admin. Try not to break everything. \uD83D\uDE0E");
+        return ResponseEntity.ok("Congrats, " + name + " - you're the admin. Try not to break everything. \uD83D\uDE0E");
     }
 
 }
