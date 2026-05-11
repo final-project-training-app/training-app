@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
 type WorkoutForm = {
   name: string;
@@ -98,7 +99,8 @@ export default function AddWorkoutPage() {
     return newErrors.length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
+    
     e.preventDefault();
 
     if (!validate()) return;

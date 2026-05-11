@@ -1,7 +1,6 @@
 package com.example.trainingapp.dto;
 
 public record WorkoutRequestDTO(
-        Long id,
         String name,
         String instructions,
         Integer level,

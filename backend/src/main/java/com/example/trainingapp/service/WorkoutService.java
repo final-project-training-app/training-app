@@ -59,6 +59,7 @@ public class WorkoutService {
     }
 
     public Workout createWorkout(Workout workout) {
-
+        return workoutRepository.save(workout);
     }
+
 }
