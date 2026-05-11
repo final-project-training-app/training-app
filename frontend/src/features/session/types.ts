@@ -11,6 +11,7 @@ export type CoachCallSession = {
   instructions: string;
   level?: string;
   type?: string;
+  instructionsAudioUrl?: string;
   workoutAudioUrl?: string;
   durationSeconds: number;
 

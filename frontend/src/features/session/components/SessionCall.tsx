@@ -8,13 +8,18 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { CoachCallSession, SessionPanel } from "../types";
+import type { CoachSessionDebugEvent } from "../useCoachSession";
 import { SessionInfoPanel } from "./SessionInfoPanel";
 
 type SessionCallProps = {
   session: CoachCallSession;
+  workoutName: string;
+  coachStep: string;
+  coachStatusLabel: string;
   elapsedSeconds: number;
   durationSeconds: number;
   activePanel: SessionPanel;
+  debugEvents?: CoachSessionDebugEvent[];
   onSpeaker: () => void;
   onTrainingSuite: () => void;
   onInfo: () => void;
@@ -35,16 +40,19 @@ function ControlButton({
   label,
   children,
   onClick,
+  disabled = false,
 }: {
   label: string;
   children: ReactNode;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-2 text-center"
+      disabled={disabled}
+      className="flex flex-col items-center gap-2 text-center disabled:opacity-45"
     >
       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-(--brand-control) text-(--brand-primary)">
         {children}
@@ -56,9 +64,13 @@ function ControlButton({
 
 export function SessionCall({
   session,
+  workoutName,
+  coachStep,
+  coachStatusLabel,
   elapsedSeconds,
   durationSeconds,
   activePanel,
+  debugEvents = [],
   onSpeaker,
   onTrainingSuite,
   onInfo,
@@ -67,6 +79,21 @@ export function SessionCall({
 }: SessionCallProps) {
   return (
     <main className="relative h-dvh overflow-hidden [background:var(--brand-call-background)]">
+      {import.meta.env.DEV && debugEvents.length > 0 ? (
+        <div className="absolute left-3 top-3 z-20 max-h-52 w-[calc(100%-1.5rem)] max-w-sm overflow-hidden rounded-lg bg-black/75 p-3 font-mono text-[11px] leading-4 text-white shadow-lg">
+          <div className="mb-1 font-sans text-xs font-bold">Dev debug</div>
+          {debugEvents.slice(0, 8).map((event) => (
+            <div key={event.id} className="truncate">
+              <span className="text-emerald-300">+{event.elapsedMs}ms</span>{" "}
+              <span>{event.label}</span>
+              {event.detail ? (
+                <span className="text-white/70"> - {event.detail}</span>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       <div className="mx-auto flex h-full w-full max-w-107.5 flex-col justify-between px-5 py-6">
         <div>
           <div className="mb-7 flex justify-center">
@@ -77,15 +104,18 @@ export function SessionCall({
 
           <div className="mb-10 text-center">
             <h1 className="text-5xl font-extrabold text-(--brand-ink)">
-              {session.workoutName}
+              {workoutName}
             </h1>
             <p className="mt-2 text-3xl font-bold text-(--brand-primary)">
               {formatTime(elapsedSeconds)}
             </p>
+            <p className="mt-3 text-base font-bold text-(--brand-muted)">
+              {coachStatusLabel}
+            </p>
           </div>
 
           <div className="grid grid-cols-3 justify-items-center gap-x-4 gap-y-8">
-            <ControlButton label="textläge">
+            <ControlButton label={coachStep === "live_intro" ? "lyssnar" : "mic"}>
               <MicOff size={34} />
             </ControlButton>
 
