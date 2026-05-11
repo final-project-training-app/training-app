@@ -39,7 +39,9 @@ export function useLiveToken() {
       });
 
       if (!res.ok) {
-        throw new Error(`Token request failed: ${res.status} ${res.statusText}`);
+        throw new Error(
+          `Token request failed: ${res.status} ${res.statusText}`,
+        );
       }
 
       const contentType = res.headers.get("content-type") ?? "";
@@ -50,7 +52,10 @@ export function useLiveToken() {
         console.debug("[Token] full response:", data);
 
         if (data.expireTime) {
-          console.debug("[Token] expires at:", new Date(data.expireTime).toISOString());
+          console.debug(
+            "[Token] expires at:",
+            new Date(data.expireTime).toISOString(),
+          );
         }
 
         tokenValue = data.token ?? data.name ?? null;

@@ -169,9 +169,11 @@ function getQueuedActionForStep(step: CoachSessionStep): PendingCoachAction {
 
 function getModelText(message: unknown) {
   const parts =
-    (message as {
-      serverContent?: { modelTurn?: { parts?: Array<{ text?: string }> } };
-    }).serverContent?.modelTurn?.parts ?? [];
+    (
+      message as {
+        serverContent?: { modelTurn?: { parts?: Array<{ text?: string }> } };
+      }
+    ).serverContent?.modelTurn?.parts ?? [];
 
   return parts
     .map((part) => part.text)
@@ -289,14 +291,23 @@ export function useCoachSession({
   const schedulePendingCoachAction = useCallback(
     (action: PendingCoachAction, reason: string, delayMs: number) => {
       if (!action) {
-        addDebugEvent("ignored queued action", `${reason}, step=${stepRef.current}`);
+        addDebugEvent(
+          "ignored queued action",
+          `${reason}, step=${stepRef.current}`,
+        );
         return;
       }
 
-      const safeDelayMs = Math.max(0, Math.min(delayMs, MAX_CONFIRMATION_WAIT_MS));
+      const safeDelayMs = Math.max(
+        0,
+        Math.min(delayMs, MAX_CONFIRMATION_WAIT_MS),
+      );
       clearPendingCoachTimer();
       pendingCoachActionRef.current = action;
-      addDebugEvent("queued action", `${action} in ${safeDelayMs}ms (${reason})`);
+      addDebugEvent(
+        "queued action",
+        `${action} in ${safeDelayMs}ms (${reason})`,
+      );
       pendingCoachTimerRef.current = window.setTimeout(() => {
         runPendingCoachAction(action, reason);
       }, safeDelayMs);
@@ -307,7 +318,10 @@ export function useCoachSession({
   const queueActionFromAck = useCallback(
     (action: PendingCoachAction, reason: string) => {
       if (!action) {
-        addDebugEvent("ignored queued action", `${reason}, step=${stepRef.current}`);
+        addDebugEvent(
+          "ignored queued action",
+          `${reason}, step=${stepRef.current}`,
+        );
         return;
       }
       addDebugEvent("ack-received", `${action} (${reason})`);
@@ -393,18 +407,21 @@ export function useCoachSession({
       return response;
     },
     onMessage: (message) => {
-        const modelText = getModelText(message);
-        if (modelText && hasReadyAckPhrase(modelText)) {
-          const queuedAction = getQueuedActionForStep(stepRef.current);
-          if (queuedAction) {
-            addDebugEvent("phrase-match", queuedAction);
-            // Let the runner handle waiting for playback end to avoid cutting off Gemini.
-            schedulePendingCoachAction(queuedAction, "phrase match", 0);
-            return;
-          }
+      const modelText = getModelText(message);
+      if (modelText && hasReadyAckPhrase(modelText)) {
+        const queuedAction = getQueuedActionForStep(stepRef.current);
+        if (queuedAction) {
+          addDebugEvent("phrase-match", queuedAction);
+          // Let the runner handle waiting for playback end to avoid cutting off Gemini.
+          schedulePendingCoachAction(queuedAction, "phrase match", 0);
+          return;
         }
+      }
 
-      if (message.serverContent?.turnComplete && pendingCoachActionRef.current) {
+      if (
+        message.serverContent?.turnComplete &&
+        pendingCoachActionRef.current
+      ) {
         const pendingAction = pendingCoachActionRef.current;
         schedulePendingCoachAction(pendingAction, "gemini turnComplete", 0);
         return;
@@ -487,7 +504,9 @@ export function useCoachSession({
       return;
     }
 
-    await new Promise((resolve) => window.setTimeout(resolve, LIVE_READY_DELAY_MS));
+    await new Promise((resolve) =>
+      window.setTimeout(resolve, LIVE_READY_DELAY_MS),
+    );
 
     const started = await startAudioCapture();
     setAudioCapturing(started);
@@ -500,13 +519,13 @@ export function useCoachSession({
     }
 
     addDebugEvent("ready-sent", "workout");
-      sendCoachPrompt(
-        [
-          "Instruktionerna är klara.",
-          "Fråga: 'Okej — är du nu redo att köra igång med träningen?'",
-          "När användaren svarar 'ja', säg exakt 'Vad bra! Nu kör vi igång.' och kalla start_workout.",
-        ].join(" "),
-      );
+    sendCoachPrompt(
+      [
+        "Instruktionerna är klara.",
+        "Fråga: 'Okej — är du nu redo att köra igång med träningen?'",
+        "När användaren svarar 'ja', säg exakt 'Vad bra! Nu kör vi igång.' och kalla start_workout.",
+      ].join(" "),
+    );
   }, [
     addDebugEvent,
     connectFreshLive,

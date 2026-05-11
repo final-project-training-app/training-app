@@ -109,7 +109,9 @@ export const useGeminiLive = ({
             name,
             response: {
               error:
-                error instanceof Error ? error.message : `Live tool failed: ${name}`,
+                error instanceof Error
+                  ? error.message
+                  : `Live tool failed: ${name}`,
             },
           } satisfies FunctionResponse;
         }
@@ -220,8 +222,12 @@ export const useGeminiLive = ({
               // Schedule a limited number of reconnect attempts with exponential backoff
               if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
                 reconnectAttemptsRef.current += 1;
-                const backoff = RECONNECT_BASE_DELAY_MS * 2 ** (reconnectAttemptsRef.current - 1);
-                console.debug(`[GeminiLive] scheduling reconnect #${reconnectAttemptsRef.current} in ${backoff}ms`);
+                const backoff =
+                  RECONNECT_BASE_DELAY_MS *
+                  2 ** (reconnectAttemptsRef.current - 1);
+                console.debug(
+                  `[GeminiLive] scheduling reconnect #${reconnectAttemptsRef.current} in ${backoff}ms`,
+                );
                 reconnectTimerRef.current = window.setTimeout(() => {
                   reconnectTimerRef.current = null;
                   // try reconnect with latest token
@@ -242,49 +248,49 @@ export const useGeminiLive = ({
       async function handleLiveMessage(message: LiveServerMessage) {
         console.debug("[GeminiLive] message:", message);
 
-            const functionCalls = message.toolCall?.functionCalls ?? [];
-            if (functionCalls.length > 0) {
-              await handleToolCalls(functionCalls);
-            }
+        const functionCalls = message.toolCall?.functionCalls ?? [];
+        if (functionCalls.length > 0) {
+          await handleToolCalls(functionCalls);
+        }
 
-            const parts = message.serverContent?.modelTurn?.parts ?? [];
-            let audioParts = 0;
+        const parts = message.serverContent?.modelTurn?.parts ?? [];
+        let audioParts = 0;
 
-            for (const part of parts) {
-              const b64 = part?.inlineData?.data;
-              if (!b64) continue;
+        for (const part of parts) {
+          const b64 = part?.inlineData?.data;
+          if (!b64) continue;
 
-              const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-              console.debug(
-                "[GeminiLive] audio part:",
-                part.inlineData?.mimeType ?? "(unknown mime)",
-                "bytes:",
-                bytes.byteLength,
-              );
-              onAudioRef.current?.(bytes.buffer);
-              void playAiPcm16(bytes.buffer);
-              audioParts++;
-            }
+          const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+          console.debug(
+            "[GeminiLive] audio part:",
+            part.inlineData?.mimeType ?? "(unknown mime)",
+            "bytes:",
+            bytes.byteLength,
+          );
+          onAudioRef.current?.(bytes.buffer);
+          void playAiPcm16(bytes.buffer);
+          audioParts++;
+        }
 
-            if (audioParts > 0) {
-              setCurrentTurn("gemini");
-            } else if (audioParts === 0 && parts.length > 0) {
-              console.debug(
-                "[GeminiLive] modelTurn had parts, but no inline audio data",
-              );
-            }
+        if (audioParts > 0) {
+          setCurrentTurn("gemini");
+        } else if (audioParts === 0 && parts.length > 0) {
+          console.debug(
+            "[GeminiLive] modelTurn had parts, but no inline audio data",
+          );
+        }
 
-            if (message.serverContent?.turnComplete) {
-              setCurrentTurn("user");
-            }
+        if (message.serverContent?.turnComplete) {
+          setCurrentTurn("user");
+        }
 
-            const text = parts
-              .map((p) => p?.text)
-              .filter(Boolean)
-              .join(" ");
-            if (text) console.debug("[GeminiLive] text:", text);
+        const text = parts
+          .map((p) => p?.text)
+          .filter(Boolean)
+          .join(" ");
+        if (text) console.debug("[GeminiLive] text:", text);
 
-            onMessageRef.current?.(message);
+        onMessageRef.current?.(message);
       }
 
       sessionRef.current = session;
