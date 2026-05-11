@@ -57,4 +57,8 @@ public class WorkoutService {
 
         return workout;
     }
+
+    public Workout createWorkout(Workout workout) {
+
+    }
 }
