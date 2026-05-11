@@ -78,140 +78,166 @@ export default function AddWorkoutPage() {
   };
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-(--brand-page) text-(--brand-ink) p-6">
-      <h1 className="text-3xl font-bold mb-6">Add Workout</h1>
+    <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
+      <div className="w-full max-w-4xl bg-white backdrop-blur rounded-2xl shadow-lg p-8">
+        <h1 className="text-3xl font-bold mb-8">Add Workout</h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md flex flex-col gap-4"
-      >
-        <input
-          name="name"
-          placeholder="Workout Name"
-          value={form.name}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+          {/* Basic Info */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Basic Info</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Name *</span>
+                <input
+                  name="name"
+                  placeholder="Morning Yoga"
+                  value={form.name}
+                  onChange={handleChange}
+                  className="p-3 border rounded-lg bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
 
-        <textarea
-          name="instructions"
-          placeholder="Instructions"
-          value={form.instructions}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Type *</span>
+                <input
+                  name="type"
+                  placeholder="Strength, Cardio..."
+                  value={form.type}
+                  onChange={handleChange}
+                  className="p-3 border rounded-lg bg-white/10 focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
 
-        <input
-          name="type"
-          placeholder="Type (e.g. strength, cardio)"
-          value={form.type}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Level</span>
+                <input
+                  type="number"
+                  name="level"
+                  value={form.level}
+                  onChange={handleChange}
+                  className="p-3 border rounded-lg bg-white/10"
+                />
+              </label>
 
-        <input
-          type="number"
-          name="level"
-          value={form.level}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
-
-        <input
-          type="number"
-          name="durationMinutes"
-          placeholder="Duration (minutes)"
-          value={form.durationMinutes}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
-
-        <input
-          name="instructionsAudio"
-          placeholder="Instructions Audio URL"
-          value={form.instructionsAudio}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
-
-        <input
-          name="workoutAudio"
-          placeholder="Workout Audio URL"
-          value={form.workoutAudio}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
-
-        <input
-          name="instructionsImage"
-          placeholder="Instructions Image URL"
-          value={form.instructionsImage}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
-
-        <input
-          name="workoutImage"
-          placeholder="Workout Image URL"
-          value={form.workoutImage}
-          onChange={handleChange}
-          className="p-2 border rounded"
-        />
-
-        {/* Boolean flags */}
-        <label>
-          <input
-            type="checkbox"
-            name="kneeFriendly"
-            checked={form.kneeFriendly}
-            onChange={handleChange}
-          />{" "}
-          Knee Friendly
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            name="lowImpact"
-            checked={form.lowImpact}
-            onChange={handleChange}
-          />{" "}
-          Low Impact
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            name="seated"
-            checked={form.seated}
-            onChange={handleChange}
-          />{" "}
-          Seated
-        </label>
-
-        <label>
-          <input
-            type="checkbox"
-            name="beginnerFriendly"
-            checked={form.beginnerFriendly}
-            onChange={handleChange}
-          />{" "}
-          Beginner Friendly
-        </label>
-
-        {/* Errors */}
-        {errors.length > 0 && (
-          <div className="text-red-500">
-            {errors.map((err, i) => (
-              <p key={i}>{err}</p>
-            ))}
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Duration (minutes) *</span>
+                <input
+                  type="number"
+                  name="durationMinutes"
+                  value={form.durationMinutes}
+                  onChange={handleChange}
+                  className="p-3 border rounded-lg bg-white/10"
+                />
+              </label>
+            </div>
           </div>
-        )}
 
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-          Create Workout
-        </button>
-      </form>
+          {/* Instructions */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Instructions</h2>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm opacity-80">Instructions *</span>
+              <textarea
+                name="instructions"
+                placeholder="Describe the workout..."
+                value={form.instructions}
+                onChange={handleChange}
+                className="p-3 border rounded-lg bg-white/10 min-h-[120px]"
+              />
+            </label>
+          </div>
+
+          {/* Media */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Media</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Instructions Audio</span>
+                <input
+                  name="instructionsAudio"
+                  value={form.instructionsAudio}
+                  onChange={handleChange}
+                  className="p-3 border rounded-lg bg-white/10"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Workout Audio</span>
+                <input
+                  name="workoutAudio"
+                  value={form.workoutAudio}
+                  onChange={handleChange}
+                  className="p-3 border rounded-lg bg-white/10"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Instructions Image</span>
+                <input
+                  name="instructionsImage"
+                  value={form.instructionsImage}
+                  onChange={handleChange}
+                  className="p-3 border rounded-lg bg-white/10"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Workout Image</span>
+                <input
+                  name="workoutImage"
+                  value={form.workoutImage}
+                  onChange={handleChange}
+                  className="p-3 border rounded-lg bg-white/10"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Options */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Options</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { name: "kneeFriendly", label: "Knee Friendly" },
+                { name: "lowImpact", label: "Low Impact" },
+                { name: "seated", label: "Seated" },
+                { name: "beginnerFriendly", label: "Beginner" },
+              ].map((item) => (
+                <label
+                  key={item.name}
+                  className="flex items-center gap-2 p-3 border rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    name={item.name}
+                    checked={form[item.name as keyof WorkoutForm] as boolean}
+                    onChange={handleChange}
+                  />
+                  {item.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Errors */}
+          {errors.length > 0 && (
+            <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg">
+              {errors.map((err, i) => (
+                <p key={i}>{err}</p>
+              ))}
+            </div>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 transition text-white font-medium p-3 rounded-lg mt-2"
+          >
+            Create Workout
+          </button>
+        </form>
+      </div>
     </main>
   );
 }
