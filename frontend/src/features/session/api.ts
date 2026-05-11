@@ -48,8 +48,8 @@ export async function getCoachCallSession(
     instructions: workout.instructions ?? "",
     level: workout.level || undefined,
     type: workout.type || undefined,
-    workoutAudioUrl:
-      workout.workoutAudio || workout.instructionsAudio || undefined,
+    instructionsAudioUrl: workout.instructionsAudio || undefined,
+    workoutAudioUrl: workout.workoutAudio || undefined,
     durationSeconds: toDurationSeconds(workout.durationMinutes),
 
     userName: user.name,

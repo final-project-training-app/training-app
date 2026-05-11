@@ -1,15 +1,12 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { startSessionAudio, stopSessionAudio } from "./audio";
+import { useState } from "react";
 import { SessionCall } from "./components/SessionCall";
 import { useCoachCallSession } from "./query";
-import type { SessionPanel } from "./types";
+import type { CoachCallSession, SessionPanel } from "./types";
+import { useCoachSession, type CoachSessionStep } from "./useCoachSession";
 
 export function SessionPage() {
   const { workoutId } = useParams({ from: "/session/$workoutId" });
-  const navigate = useNavigate();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const hasStartedAudioRef = useRef(false);
 
   const {
     data: session,
@@ -17,93 +14,6 @@ export function SessionPage() {
     isError,
     error,
   } = useCoachCallSession(workoutId);
-
-  const [activePanel, setActivePanel] = useState<SessionPanel>("none");
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [durationSeconds, setDurationSeconds] = useState(0);
-
-  function bindAudioState(audio: HTMLAudioElement) {
-    audio.onloadedmetadata = () => {
-      if (Number.isFinite(audio.duration)) {
-        setDurationSeconds(Math.round(audio.duration));
-      }
-    };
-
-    audio.ontimeupdate = () => {
-      setElapsedSeconds(Math.floor(audio.currentTime));
-    };
-
-    audio.onended = () => {
-      setElapsedSeconds(0);
-    };
-
-    if (Number.isFinite(audio.duration)) {
-      setDurationSeconds(Math.round(audio.duration));
-    }
-
-    setElapsedSeconds(Math.floor(audio.currentTime));
-  }
-
-  async function playCallAudio(restart = false) {
-    if (!session?.workoutAudioUrl) {
-      return;
-    }
-
-    const audio =
-      restart || !audioRef.current
-        ? await startSessionAudio(session.workoutAudioUrl)
-        : audioRef.current;
-
-    audioRef.current = audio;
-
-    if (restart) {
-      audio.currentTime = 0;
-    }
-
-    bindAudioState(audio);
-
-    if (!audio.paused) {
-      return;
-    }
-
-    void audio.play().catch(() => {
-      // Browsers may block autoplay; in that case the call screen still opens.
-    });
-  }
-
-  useEffect(() => {
-    if (!session?.workoutAudioUrl || hasStartedAudioRef.current) {
-      return;
-    }
-
-    hasStartedAudioRef.current = true;
-
-    void playCallAudio();
-
-    return () => {
-      const audio = audioRef.current;
-
-      if (!audio) {
-        return;
-      }
-
-      audio.onloadedmetadata = null;
-      audio.ontimeupdate = null;
-      audio.onended = null;
-    };
-  }, [session?.workoutAudioUrl]);
-
-  function handleEnd() {
-    stopSessionAudio();
-    setActivePanel("none");
-    setElapsedSeconds(0);
-    hasStartedAudioRef.current = false;
-    void navigate({ to: "/" });
-  }
-
-  function togglePanel(panel: Exclude<SessionPanel, "none">) {
-    setActivePanel((current) => (current === panel ? "none" : panel));
-  }
 
   if (isLoading) {
     return (
@@ -125,17 +35,78 @@ export function SessionPage() {
     return null;
   }
 
+  return <ReadySessionPage session={session} />;
+}
+
+function getCoachStatusLabel(step: CoachSessionStep) {
+  switch (step) {
+    case "idle":
+      return "Ansluter till tränaren...";
+    case "choosing_workout":
+      return "Tränaren väljer ett pass åt dig...";
+    case "live_intro":
+      return "Coach-samtalet är igång.";
+    case "waiting_instruction_approval":
+      return "Säg ja när du är redo för instruktionerna.";
+    case "playing_instructions":
+      return "Spelar instruktioner.";
+    case "asking_ready":
+      return "Säg ja när du är redo för workouten.";
+    case "playing_workout":
+      return "Workout pågår.";
+    case "collecting_feedback":
+      return "Tränaren sammanfattar och frågar hur det kändes.";
+    case "completed":
+      return "Sessionen är sparad.";
+    case "error":
+      return "Något gick fel.";
+  }
+}
+
+function ReadySessionPage({ session }: { session: CoachCallSession }) {
+  const navigate = useNavigate();
+  const [activePanel, setActivePanel] = useState<SessionPanel>("none");
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const {
+    step,
+    error,
+    selectedWorkout,
+    debugEvents,
+    endSession,
+  } = useCoachSession({
+    session,
+    autoStart: true,
+  });
+
+  function handleEnd() {
+    endSession();
+    setActivePanel("none");
+    setElapsedSeconds(0);
+    void navigate({ to: "/" });
+  }
+
+  function togglePanel(panel: Exclude<SessionPanel, "none">) {
+    setActivePanel((current) => (current === panel ? "none" : panel));
+  }
+
   return (
-    <SessionCall
-      session={session}
-      elapsedSeconds={elapsedSeconds}
-      durationSeconds={durationSeconds}
-      activePanel={activePanel}
-      onSpeaker={() => togglePanel("exercise")}
-      onTrainingSuite={() => togglePanel("suite")}
-      onInfo={() => togglePanel("info")}
-      onClosePanel={() => setActivePanel("none")}
-      onEnd={handleEnd}
-    />
+    <>
+      <SessionCall
+        session={session}
+        workoutName={selectedWorkout?.name ?? session.workoutName}
+        coachStep={step}
+        coachStatusLabel={error ?? getCoachStatusLabel(step)}
+        elapsedSeconds={elapsedSeconds}
+        durationSeconds={0}
+        activePanel={activePanel}
+        debugEvents={debugEvents}
+        onSpeaker={() => togglePanel("exercise")}
+        onTrainingSuite={() => togglePanel("suite")}
+        onInfo={() => togglePanel("info")}
+        onClosePanel={() => setActivePanel("none")}
+        onEnd={handleEnd}
+      />
+    </>
   );
 }

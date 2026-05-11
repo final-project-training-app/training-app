@@ -183,12 +183,7 @@ export function GeminiLiveTest() {
     setAudioCapturing(false);
   }
 
-  function handleDisconnect() {
-    pendingSelectedWorkoutRef.current = null;
-    introStartedRef.current = false;
-    geminiDisconnect();
-    setAudioCapturing(false);
-  }
+  // handleDisconnect removed — prefer pause/disconnect via UI elsewhere if needed
 
   async function handleTestWorkoutCatalog() {
     setEndpointTestLoading(true);
@@ -279,22 +274,7 @@ export function GeminiLiveTest() {
           Avsluta min tur
         </button>
 
-        <button
-          type="button"
-          onClick={handleDisconnect}
-          disabled={!isActive}
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-bold text-red-700 disabled:opacity-50"
-        >
-          Disconnect
-        </button>
-
-        <button
-          type="button"
-          onClick={() => console.log("Gemini Live session", getSession())}
-          className="rounded-xl border border-(--brand-border) bg-white px-4 py-3 font-bold text-(--brand-ink)"
-        >
-          Inspect session
-        </button>
+        {/* Removed dev-only Disconnect / Inspect buttons for a cleaner UI */}
       </div>
 
       {tokenError ? (

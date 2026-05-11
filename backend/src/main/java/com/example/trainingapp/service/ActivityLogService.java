@@ -34,6 +34,15 @@ public class ActivityLogService {
         return activityLogRepository.save(activityLog);
     }
 
+    public ActivityLog completeActivityLog(Long id) {
+        ActivityLog log = activityLogRepository.findById(id)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "ActivityLog not found"));
+        log.setStatus("COMPLETED");
+        log.setCompletedAt(LocalDateTime.now());
+        return activityLogRepository.save(log);
+    }
+
     public Map<String, Object> getUserProgress(Long userId) {
         List<ActivityLog> completedLogs = activityLogRepository
                 .findByUserIdAndStatusOrderByCompletedAtDesc(userId, "COMPLETED");
