@@ -2,6 +2,7 @@ import { SignInButton, useAuth } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAdminPage } from "../../hooks/useAdminPage";
 import { useMyProfile } from "../../hooks/useMyProfile";
+import AddWorkoutPage from "./AddWorkoutPage";
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -98,9 +99,8 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="flex h-dvh flex-col items-center justify-center bg-(--brand-page) text-(--brand-ink)">
-      <h1 className="text-3xl font-bold">Admin Page</h1>
-      <p className="text-lg">{data}</p>
-    </main>
+    <>
+      <AddWorkoutPage workoutData={data} />
+    </>
   );
 }
