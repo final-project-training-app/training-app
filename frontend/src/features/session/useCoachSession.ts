@@ -12,7 +12,8 @@ import {
   liveSystemInstruction,
   liveTools,
 } from "../ai-dev/live/tools";
-import { getWorkoutCatalogEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
+import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
+import { getWorkoutEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
 import type { BackendWorkoutResponse } from "../ai-dev/live/tools/workout/workoutTypes";
 import {
   preloadSessionAudio,
@@ -46,10 +47,11 @@ export type CoachSessionDebugEvent = {
   detail?: string;
 };
 
-const LIVE_READY_DELAY_MS = 250;
-const MAX_CONFIRMATION_WAIT_MS = 300;
-const MAX_AI_PLAYBACK_WAIT_MS = 1200;
+// Minimal fixed pauses are implemented with `sleep(ms)` helper below.
 const READY_ACK_PHRASE = "vad bra! nu kör vi igång";
+
+// Simple sleep helper used to add a short human-like pause before playback.
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const sessionControlTools: ToolListUnion = [
   {
@@ -90,26 +92,9 @@ const sessionControlTools: ToolListUnion = [
   },
 ];
 
-function buildSessionInstruction(session: CoachCallSession) {
-  return [
-    liveSystemInstruction,
-    `Du pratar med ${session.userName}.`,
-    `Använd denna användarkontext: ${session.context || "Ingen extra context finns."}`,
-    "Det här är ett träningssamtal. Om användaren börjar prata om annat, svara kort och vänligt att ni kan ta det senare och styr tillbaka till träningen.",
-    "I början ska du först välja workout från katalogen. Sedan ska du hälsa personligt, säga vilken workout du valde och varför den passar användarens context.",
-    "Stilen ska passa en person som är 60+: prata långsamt, varmt, enkelt och utan tekniska ord.",
-    "Var förklarande men kort: säg vad som händer nu, varför passet passar, och vad användaren ska göra härnäst.",
-    "Ge bara en instruktion i taget. Undvik långa monologer.",
-    "Efter att du har valt workout och sagt varför ska du säga att användaren först får lyssna noggrant på instruktionerna.",
-    "Fråga sedan: 'Är du redo att lyssna på instruktionerna?'",
-    "Du får bara kalla start_instructions efter att användaren tydligt har sagt ja till instruktionerna. När användaren godkänner ska du först säga exakt: 'Vad bra! Nu kör vi igång.' Sedan ska du kalla start_instructions.",
-    "När appen har spelat instruktionerna ska du fråga om användaren är redo att börja workouten.",
-    "Du får bara kalla start_workout när appen redan har spelat instruktionerna och användaren därefter tydligt säger ja eller att hen är redo. När användaren är redo ska du först säga exakt: 'Vad bra! Nu kör vi igång.' Sedan ska du kalla start_workout.",
-    "När workouten är klar ska du först hämta progress med get_user_progress. Nämn kort vad användaren just gjorde och om det finns progress, till exempel streak eller tidigare pass.",
-    "Efter progress-sammanfattningen ska du fråga hur passet kändes. När du har fått feedback ska du sammanfatta kort och kalla finish_session_feedback.",
-    "Upprepa inte frågor som redan har besvarats. Fråga inte igen om instruktioner.",
-    "Håll allt kort, tryggt och tydligt.",
-  ].join(" ");
+function buildSessionInstruction() {
+  // Minimal system instruction for MVP sessions — keep voice-friendly behaviour.
+  return liveSystemInstruction;
 }
 
 function readFeedbackSummary(functionCall: FunctionCall) {
@@ -135,25 +120,7 @@ function readWorkoutFromResponse(response: FunctionResponse) {
     : null;
 }
 
-function formatWorkoutCatalogForCoach(workouts: BackendWorkoutResponse[]) {
-  return workouts
-    .slice(0, 8)
-    .map((workout) =>
-      [
-        `${workout.id}: ${workout.name}`,
-        workout.type ? `typ ${workout.type}` : null,
-        workout.level ? `nivå ${workout.level}` : null,
-        workout.durationMinutes ? `${workout.durationMinutes} min` : null,
-        workout.seated ? "sittande" : null,
-        workout.lowImpact ? "low impact" : null,
-        workout.beginnerFriendly ? "nybörjarvänlig" : null,
-        workout.kneeFriendly ? "knävänlig" : null,
-      ]
-        .filter(Boolean)
-        .join(", "),
-    )
-    .join(" | ");
-}
+// formatWorkoutCatalogForCoach removed for MVP — selection is fixed to workout id 1.
 
 function getQueuedActionForStep(step: CoachSessionStep): PendingCoachAction {
   if (step === "waiting_instruction_approval") {
@@ -188,10 +155,8 @@ function hasReadyAckPhrase(text: string) {
     .includes(READY_ACK_PHRASE);
 }
 
-export function useCoachSession({
-  session,
-  autoStart = true,
-}: UseCoachSessionOptions) {
+export function useCoachSession(options: UseCoachSessionOptions) {
+  const { autoStart = true } = options;
   const [step, setStep] = useState<CoachSessionStep>("idle");
   const [error, setError] = useState<string | null>(null);
   const [audioCapturing, setAudioCapturing] = useState(false);
@@ -204,9 +169,8 @@ export function useCoachSession({
   const stepRef = useRef<CoachSessionStep>("idle");
   const selectedWorkoutRef = useRef<BackendWorkoutResponse | null>(null);
   const hasStartedRef = useRef(false);
-  const pendingCoachActionRef = useRef<PendingCoachAction>(null);
-  const pendingCoachTimerRef = useRef<number | null>(null);
-  const getAiPlaybackRemainingMsRef = useRef<() => number>(() => 0);
+
+  // playback remaining helper removed for MVP
   const disconnectRef = useRef<() => void>(() => {});
   const startInstructionsRef = useRef<() => Promise<void>>(async () => {});
   const startWorkoutRef = useRef<() => Promise<void>>(async () => {});
@@ -250,86 +214,10 @@ export function useCoachSession({
     setDebugEvents((current) => [event, ...current].slice(0, 12));
   }, []);
 
-  const clearPendingCoachTimer = useCallback(() => {
-    if (pendingCoachTimerRef.current === null) {
-      return;
-    }
+  // No pending timers in MVP — keep function for compatibility but noop.
+  const clearPendingCoachTimer = useCallback(() => {}, []);
 
-    window.clearTimeout(pendingCoachTimerRef.current);
-    pendingCoachTimerRef.current = null;
-  }, []);
-
-  const runPendingCoachAction = useCallback(
-    async (action: Exclude<PendingCoachAction, null>, reason: string) => {
-      clearPendingCoachTimer();
-      pendingCoachActionRef.current = null;
-      addDebugEvent("runQueuedAction", `${action} (${reason})`);
-
-      // Wait for AI playback to finish (or until timeout) to avoid cutting off Gemini.
-      const start = Date.now();
-      const pollMs = 40;
-      const graceMs = 60;
-      while (Date.now() - start < MAX_AI_PLAYBACK_WAIT_MS) {
-        const remaining = getAiPlaybackRemainingMsRef.current();
-        if (remaining <= 60) break;
-        await new Promise((r) => setTimeout(r, pollMs));
-      }
-
-      // small grace period to let audio tail finish
-      await new Promise((r) => setTimeout(r, graceMs));
-
-      if (action === "start_instructions") {
-        await startInstructionsRef.current();
-        return;
-      }
-
-      await startWorkoutRef.current();
-    },
-    [addDebugEvent, clearPendingCoachTimer],
-  );
-
-  const schedulePendingCoachAction = useCallback(
-    (action: PendingCoachAction, reason: string, delayMs: number) => {
-      if (!action) {
-        addDebugEvent(
-          "ignored queued action",
-          `${reason}, step=${stepRef.current}`,
-        );
-        return;
-      }
-
-      const safeDelayMs = Math.max(
-        0,
-        Math.min(delayMs, MAX_CONFIRMATION_WAIT_MS),
-      );
-      clearPendingCoachTimer();
-      pendingCoachActionRef.current = action;
-      addDebugEvent(
-        "queued action",
-        `${action} in ${safeDelayMs}ms (${reason})`,
-      );
-      pendingCoachTimerRef.current = window.setTimeout(() => {
-        runPendingCoachAction(action, reason);
-      }, safeDelayMs);
-    },
-    [addDebugEvent, clearPendingCoachTimer, runPendingCoachAction],
-  );
-
-  const queueActionFromAck = useCallback(
-    (action: PendingCoachAction, reason: string) => {
-      if (!action) {
-        addDebugEvent(
-          "ignored queued action",
-          `${reason}, step=${stepRef.current}`,
-        );
-        return;
-      }
-      addDebugEvent("ack-received", `${action} (${reason})`);
-      // Schedule immediately; the runner will wait for AI playback to finish.
-      schedulePendingCoachAction(action, reason, 0);
-    },
-    [addDebugEvent, schedulePendingCoachAction],
-  );
+  // Simplified flow: no queued actions or polling — actions start directly.
 
   const {
     geminiConnect,
@@ -340,19 +228,20 @@ export function useCoachSession({
     connectionError,
     currentTurn,
     getSession,
-    getAiPlaybackRemainingMs,
+    // no longer using playback remaining helper in MVP
   } = useGeminiLive({
     token,
     tools: [...liveTools, ...sessionControlTools],
-    systemInstruction: buildSessionInstruction(session),
+    systemInstruction: buildSessionInstruction(),
     onToolCall: async (functionCall): Promise<FunctionResponse> => {
       const name = functionCall.name ?? "unknown_tool";
       addDebugEvent("tool call", `${name}, step=${stepRef.current}`);
 
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
-        queueActionFromAck(queuedAction, "tool call");
-
+        addDebugEvent("tool-start-instructions", String(queuedAction));
+        // start immediately in MVP
+        void startInstructionsRef.current();
         return {
           id: functionCall.id,
           name,
@@ -368,8 +257,9 @@ export function useCoachSession({
 
       if (name === "start_workout") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
-        queueActionFromAck(queuedAction, "tool call");
-
+        addDebugEvent("tool-start-workout", String(queuedAction));
+        // start immediately in MVP
+        void startWorkoutRef.current();
         return {
           id: functionCall.id,
           name,
@@ -409,22 +299,16 @@ export function useCoachSession({
     onMessage: (message) => {
       const modelText = getModelText(message);
       if (modelText && hasReadyAckPhrase(modelText)) {
-        const queuedAction = getQueuedActionForStep(stepRef.current);
-        if (queuedAction) {
-          addDebugEvent("phrase-match", queuedAction);
-          // Let the runner handle waiting for playback end to avoid cutting off Gemini.
-          schedulePendingCoachAction(queuedAction, "phrase match", 0);
+        const action = getQueuedActionForStep(stepRef.current);
+        if (action) {
+          addDebugEvent("phrase-match", action);
+          if (action === "start_instructions") {
+            void startInstructionsRef.current();
+          } else if (action === "start_workout") {
+            void startWorkoutRef.current();
+          }
           return;
         }
-      }
-
-      if (
-        message.serverContent?.turnComplete &&
-        pendingCoachActionRef.current
-      ) {
-        const pendingAction = pendingCoachActionRef.current;
-        schedulePendingCoachAction(pendingAction, "gemini turnComplete", 0);
-        return;
       }
 
       if (
@@ -443,9 +327,7 @@ export function useCoachSession({
     },
   });
 
-  useEffect(() => {
-    getAiPlaybackRemainingMsRef.current = getAiPlaybackRemainingMs;
-  }, [getAiPlaybackRemainingMs]);
+  // playback remaining tracking removed for MVP
 
   useEffect(() => {
     disconnectRef.current = geminiDisconnect;
@@ -504,9 +386,7 @@ export function useCoachSession({
       return;
     }
 
-    await new Promise((resolve) =>
-      window.setTimeout(resolve, LIVE_READY_DELAY_MS),
-    );
+    await sleep(250);
 
     const started = await startAudioCapture();
     setAudioCapturing(started);
@@ -553,6 +433,10 @@ export function useCoachSession({
     }
 
     try {
+      // Small human-like pause before starting audio so it doesn't feel abrupt.
+      addDebugEvent("pre-play-sleep", "instructions 1000ms");
+      await sleep(1000);
+
       addDebugEvent("play instructions", instructionsAudioUrl);
       await startSessionAudio(instructionsAudioUrl, {
         onEnded: () => {
@@ -569,29 +453,17 @@ export function useCoachSession({
   }, [addDebugEvent, askIfReadyForWorkout, pauseLive, setSessionStep]);
 
   const startSession = useCallback(async () => {
-    if (hasStartedRef.current) {
-      return;
-    }
+    if (hasStartedRef.current) return;
 
     startedAtRef.current = performance.now();
     debugIdRef.current = 0;
     setDebugEvents([]);
-    addDebugEvent("session start", session.userName);
+    addDebugEvent("session start");
     hasStartedRef.current = true;
     setError(null);
-    setSessionStep("choosing_workout");
+    setSessionStep("live_intro");
 
-    const [freshToken, workoutCatalog] = await Promise.all([
-      loadToken(),
-      getWorkoutCatalogEndpoint().catch(() => null),
-    ]);
-    addDebugEvent(
-      "prefetch complete",
-      workoutCatalog?.ok
-        ? `${workoutCatalog.data.length} workouts`
-        : "catalog failed",
-    );
-
+    const freshToken = await loadToken();
     if (!freshToken) {
       addDebugEvent("initial token failed");
       setError("Kunde inte starta coach-samtalet.");
@@ -599,6 +471,22 @@ export function useCoachSession({
       hasStartedRef.current = false;
       return;
     }
+
+    // MVP: always use workout id 1
+    const workoutResp = await getWorkoutEndpoint(1).catch(() => null);
+    if (!workoutResp || !workoutResp.ok) {
+      addDebugEvent("workout fetch failed");
+      setError("Kunde inte hämta workout.");
+      setSessionStep("error");
+      hasStartedRef.current = false;
+      return;
+    }
+
+    const workout = workoutResp.data as BackendWorkoutResponse;
+    selectedWorkoutRef.current = workout;
+    setSelectedWorkout(workout);
+    preloadSessionAudio(workout.instructionsAudio);
+    preloadSessionAudio(workout.workoutAudio);
 
     await geminiConnect(freshToken);
     addDebugEvent("initial live connected");
@@ -613,16 +501,14 @@ export function useCoachSession({
       return;
     }
 
-    await new Promise((resolve) => window.setTimeout(resolve, 250));
+    await sleep(250);
 
-    addDebugEvent("ready-sent", "instructions");
+    // Ask the user straightforwardly about the single MVP workout.
+    setSessionStep("waiting_instruction_approval");
     sendCoachPrompt(
       [
-        `Starta sessionen för ${session.userName}. Context: ${session.context || "ingen extra context"}.`,
-        workoutCatalog?.ok
-          ? `Katalog: ${formatWorkoutCatalogForCoach(workoutCatalog.data)}. Välj bästa workouten och kalla get_workout_details.`
-          : "Hämta katalogen med get_workout_catalog, välj bästa workouten och kalla get_workout_details.",
-        "Säg sedan: 'Jag har valt [workout]. Lyssna noggrant på instruktionerna.' Fråga: 'Är du redo att lyssna på instruktionerna?' Vid användarens ja, säg exakt 'Vad bra! Nu kör vi igång.' och kalla start_instructions.",
+        `Vi har ett kort träningspass: "${workout.name}". Vill du att jag spelar instruktionerna?`,
+        "Fråga: 'Okej — är du nu redo att köra igång med träningen?'. När användaren svarar ja, säg exakt 'Vad bra! Nu kör vi igång.' och kalla start_instructions.",
       ].join(" "),
     );
   }, [
@@ -630,8 +516,6 @@ export function useCoachSession({
     geminiConnect,
     loadToken,
     sendCoachPrompt,
-    session.userName,
-    session.context,
     setSessionStep,
     startAudioCapture,
   ]);
@@ -646,7 +530,7 @@ export function useCoachSession({
     setSessionStep("playing_workout");
 
     const workout = selectedWorkoutRef.current;
-    const workoutAudioUrl = workout?.workoutAudio ?? session.workoutAudioUrl;
+    const workoutAudioUrl = workout?.workoutAudio;
 
     if (!workoutAudioUrl) {
       setError("Workout-ljud saknas.");
@@ -655,36 +539,117 @@ export function useCoachSession({
     }
 
     try {
+      // Small human-like pause before starting the workout audio.
+      addDebugEvent("pre-play-sleep", "workout 1000ms");
+      await sleep(1000);
+
       addDebugEvent("play workout", workoutAudioUrl);
       await startSessionAudio(workoutAudioUrl, {
         onEnded: async () => {
           addDebugEvent("workout ended");
           setSessionStep("collecting_feedback");
-          const connected = await connectFreshLive();
-          if (!connected) {
-            return;
+
+          // Persist activity and fetch updated progress before reconnecting
+          try {
+            const workoutId =
+              (selectedWorkoutRef.current?.id as number | undefined) ?? null;
+
+            const activityResult = await executeLiveToolCall({
+              name: "create_activity_log",
+              args: { userId: fixedLiveUserId, workoutId },
+            });
+
+            addDebugEvent(
+              "create_activity_log",
+              JSON.stringify(activityResult?.response ?? {}),
+            );
+
+            const activityRespObj = activityResult as FunctionResponse | null;
+            const output = activityRespObj?.response?.output ?? {};
+
+            let progress: Record<string, unknown> | null = null;
+            if (output && typeof output === "object") {
+              const outObj = output as Record<string, unknown>;
+              if ("progress" in outObj && outObj.progress != null) {
+                progress = outObj.progress as Record<string, unknown>;
+              } else if (
+                "progressEndpoint" in outObj &&
+                typeof outObj.progressEndpoint === "object"
+              ) {
+                const pe = outObj.progressEndpoint as Record<string, unknown>;
+                if (pe.data) progress = pe.data as Record<string, unknown>;
+              }
+            }
+
+            let progressSummary = "";
+            if (progress) {
+              const streak =
+                typeof progress.currentStreak === "number"
+                  ? (progress.currentStreak as number)
+                  : null;
+              const completed = Array.isArray(progress.completedWorkouts)
+                ? (progress.completedWorkouts as Array<Record<string, unknown>>)
+                : [];
+              if (streak)
+                progressSummary += `Din nuvarande streak är ${streak} dag(ar). `;
+              if (completed.length > 0) {
+                const latest = completed[0];
+                const name =
+                  (latest as Record<string, unknown>).workoutName ??
+                  (latest as Record<string, unknown>).workout ??
+                  null;
+                const label =
+                  (latest as Record<string, unknown>).dateLabel ?? null;
+                if (name && label)
+                  progressSummary += `Senaste: ${name} (${label}). `;
+              }
+            }
+
+            const connected = await connectFreshLive();
+            if (!connected) {
+              return;
+            }
+
+            await sleep(250);
+            const started = await startAudioCapture();
+            setAudioCapturing(started);
+            addDebugEvent("mic after workout", started);
+
+            if (!started) {
+              setError("Kunde inte starta mikrofonen.");
+              setSessionStep("error");
+              return;
+            }
+
+            sendCoachPrompt(
+              [
+                `Workouten "${selectedWorkoutRef.current?.name ?? "workout"}" är klar.`,
+                progressSummary
+                  ? `Jag har sparat passet åt dig. ${progressSummary}`
+                  : "Jag har sparat passet åt dig.",
+                "Fråga: 'Hur kändes det i kroppen?'",
+                "När användaren svarar, kalla `create_feedback` med `userId`, `workoutId` och `comment`. Efter att feedback sparats, säg en varm bekräftelse att feedbacken är sparad och att den kommer användas nästa gång, och kalla `finish_session_feedback` med en kort svensk sammanfattning.",
+              ].join(" "),
+            );
+          } catch (e) {
+            addDebugEvent("activity save failed", String(e));
+            // Fallback: reconnect and ask for feedback anyway
+            const connected = await connectFreshLive();
+            if (!connected) return;
+            await sleep(250);
+            const started = await startAudioCapture();
+            setAudioCapturing(started);
+            addDebugEvent("mic after workout (fallback)", started);
+
+            sendCoachPrompt(
+              [
+                `Workouten "${selectedWorkoutRef.current?.name ?? "workout"}" är klar.`,
+                "Kunde inte spara passet just nu, men vi försöker igen senare.",
+                "Fråga: 'Hur kändes det i kroppen?'",
+                "När användaren svarar, kalla `create_feedback` med `userId`, `workoutId` och `comment`.",
+              ].join(" "),
+            );
           }
-
-          await new Promise((resolve) =>
-            window.setTimeout(resolve, LIVE_READY_DELAY_MS),
-          );
-          const started = await startAudioCapture();
-          setAudioCapturing(started);
-          addDebugEvent("mic after workout", started);
-
-          if (!started) {
-            setError("Kunde inte starta mikrofonen.");
-            setSessionStep("error");
-            return;
-          }
-
-          sendCoachPrompt(
-            [
-              `Workouten "${selectedWorkoutRef.current?.name ?? session.workoutName}" är klar.`,
-              "Kalla get_user_progress, nämn kort vad användaren gjorde och en enkel progress-sak om den finns.",
-              "Fråga 'Hur kändes det i kroppen?' och kalla finish_session_feedback efter användarens feedback.",
-            ].join(" "),
-          );
         },
       });
       addDebugEvent("play-started", "workout");
@@ -700,8 +665,6 @@ export function useCoachSession({
     connectFreshLive,
     setSessionStep,
     startAudioCapture,
-    session.workoutAudioUrl,
-    session.workoutName,
   ]);
 
   const finishSession = useCallback(() => {
@@ -709,22 +672,73 @@ export function useCoachSession({
   }, []);
 
   const finishSessionWithSummary = useCallback(
-    (summary = "") => {
+    async (summary = "") => {
       clearPendingCoachTimer();
       stopSessionAudio();
-      disconnectLive();
-      console.debug(
-        "[CoachSession] Mock save feedback until backend endpoint exists",
-        {
-          workoutId: session.id,
-          selectedWorkoutId: selectedWorkoutRef.current?.id ?? null,
-          status: "COMPLETED",
-          feedback: summary,
-        },
-      );
-      setSessionStep("completed");
+
+      try {
+        const workoutId = selectedWorkoutRef.current?.id ?? null;
+
+        const feedbackResp = await executeLiveToolCall({
+          name: "create_feedback",
+          args: { userId: fixedLiveUserId, workoutId, comment: summary },
+        });
+
+        addDebugEvent(
+          "create_feedback",
+          JSON.stringify(feedbackResp?.response ?? {}),
+        );
+
+        const closing = `Tack — jag har sparat din feedback. Det hjälper mig att anpassa nästa pass. Ta hand om dig, vi hörs snart igen. Hej då!`;
+
+        // Ask Gemini to speak a warm closing message so the UX feels complete.
+        getSession()?.sendClientContent({
+          turns: [
+            {
+              role: "user",
+              parts: [{ text: `Säg exakt: '${closing}'` }],
+            },
+          ],
+          turnComplete: true,
+        });
+
+        // Wait a fixed short time to let Gemini finish speaking, then give a short tail.
+        await sleep(1800);
+      } catch (e) {
+        addDebugEvent("create_feedback_failed", String(e));
+        try {
+          const fallbackMsg =
+            "Tack för din feedback. Vi sparade den lokalt men något gick fel med lagringen — vi försöker igen nästa gång. Vi hörs snart. Hej då!";
+          getSession()?.sendClientContent({
+            turns: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `Säg exakt: '${fallbackMsg}'`,
+                  },
+                ],
+              },
+            ],
+            turnComplete: true,
+          });
+
+          await sleep(1400);
+        } catch {
+          // ignore
+        }
+      } finally {
+        disconnectLive();
+        setSessionStep("completed");
+      }
     },
-    [clearPendingCoachTimer, disconnectLive, session.id, setSessionStep],
+    [
+      addDebugEvent,
+      clearPendingCoachTimer,
+      disconnectLive,
+      getSession,
+      setSessionStep,
+    ],
   );
 
   useEffect(() => {
