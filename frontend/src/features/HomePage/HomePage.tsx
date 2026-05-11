@@ -25,8 +25,22 @@ export default function HomePage() {
     void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
   }, [isLoaded, isSignedIn, queryClient]);
 
+  async function primeMicrophonePermission() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+    } catch (error) {
+      console.warn("[HomePage] Microphone permission prime failed", error);
+    }
+  }
+
   async function handleStartCall() {
     void primeSessionAudio();
+    void primeMicrophonePermission();
 
     const queryOptions = coachCallSessionQueryOptions("1");
     const cachedSession = queryClient.getQueryData<CoachCallSession>(

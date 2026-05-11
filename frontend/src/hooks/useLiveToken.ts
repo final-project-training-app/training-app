@@ -47,10 +47,10 @@ export function useLiveToken() {
 
       if (contentType.includes("application/json")) {
         const data = (await res.json()) as AuthTokenResponse;
-        console.log("[Token] full response:", data);
+        console.debug("[Token] full response:", data);
 
         if (data.expireTime) {
-          console.log("[Token] expires at:", new Date(data.expireTime).toISOString());
+          console.debug("[Token] expires at:", new Date(data.expireTime).toISOString());
         }
 
         tokenValue = data.token ?? data.name ?? null;

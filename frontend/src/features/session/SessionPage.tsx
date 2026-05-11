@@ -46,14 +46,16 @@ function getCoachStatusLabel(step: CoachSessionStep) {
       return "Tränaren väljer ett pass åt dig...";
     case "live_intro":
       return "Coach-samtalet är igång.";
+    case "waiting_instruction_approval":
+      return "Säg ja när du är redo för instruktionerna.";
     case "playing_instructions":
       return "Spelar instruktioner.";
     case "asking_ready":
-      return "Coach frågar om du är redo.";
+      return "Säg ja när du är redo för workouten.";
     case "playing_workout":
       return "Workout pågår.";
     case "collecting_feedback":
-      return "Coach samlar feedback.";
+      return "Tränaren sammanfattar och frågar hur det kändes.";
     case "completed":
       return "Sessionen är sparad.";
     case "error":
@@ -70,6 +72,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     step,
     error,
     selectedWorkout,
+    debugEvents,
     endSession,
   } = useCoachSession({
     session,
@@ -97,6 +100,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
         elapsedSeconds={elapsedSeconds}
         durationSeconds={0}
         activePanel={activePanel}
+        debugEvents={debugEvents}
         onSpeaker={() => togglePanel("exercise")}
         onTrainingSuite={() => togglePanel("suite")}
         onInfo={() => togglePanel("info")}

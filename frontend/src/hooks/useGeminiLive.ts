@@ -16,6 +16,8 @@ const AI_SAMPLE_RATE = 24000;
 const INTERRUPT_THRESHOLD = 0.25; // RMS required to interrupt Gemini mid-response
 const PLAYBACK_TAIL_MS = 200; // extra gate time after playback ends (speaker reverb)
 const LIVE_MODEL = "gemini-3.1-flash-live-preview";
+const MAX_RECONNECT_ATTEMPTS = 3;
+const RECONNECT_BASE_DELAY_MS = 500;
 
 interface UseGeminiLiveProps {
   token: string;
@@ -70,6 +72,10 @@ export const useGeminiLive = ({
   const onAudioRef = useRef(onAudioData);
   const onMessageRef = useRef(onMessage);
   const onToolCallRef = useRef(onToolCall);
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const connectingRef = useRef(false);
+  const autoReconnectDisabledRef = useRef(false);
 
   useEffect(() => {
     tokenRef.current = token;
@@ -118,8 +124,18 @@ export const useGeminiLive = ({
   }
 
   async function geminiConnect(overrideToken?: string) {
-    console.log("[GeminiLive] connect pressed");
+    console.debug("[GeminiLive] connect pressed");
     setConnectionError(null);
+
+    // If a manual connect is requested, allow auto-reconnect again.
+    autoReconnectDisabledRef.current = false;
+
+    // Prevent parallel connects
+    if (connectingRef.current) {
+      console.debug("[GeminiLive] connect already in progress — skipping");
+      return;
+    }
+    connectingRef.current = true;
 
     const activeToken = overrideToken ?? tokenRef.current;
     if (!activeToken) {
@@ -131,7 +147,8 @@ export const useGeminiLive = ({
     if (overrideToken) tokenRef.current = overrideToken;
 
     if (sessionRef.current) {
-      console.log("[GeminiLive] already connected — skipping");
+      console.debug("[GeminiLive] already connected — skipping");
+      connectingRef.current = false;
       return;
     }
 
@@ -140,6 +157,13 @@ export const useGeminiLive = ({
         apiKey: activeToken,
         httpOptions: { apiVersion: "v1alpha" },
       });
+
+      // If a reconnect was scheduled, clear it — we are connecting now.
+      if (reconnectTimerRef.current) {
+        window.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+        reconnectAttemptsRef.current = 0;
+      }
 
       const session = await ai.live.connect({
         model: LIVE_MODEL,
@@ -158,16 +182,69 @@ export const useGeminiLive = ({
         },
         callbacks: {
           onopen: () => {
-            console.log("[GeminiLive] opened");
+            console.debug("[GeminiLive] opened");
             setIsActive(true);
+            // successful open -> reset reconnect attempts
+            reconnectAttemptsRef.current = 0;
+            connectingRef.current = false;
           },
           onmessage: (message: LiveServerMessage) => {
-            console.log("[GeminiLive] message:", message);
-            onMessageRef.current?.(message);
+            void handleLiveMessage(message);
+          },
+          onerror: (e: ErrorEvent) => {
+            console.error("[GeminiLive] error:", e.message);
+            setConnectionError(e.message || "Gemini Live websocket error.");
+          },
+          onclose: (e: CloseEvent) => {
+            console.debug(
+              "[GeminiLive] closed — code:",
+              e.code,
+              "reason:",
+              e.reason || "(no reason)",
+            );
+            setIsActive(false);
+            sessionRef.current = null;
+
+            // If manual disconnect happened, don't auto-reconnect.
+            if (autoReconnectDisabledRef.current) {
+              reconnectAttemptsRef.current = 0;
+              connectingRef.current = false;
+              return;
+            }
+
+            if (e.code !== 1000) {
+              setConnectionError(
+                e.reason || `Gemini Live closed with code ${e.code}.`,
+              );
+
+              // Schedule a limited number of reconnect attempts with exponential backoff
+              if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttemptsRef.current += 1;
+                const backoff = RECONNECT_BASE_DELAY_MS * 2 ** (reconnectAttemptsRef.current - 1);
+                console.debug(`[GeminiLive] scheduling reconnect #${reconnectAttemptsRef.current} in ${backoff}ms`);
+                reconnectTimerRef.current = window.setTimeout(() => {
+                  reconnectTimerRef.current = null;
+                  // try reconnect with latest token
+                  void geminiConnect();
+                }, backoff) as unknown as number;
+              } else {
+                console.debug("[GeminiLive] max reconnect attempts reached");
+                reconnectAttemptsRef.current = 0;
+                connectingRef.current = false;
+              }
+            } else {
+              connectingRef.current = false;
+            }
+          },
+        },
+      });
+
+      async function handleLiveMessage(message: LiveServerMessage) {
+        console.debug("[GeminiLive] message:", message);
 
             const functionCalls = message.toolCall?.functionCalls ?? [];
             if (functionCalls.length > 0) {
-              void handleToolCalls(functionCalls);
+              await handleToolCalls(functionCalls);
             }
 
             const parts = message.serverContent?.modelTurn?.parts ?? [];
@@ -178,7 +255,7 @@ export const useGeminiLive = ({
               if (!b64) continue;
 
               const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-              console.log(
+              console.debug(
                 "[GeminiLive] audio part:",
                 part.inlineData?.mimeType ?? "(unknown mime)",
                 "bytes:",
@@ -192,7 +269,7 @@ export const useGeminiLive = ({
             if (audioParts > 0) {
               setCurrentTurn("gemini");
             } else if (audioParts === 0 && parts.length > 0) {
-              console.log(
+              console.debug(
                 "[GeminiLive] modelTurn had parts, but no inline audio data",
               );
             }
@@ -205,43 +282,35 @@ export const useGeminiLive = ({
               .map((p) => p?.text)
               .filter(Boolean)
               .join(" ");
-            if (text) console.log("[GeminiLive] text:", text);
-          },
-          onerror: (e: ErrorEvent) => {
-            console.error("[GeminiLive] error:", e.message);
-            setConnectionError(e.message || "Gemini Live websocket error.");
-          },
-          onclose: (e: CloseEvent) => {
-            console.log(
-              "[GeminiLive] closed — code:",
-              e.code,
-              "reason:",
-              e.reason || "(no reason)",
-            );
-            setIsActive(false);
-            sessionRef.current = null;
-            if (e.code !== 1000) {
-              setConnectionError(
-                e.reason || `Gemini Live closed with code ${e.code}.`,
-              );
-            }
-          },
-        },
-      });
+            if (text) console.debug("[GeminiLive] text:", text);
+
+            onMessageRef.current?.(message);
+      }
 
       sessionRef.current = session;
-      console.log("[GeminiLive] connect success:", session);
+      console.debug("[GeminiLive] connect success:", session);
+      connectingRef.current = false;
     } catch (error) {
       console.error("[GeminiLive] Failed to connect:", error);
       setIsActive(false);
       setConnectionError(
         error instanceof Error ? error.message : "Gemini Live connect failed.",
       );
+      connectingRef.current = false;
     }
   }
 
   function geminiDisconnect() {
-    console.log("[GeminiLive] disconnect pressed");
+    console.debug("[GeminiLive] disconnect pressed");
+    // Manual disconnect should disable auto-reconnect
+    autoReconnectDisabledRef.current = true;
+
+    // Clear any scheduled reconnect
+    if (reconnectTimerRef.current) {
+      window.clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+
     if (isCapturingRef.current) {
       stopAudioCapture();
     }
@@ -254,10 +323,16 @@ export const useGeminiLive = ({
     aiAudioCtxRef.current = null;
     aiPlayheadRef.current = 0;
     playingUntilWallMsRef.current = 0;
+    reconnectAttemptsRef.current = 0;
+    connectingRef.current = false;
   }
 
   function getSession() {
     return sessionRef.current;
+  }
+
+  function getAiPlaybackRemainingMs() {
+    return Math.max(0, playingUntilWallMsRef.current - Date.now());
   }
 
   async function playAiPcm16(buffer: ArrayBuffer) {
@@ -315,7 +390,7 @@ export const useGeminiLive = ({
     }
 
     try {
-      console.log("[GeminiLive] requesting microphone access");
+      console.debug("[GeminiLive] requesting microphone access");
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -329,7 +404,7 @@ export const useGeminiLive = ({
       mediaStreamRef.current = stream;
 
       const trackSettings = stream.getAudioTracks()[0]?.getSettings() ?? {};
-      console.log("[GeminiLive] track settings:", trackSettings);
+      console.debug("[GeminiLive] track settings:", trackSettings);
       statsRef.current.inputSampleRate =
         trackSettings.sampleRate ?? SAMPLE_RATE;
       statsRef.current.channels = trackSettings.channelCount ?? 1;
@@ -337,7 +412,7 @@ export const useGeminiLive = ({
       const audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
       audioContextRef.current = audioContext;
       statsRef.current.outputSampleRate = audioContext.sampleRate;
-      console.log(
+      console.debug(
         "[GeminiLive] AudioContext.sampleRate:",
         audioContext.sampleRate,
       );
@@ -430,7 +505,7 @@ export const useGeminiLive = ({
         statsRef.current.bytesThisSecond = 0;
       }, 1000);
 
-      console.log(
+      console.debug(
         `[GeminiLive] audio capture started — mono PCM16 @ ${SAMPLE_RATE} Hz, ` +
           `chunk ${CHUNK_SAMPLES} samples / ${((CHUNK_SAMPLES / SAMPLE_RATE) * 1000).toFixed(0)} ms`,
       );
@@ -480,7 +555,7 @@ export const useGeminiLive = ({
 
     isCapturingRef.current = false;
 
-    console.log(
+    console.debug(
       "[GeminiLive] audio capture stopped — total bytes sent:",
       statsRef.current.totalBytesSent,
     );
@@ -501,6 +576,14 @@ export const useGeminiLive = ({
       }
       sessionRef.current?.close();
       sessionRef.current = null;
+
+      // Clear any pending reconnect attempts and reset flags
+      if (reconnectTimerRef.current) {
+        window.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      connectingRef.current = false;
+      autoReconnectDisabledRef.current = false;
     };
   }, []);
 
@@ -514,5 +597,6 @@ export const useGeminiLive = ({
     connectionError,
     currentTurn,
     getSession,
+    getAiPlaybackRemainingMs,
   };
 };
