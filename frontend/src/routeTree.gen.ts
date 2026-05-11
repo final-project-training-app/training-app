@@ -9,17 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as StatusRouteImport } from './routes/status'
 import { Route as AiDevRouteImport } from './routes/ai-dev'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionWorkoutIdRouteImport } from './routes/session.$workoutId'
 
-const StatusRoute = StatusRouteImport.update({
-  id: '/status',
-  path: '/status',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AiDevRoute = AiDevRouteImport.update({
   id: '/ai-dev',
   path: '/ai-dev',
@@ -45,14 +39,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ai-dev': typeof AiDevRoute
-  '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ai-dev': typeof AiDevRoute
-  '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesById {
@@ -60,40 +52,25 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/ai-dev': typeof AiDevRoute
-  '/status': typeof StatusRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/ai-dev' | '/status' | '/session/$workoutId'
+  fullPaths: '/' | '/admin' | '/ai-dev' | '/session/$workoutId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/ai-dev' | '/status' | '/session/$workoutId'
-  id:
-    | '__root__'
-    | '/'
-    | '/admin'
-    | '/ai-dev'
-    | '/status'
-    | '/session/$workoutId'
+  to: '/' | '/admin' | '/ai-dev' | '/session/$workoutId'
+  id: '__root__' | '/' | '/admin' | '/ai-dev' | '/session/$workoutId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AiDevRoute: typeof AiDevRoute
-  StatusRoute: typeof StatusRoute
   SessionWorkoutIdRoute: typeof SessionWorkoutIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/status': {
-      id: '/status'
-      path: '/status'
-      fullPath: '/status'
-      preLoaderRoute: typeof StatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/ai-dev': {
       id: '/ai-dev'
       path: '/ai-dev'
@@ -129,7 +106,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AiDevRoute: AiDevRoute,
-  StatusRoute: StatusRoute,
   SessionWorkoutIdRoute: SessionWorkoutIdRoute,
 }
 export const routeTree = rootRouteImport
