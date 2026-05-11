@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useCreateWorkout } from "../../hooks/useCreateWorkoutHook";
 
 type WorkoutForm = {
   name: string;
@@ -42,10 +42,10 @@ export default function AddWorkoutPage() {
     seated: false,
     beginnerFriendly: false,
   });
-
+  const { mutateAsync, isPending } = useCreateWorkout();
   const [errors, setErrors] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const isSubmitting = isPending;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -100,30 +100,23 @@ export default function AddWorkoutPage() {
   };
 
   async function handleSubmit(e: React.FormEvent) {
-    
     e.preventDefault();
 
     if (!validate()) return;
 
-    setIsSubmitting(true);
     setSuccess(false);
 
     try {
-      console.log("Submitting workout:", form);
-
-      // simulate API call (replace later)
-      await new Promise((res) => setTimeout(res, 1200));
+      await mutateAsync(form);
 
       setSuccess(true);
 
-      // optional: reset form
+      // optional reset
       // setForm(initialState)
     } catch (err) {
       console.error(err);
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  }
   return (
     <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
       <div className="w-full max-w-4xl bg-white backdrop-blur rounded-2xl shadow-lg p-8">
