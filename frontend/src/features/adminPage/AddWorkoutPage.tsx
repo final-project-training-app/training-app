@@ -66,6 +66,14 @@ export default function AddWorkoutPage() {
     if (!form.type) newErrors.push("Type is required");
     if (form.durationMinutes <= 0)
       newErrors.push("Duration must be greater than 0");
+    if (form.level < 0 || form.level > 4)
+      newErrors.push("Level must be between 0 and 4");
+    if (!form.instructionsAudio)
+      newErrors.push("Instructions Audio is required");
+    if (!form.workoutAudio) newErrors.push("Workout Audio is required");
+    if (!form.instructionsImage)
+      newErrors.push("Instructions Image is required");
+    if (!form.workoutImage) newErrors.push("Workout Image is required");
 
     setErrors(newErrors);
     return newErrors.length === 0;
@@ -115,7 +123,7 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Level</span>
+                <span className="text-sm opacity-80">Level *</span>
                 <input
                   type="number"
                   name="level"
@@ -160,7 +168,7 @@ export default function AddWorkoutPage() {
             <h2 className="text-xl font-semibold mb-4">Media</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Instructions Audio</span>
+                <span className="text-sm opacity-80">Instructions Audio *</span>
                 <input
                   name="instructionsAudio"
                   value={form.instructionsAudio}
@@ -170,7 +178,7 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Workout Audio</span>
+                <span className="text-sm opacity-80">Workout Audio *</span>
                 <input
                   name="workoutAudio"
                   value={form.workoutAudio}
@@ -180,7 +188,7 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Instructions Image</span>
+                <span className="text-sm opacity-80">Instructions Image *</span>
                 <input
                   name="instructionsImage"
                   value={form.instructionsImage}
@@ -190,7 +198,7 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Workout Image</span>
+                <span className="text-sm opacity-80">Workout Image *</span>
                 <input
                   name="workoutImage"
                   value={form.workoutImage}
