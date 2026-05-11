@@ -16,6 +16,15 @@ type WorkoutForm = {
   beginnerFriendly: boolean;
 };
 
+const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export default function AddWorkoutPage() {
   const [form, setForm] = useState<WorkoutForm>({
     name: "",
@@ -70,10 +79,18 @@ export default function AddWorkoutPage() {
       newErrors.push("Level must be between 0 and 4");
     if (!form.instructionsAudio)
       newErrors.push("Instructions Audio is required");
+    else if (!isValidUrl(form.instructionsAudio))
+      newErrors.push("Instructions Audio must be a valid URL");
     if (!form.workoutAudio) newErrors.push("Workout Audio is required");
+    else if (!isValidUrl(form.workoutAudio))
+      newErrors.push("Workout Audio must be a valid URL");
     if (!form.instructionsImage)
       newErrors.push("Instructions Image is required");
+    else if (!isValidUrl(form.instructionsImage))
+      newErrors.push("Instructions Image must be a valid URL");
     if (!form.workoutImage) newErrors.push("Workout Image is required");
+    else if (!isValidUrl(form.workoutImage))
+      newErrors.push("Workout Image must be a valid URL");
 
     setErrors(newErrors);
     return newErrors.length === 0;
@@ -168,9 +185,12 @@ export default function AddWorkoutPage() {
             <h2 className="text-xl font-semibold mb-4">Media</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Instructions Audio *</span>
+                <span className="text-sm opacity-80">
+                  Instructions Audio * (URL)
+                </span>
                 <input
                   name="instructionsAudio"
+                  placeholder="https://example.com/audio.mp3"
                   value={form.instructionsAudio}
                   onChange={handleChange}
                   className="p-3 border rounded-lg bg-white/10"
@@ -178,9 +198,12 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Workout Audio *</span>
+                <span className="text-sm opacity-80">
+                  Workout Audio * (URL)
+                </span>
                 <input
                   name="workoutAudio"
+                  placeholder="https://example.com/audio.mp3"
                   value={form.workoutAudio}
                   onChange={handleChange}
                   className="p-3 border rounded-lg bg-white/10"
@@ -188,9 +211,12 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Instructions Image *</span>
+                <span className="text-sm opacity-80">
+                  Instructions Image * (URL)
+                </span>
                 <input
                   name="instructionsImage"
+                  placeholder="https://example.com/image.jpg"
                   value={form.instructionsImage}
                   onChange={handleChange}
                   className="p-3 border rounded-lg bg-white/10"
@@ -198,9 +224,12 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Workout Image *</span>
+                <span className="text-sm opacity-80">
+                  Workout Image * (URL)
+                </span>
                 <input
                   name="workoutImage"
+                  placeholder="https://example.com/image.jpg"
                   value={form.workoutImage}
                   onChange={handleChange}
                   className="p-3 border rounded-lg bg-white/10"
