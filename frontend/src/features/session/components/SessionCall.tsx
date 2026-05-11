@@ -12,6 +12,9 @@ import { SessionInfoPanel } from "./SessionInfoPanel";
 
 type SessionCallProps = {
   session: CoachCallSession;
+  workoutName: string;
+  coachStep: string;
+  coachStatusLabel: string;
   elapsedSeconds: number;
   durationSeconds: number;
   activePanel: SessionPanel;
@@ -35,16 +38,19 @@ function ControlButton({
   label,
   children,
   onClick,
+  disabled = false,
 }: {
   label: string;
   children: ReactNode;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-2 text-center"
+      disabled={disabled}
+      className="flex flex-col items-center gap-2 text-center disabled:opacity-45"
     >
       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-(--brand-control) text-(--brand-primary)">
         {children}
@@ -56,6 +62,9 @@ function ControlButton({
 
 export function SessionCall({
   session,
+  workoutName,
+  coachStep,
+  coachStatusLabel,
   elapsedSeconds,
   durationSeconds,
   activePanel,
@@ -77,15 +86,18 @@ export function SessionCall({
 
           <div className="mb-10 text-center">
             <h1 className="text-5xl font-extrabold text-(--brand-ink)">
-              {session.workoutName}
+              {workoutName}
             </h1>
             <p className="mt-2 text-3xl font-bold text-(--brand-primary)">
               {formatTime(elapsedSeconds)}
             </p>
+            <p className="mt-3 text-base font-bold text-(--brand-muted)">
+              {coachStatusLabel}
+            </p>
           </div>
 
           <div className="grid grid-cols-3 justify-items-center gap-x-4 gap-y-8">
-            <ControlButton label="textläge">
+            <ControlButton label={coachStep === "live_intro" ? "lyssnar" : "mic"}>
               <MicOff size={34} />
             </ControlButton>
 

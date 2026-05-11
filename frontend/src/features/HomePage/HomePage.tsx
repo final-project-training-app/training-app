@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Phone, Settings } from "lucide-react";
 import coachHeroImage from "../../assets/image.png";
-import { startSessionAudio } from "../session/audio";
+import { primeSessionAudio } from "../session/audio";
 import { coachCallSessionQueryOptions } from "../session/query";
 import type { CoachCallSession } from "../session/types";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
@@ -26,6 +26,8 @@ export default function HomePage() {
   }, [isLoaded, isSignedIn, queryClient]);
 
   async function handleStartCall() {
+    void primeSessionAudio();
+
     const queryOptions = coachCallSessionQueryOptions("1");
     const cachedSession = queryClient.getQueryData<CoachCallSession>(
       queryOptions.queryKey,
@@ -34,10 +36,8 @@ export default function HomePage() {
       cachedSession ??
       (await queryClient.fetchQuery(queryOptions).catch(() => null));
 
-    if (session?.workoutAudioUrl) {
-      void startSessionAudio(session.workoutAudioUrl).catch(() => {
-        // SessionPage will make one more attempt if the browser still blocks playback here.
-      });
+    if (!session) {
+      return;
     }
 
     navigate({

@@ -1,10 +1,7 @@
-import type { LiveToolArgs } from "../shared/liveToolTypes";
-import {
-  fallbackIntroWorkoutId,
-} from "../shared/liveIntroDefaults";
+import { fallbackIntroWorkoutId } from "../shared/liveIntroDefaults";
 import { getWorkoutCatalogEndpoint } from "./workoutEndpoint";
 
-export async function getWorkoutCatalogHandler(_: LiveToolArgs) {
+export async function getWorkoutCatalogHandler() {
   const workouts = await getWorkoutCatalogEndpoint();
   const simplifiedWorkouts = workouts.ok
     ? workouts.data.map((workout) => ({
