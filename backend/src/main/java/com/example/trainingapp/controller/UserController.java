@@ -16,8 +16,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 record CreateUserRequest(String displayName) {
 }
@@ -40,9 +43,15 @@ public class UserController {
         this.activityLogService = activityLogService;
     }
 
+    private Jwt getJwtOrThrow(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Missing or invalid authentication token");
+        }
+        return jwt;
+    }
+
     private String getClerkId(Authentication authentication) {
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        return jwt.getSubject();
+        return getJwtOrThrow(authentication).getSubject();
     }
 
     private String resolveDisplayName(Jwt jwt) {
@@ -100,7 +109,7 @@ public class UserController {
             @RequestBody(required = false) CreateUserRequest request,
             Authentication authentication
     ) {
-        Jwt jwt = (Jwt) authentication.getPrincipal();
+        Jwt jwt = getJwtOrThrow(authentication);
         String requestedName = request != null ? request.displayName() : null;
 
         User created = userService.createUser(
