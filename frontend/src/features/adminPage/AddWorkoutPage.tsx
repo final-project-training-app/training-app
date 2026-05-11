@@ -295,8 +295,8 @@ export default function AddWorkoutPage() {
             className={`relative flex items-center justify-center gap-2 p-3 rounded-lg mt-2 font-medium text-white transition
     ${
       isSubmitting
-        ? "bg-blue-400 cursor-not-allowed"
-        : "bg-blue-600 hover:bg-blue-700"
+        ? "bg-purple-400 cursor-not-allowed"
+        : "bg-purple-600 hover:bg-purple-700"
     }
   `}
           >
