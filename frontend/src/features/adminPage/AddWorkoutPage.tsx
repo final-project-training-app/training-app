@@ -43,6 +43,8 @@ export default function AddWorkoutPage() {
   });
 
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -96,18 +98,30 @@ export default function AddWorkoutPage() {
     return newErrors.length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-    console.log("done");
-    console.log("Submitting workout:", form);
+    setIsSubmitting(true);
+    setSuccess(false);
 
-    // TODO: send to backend
-    // await fetch('/api/admin/workouts', { method: 'POST', body: JSON.stringify(form) })
+    try {
+      console.log("Submitting workout:", form);
+
+      // simulate API call (replace later)
+      await new Promise((res) => setTimeout(res, 1200));
+
+      setSuccess(true);
+
+      // optional: reset form
+      // setForm(initialState)
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
   return (
     <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
       <div className="w-full max-w-4xl bg-white backdrop-blur rounded-2xl shadow-lg p-8">
@@ -277,9 +291,25 @@ export default function AddWorkoutPage() {
           {/* Submit */}
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 transition text-white font-medium p-3 rounded-lg mt-2"
+            disabled={isSubmitting}
+            className={`relative flex items-center justify-center gap-2 p-3 rounded-lg mt-2 font-medium text-white transition
+    ${
+      isSubmitting
+        ? "bg-blue-400 cursor-not-allowed"
+        : "bg-blue-600 hover:bg-blue-700"
+    }
+  `}
           >
-            Create Workout
+            {isSubmitting ? (
+              <>
+                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Creating...
+              </>
+            ) : success ? (
+              "✔ Workout Created"
+            ) : (
+              "Create Workout"
+            )}
           </button>
         </form>
       </div>
