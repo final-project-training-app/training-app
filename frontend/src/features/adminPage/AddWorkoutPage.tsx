@@ -101,6 +101,7 @@ export default function AddWorkoutPage() {
 
     if (!validate()) return;
 
+    console.log("done");
     console.log("Submitting workout:", form);
 
     // TODO: send to backend
