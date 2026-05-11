@@ -20,7 +20,7 @@ export default function AddWorkoutPage() {
   const [form, setForm] = useState<WorkoutForm>({
     name: "",
     instructions: "",
-    level: 1,
+    level: 2,
     type: "",
     durationMinutes: 0,
     instructionsAudio: "",
@@ -40,12 +40,17 @@ export default function AddWorkoutPage() {
   ) => {
     const { name, value, type } = e.target;
 
-    const newValue =
+    let newValue =
       type === "checkbox"
         ? (e.target as HTMLInputElement).checked
         : type === "number"
           ? Number(value)
           : value;
+
+    // Constrain level to 0-4
+    if (name === "level" && typeof newValue === "number") {
+      newValue = Math.min(Math.max(newValue, 0), 4);
+    }
 
     setForm((prev) => ({
       ...prev,
@@ -116,6 +121,8 @@ export default function AddWorkoutPage() {
                   name="level"
                   value={form.level}
                   onChange={handleChange}
+                  min="0"
+                  max="4"
                   className="p-3 border rounded-lg bg-white/10"
                 />
               </label>
