@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE ??
+const API_BASE =
+  import.meta.env.VITE_API_BASE ??
   (typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:8080"
     : "");
@@ -19,4 +20,44 @@ export async function createWorkout(data: unknown) {
   }
 
   return res.json();
+}
+//  GET all workouts
+export async function fetchWorkouts() {
+  const res = await fetch(`${API_BASE}/api/workouts`);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch workouts");
+  }
+
+  return res.json();
+}
+
+//  UPDATE workout
+export async function updateWorkout(id: number, data: unknown) {
+  const res = await fetch(`${API_BASE}/api/workouts/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update workout");
+  }
+
+  return res.json();
+}
+
+// DELETE workout
+export async function deleteWorkout(id: number) {
+  const res = await fetch(`${API_BASE}/api/workouts/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete workout");
+  }
+
+  return true;
 }

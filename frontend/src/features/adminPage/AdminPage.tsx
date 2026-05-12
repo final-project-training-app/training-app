@@ -4,20 +4,15 @@ import { useAdminPage } from "../../hooks/useAdminPage";
 import { useMyProfile } from "../../hooks/useMyProfile";
 type AdminTab = "workouts" | "trainers" | "feedback";
 
-import AddWorkoutPage from "./AddWorkoutPage";
-import { useState, type JSX } from "react";
+import { useState } from "react";
 import MainWorkoutPage from "./MainWorkoutPage";
-// If AddWorkoutPage's props aren't typed as expected, cast to a compatible component type for this usage
-const AddWorkout = AddWorkoutPage as unknown as (props: {
-  workoutData?: string | undefined;
-}) => JSX.Element;
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn } = useAuth();
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const isAdmin = profile?.isAdmin === true;
-  const { data, isLoading, error } = useAdminPage(isAdmin);
+  const { isLoading, error } = useAdminPage(isAdmin);
   const [activeTab, setActiveTab] = useState<AdminTab>("workouts");
 
   if (!isLoaded || profileLoading) {
@@ -147,7 +142,7 @@ export default function AdminPage() {
 
       {/* Workout Content */}
       <div className="flex-1 p-6">
-        <MainWorkoutPage/>
+        <MainWorkoutPage />
       </div>
     </main>
   );

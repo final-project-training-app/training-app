@@ -48,4 +48,5 @@ public class WorkoutController {
     public ResponseEntity<Workout> createWorkout(@RequestBody Workout workout) {
         return ResponseEntity.ok(workoutService.createWorkout(workout));
     }
+
 }
