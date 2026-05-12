@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { fetchWorkouts, deleteWorkout } from "../../api/workouts";
 
 type Workout = {
@@ -15,9 +16,18 @@ type Props = {
   onStatusChange?: (message: string) => void;
 };
 
+type PendingDelete = {
+  id: number;
+  name: string;
+  timerId: number;
+};
+
 export default function AllWorkoutsPage({ onEdit, onStatusChange }: Props) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
+    null,
+  );
 
   //  FETCH workouts
   const {
@@ -60,6 +70,55 @@ export default function AllWorkoutsPage({ onEdit, onStatusChange }: Props) {
     },
   });
 
+  useEffect(() => {
+    return () => {
+      if (pendingDelete != null) {
+        window.clearTimeout(pendingDelete.timerId);
+      }
+    };
+  }, [pendingDelete]);
+
+  const scheduleDelete = (workout: Workout) => {
+    if (pendingDelete != null) {
+      onStatusChange?.("Undo current delete first.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete workout "${workout.name}"? You can undo for 5 seconds.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const timerId = window.setTimeout(async () => {
+      try {
+        await deleteMutation.mutateAsync(workout.id);
+      } finally {
+        setPendingDelete(null);
+      }
+    }, 5000);
+
+    setPendingDelete({
+      id: workout.id,
+      name: workout.name,
+      timerId,
+    });
+
+    onStatusChange?.("Delete scheduled. Undo within 5 seconds.");
+  };
+
+  const undoDelete = () => {
+    if (pendingDelete == null) {
+      return;
+    }
+
+    window.clearTimeout(pendingDelete.timerId);
+    setPendingDelete(null);
+    onStatusChange?.("Delete cancelled.");
+  };
+
   if (isLoading) {
     return <p className="text-sm text-(--brand-muted)">Loading workouts...</p>;
   }
@@ -70,6 +129,21 @@ export default function AllWorkoutsPage({ onEdit, onStatusChange }: Props) {
 
   return (
     <div className="space-y-4">
+      {pendingDelete != null && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3">
+          <p className="text-sm text-amber-800">
+            Delete pending for {pendingDelete.name}. You can undo now.
+          </p>
+          <button
+            type="button"
+            onClick={undoDelete}
+            className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white"
+          >
+            Undo
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">All Workouts</h2>
@@ -80,7 +154,8 @@ export default function AllWorkoutsPage({ onEdit, onStatusChange }: Props) {
         {workouts.map((workout: Workout) => (
           <div
             key={workout.id}
-            className="flex items-center justify-between rounded-xl border border-(--brand-border) bg-(--brand-surface-glass) p-4"
+            onClick={() => onEdit(workout.id)}
+            className="flex cursor-pointer items-center justify-between rounded-xl border border-(--brand-border) bg-(--brand-surface-glass) p-4 transition hover:border-(--brand-primary)"
           >
             {/* Info */}
             <div>
@@ -94,14 +169,20 @@ export default function AllWorkoutsPage({ onEdit, onStatusChange }: Props) {
             {/* Actions */}
             <div className="flex gap-2">
               <button
-                onClick={() => onEdit(workout.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEdit(workout.id);
+                }}
                 className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
               >
                 Edit
               </button>
 
               <button
-                onClick={() => deleteMutation.mutate(workout.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  scheduleDelete(workout);
+                }}
                 disabled={deleteMutation.isPending}
                 className="rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
               >
