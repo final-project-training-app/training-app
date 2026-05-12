@@ -70,7 +70,7 @@ export async function updateTrainerWithToken(
   data: unknown,
   token: string,
 ) {
-  let res = await fetch(`${API_BASE}/api/trainers/${id}`, {
+  const res = await fetch(`${API_BASE}/api/trainers/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -78,17 +78,6 @@ export async function updateTrainerWithToken(
     },
     body: JSON.stringify(data),
   });
-
-  if (res.status === 405) {
-    res = await fetch(`${API_BASE}/api/trainers/${id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");

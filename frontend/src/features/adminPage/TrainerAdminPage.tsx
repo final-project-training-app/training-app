@@ -79,6 +79,7 @@ export default function TrainerAdminPage() {
   const [editingTrainerId, setEditingTrainerId] = useState<number | null>(null);
   const [form, setForm] = useState<TrainerForm>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
     null,
   );
@@ -117,12 +118,16 @@ export default function TrainerAdminPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
+      setSubmitError(null);
       showToast("Trainer saved.");
       setForm(emptyForm);
       setView("all");
     },
     onError: (mutationError) => {
-      showToast((mutationError as Error).message || "Failed to save trainer.");
+      const message =
+        (mutationError as Error).message || "Failed to save trainer.";
+      setSubmitError(message);
+      showToast(message);
     },
   });
 
@@ -151,14 +156,16 @@ export default function TrainerAdminPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
+      setSubmitError(null);
       showToast("Trainer updated.");
       setView("all");
       setEditingTrainerId(null);
     },
     onError: (mutationError) => {
-      showToast(
-        (mutationError as Error).message || "Failed to update trainer.",
-      );
+      const message =
+        (mutationError as Error).message || "Failed to update trainer.";
+      setSubmitError(message);
+      showToast(message);
     },
   });
 
@@ -319,6 +326,7 @@ export default function TrainerAdminPage() {
 
   const openCreate = () => {
     setFieldErrors({});
+    setSubmitError(null);
     setForm(emptyForm);
     setEditingTrainerId(null);
     setView("create");
@@ -326,6 +334,7 @@ export default function TrainerAdminPage() {
 
   const openEdit = (trainerId: number) => {
     setFieldErrors({});
+    setSubmitError(null);
     setEditingTrainerId(trainerId);
     setView("edit");
     showToast("Opening trainer edit page...");
@@ -333,6 +342,7 @@ export default function TrainerAdminPage() {
 
   const submitCreate = async (event: React.FormEvent) => {
     event.preventDefault();
+    setSubmitError(null);
     if (!validate()) return;
     showToast("Saving trainer...");
     await createMutation.mutateAsync(form);
@@ -340,6 +350,7 @@ export default function TrainerAdminPage() {
 
   const submitEdit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setSubmitError(null);
     if (!validate() || editingTrainerId == null) return;
     showToast("Saving changes...");
     await updateMutation.mutateAsync({ id: editingTrainerId, payload: form });
@@ -460,6 +471,12 @@ export default function TrainerAdminPage() {
               </button>
             </div>
 
+            {submitError && (
+              <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {submitError}
+              </div>
+            )}
+
             <form
               onSubmit={view === "create" ? submitCreate : submitEdit}
               className="flex flex-col gap-6"
@@ -476,7 +493,9 @@ export default function TrainerAdminPage() {
                     }`}
                   />
                   {fieldErrors.name && (
-                    <span className="text-xs text-red-500">{fieldErrors.name}</span>
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.name}
+                    </span>
                   )}
                 </label>
 
@@ -508,7 +527,9 @@ export default function TrainerAdminPage() {
                     }`}
                   />
                   {fieldErrors.voice && (
-                    <span className="text-xs text-red-500">{fieldErrors.voice}</span>
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.voice}
+                    </span>
                   )}
                 </label>
 
@@ -523,7 +544,9 @@ export default function TrainerAdminPage() {
                     }`}
                   />
                   {fieldErrors.intro && (
-                    <span className="text-xs text-red-500">{fieldErrors.intro}</span>
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.intro}
+                    </span>
                   )}
                 </label>
 
