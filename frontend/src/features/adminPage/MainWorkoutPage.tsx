@@ -5,8 +5,13 @@ import EditWorkoutPage from "./EditWorkoutPage";
 import { useToast } from "../../hooks/useToast";
 
 type View = "all" | "create" | "edit";
+type AdminTab = "workouts" | "trainers" | "feedback";
 
-export default function MainWorkoutPage() {
+type Props = {
+  onSwitchTab?: (tab: AdminTab) => void;
+};
+
+export default function MainWorkoutPage({ onSwitchTab }: Props) {
   const [view, setView] = useState<View>("all");
   const [editingWorkoutId, setEditingWorkoutId] = useState<number | null>(null);
   const { toast, showToast } = useToast();
@@ -20,30 +25,55 @@ export default function MainWorkoutPage() {
       )}
 
       {/* Top Navigation */}
-      <div className="flex gap-3 border-b border-(--brand-border) px-6 py-4">
-        <button
-          onClick={() => setView("all")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-            view === "all"
-              ? "bg-(--brand-primary) text-(--brand-on-primary)"
-              : "bg-(--brand-surface-glass) text-(--brand-muted)"
-          }`}
-        >
-          All Workouts
-        </button>
-
-        {view === "edit" && (
+      {view === "all" && (
+        <div className="flex gap-3 border-b border-(--brand-border) px-6 py-4">
           <button
+            onClick={() => setView("all")}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              view === "all"
+                ? "bg-(--brand-primary) text-(--brand-on-primary)"
+                : "bg-(--brand-surface-glass) text-(--brand-muted)"
+            }`}
+          >
+            All Workouts
+          </button>
+        </div>
+      )}
+
+      {view !== "all" && (
+        <div className="flex flex-wrap gap-2 border-b border-(--brand-border) px-6 py-4">
+          <button
+            type="button"
             onClick={() => {
               setView("all");
               showToast("Back to workouts.");
             }}
-            className="rounded-full bg-(--brand-primary) px-4 py-2 text-sm font-semibold text-(--brand-on-primary)"
+            className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
-            Edit Workout
+            Back to Workouts
           </button>
-        )}
-      </div>
+
+          {onSwitchTab && (
+            <>
+              <button
+                type="button"
+                onClick={() => onSwitchTab("trainers")}
+                className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
+              >
+                Go to Trainers
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onSwitchTab("feedback")}
+                className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
+              >
+                Go to Feedback
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Page Content */}
       <div className="flex-1 p-6">

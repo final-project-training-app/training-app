@@ -162,7 +162,9 @@ export default function AdminPage() {
       </header>
 
       <div className="mx-auto w-full max-w-6xl flex-1 p-6">
-        {activeTab === "workouts" && <MainWorkoutPage />}
+        {activeTab === "workouts" && (
+          <MainWorkoutPage onSwitchTab={setActiveTab} />
+        )}
         {activeTab === "trainers" && <TrainerAdminPage />}
         {activeTab === "feedback" && <FeedbackAdminPage />}
       </div>

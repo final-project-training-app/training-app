@@ -97,6 +97,12 @@ export default function AllWorkoutsPage({
       return;
     }
 
+    const typed = window.prompt('Type DELETE to confirm workout deletion.');
+    if (typed?.trim().toUpperCase() !== "DELETE") {
+      onStatusChange?.("Delete cancelled.");
+      return;
+    }
+
     const timerId = window.setTimeout(async () => {
       try {
         await deleteMutation.mutateAsync(workout.id);

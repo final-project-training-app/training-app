@@ -75,7 +75,9 @@ export default function TrainerAdminPage() {
   const [editingTrainerId, setEditingTrainerId] = useState<number | null>(null);
   const [form, setForm] = useState<TrainerForm>(emptyForm);
   const [errors, setErrors] = useState<string[]>([]);
-  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
+    null,
+  );
 
   const {
     data: trainers = [],
@@ -121,7 +123,13 @@ export default function TrainerAdminPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, payload }: { id: number; payload: TrainerForm }) => {
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: TrainerForm;
+    }) => {
       const token = await getToken();
       if (!token) {
         throw new Error("Missing Clerk token");
@@ -144,7 +152,9 @@ export default function TrainerAdminPage() {
       setEditingTrainerId(null);
     },
     onError: (mutationError) => {
-      showToast((mutationError as Error).message || "Failed to update trainer.");
+      showToast(
+        (mutationError as Error).message || "Failed to update trainer.",
+      );
     },
   });
 
@@ -161,7 +171,9 @@ export default function TrainerAdminPage() {
       showToast("Trainer deleted.");
     },
     onError: (mutationError) => {
-      showToast((mutationError as Error).message || "Failed to delete trainer.");
+      showToast(
+        (mutationError as Error).message || "Failed to delete trainer.",
+      );
     },
   });
 
@@ -261,6 +273,12 @@ export default function TrainerAdminPage() {
     );
 
     if (!confirmed) {
+      return;
+    }
+
+    const typed = window.prompt('Type DELETE to confirm trainer deletion.');
+    if (typed?.trim().toUpperCase() !== "DELETE") {
+      showToast("Delete cancelled.");
       return;
     }
 
@@ -366,9 +384,12 @@ export default function TrainerAdminPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold">{trainer.name || "Unnamed trainer"}</p>
+                    <p className="font-semibold">
+                      {trainer.name || "Unnamed trainer"}
+                    </p>
                     <p className="text-xs text-(--brand-muted)">
-                      Language: {trainer.language || "-"} | Voice: {trainer.voice || "-"}
+                      Language: {trainer.language || "-"} | Voice:{" "}
+                      {trainer.voice || "-"}
                     </p>
                   </div>
 
@@ -534,7 +555,9 @@ export default function TrainerAdminPage() {
 
                 <button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
                   className="rounded-lg bg-(--brand-primary) px-4 py-3 text-sm font-medium text-(--brand-on-primary) disabled:opacity-50"
                 >
                   {createMutation.isPending || updateMutation.isPending
