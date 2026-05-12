@@ -33,6 +33,10 @@ type TrainerForm = {
   imageStart: string;
 };
 
+type TrainerField = keyof TrainerForm;
+
+type FieldErrors = Partial<Record<TrainerField, string>>;
+
 type View = "all" | "create" | "edit";
 
 type PendingDelete = {
@@ -57,6 +61,15 @@ function normalizeOptional(value: string) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function isHttpUrl(value: string) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export default function TrainerAdminPage() {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
@@ -65,7 +78,7 @@ export default function TrainerAdminPage() {
   const [view, setView] = useState<View>("all");
   const [editingTrainerId, setEditingTrainerId] = useState<number | null>(null);
   const [form, setForm] = useState<TrainerForm>(emptyForm);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
     null,
   );
@@ -231,16 +244,28 @@ export default function TrainerAdminPage() {
   }, [trainers]);
 
   const validate = () => {
-    const nextErrors: string[] = [];
+    const nextErrors: FieldErrors = {};
 
-    if (!form.name.trim()) nextErrors.push("Name is required");
-    if (!form.prompt.trim()) nextErrors.push("Prompt is required");
-    if (!form.voice.trim()) nextErrors.push("Voice is required");
-    if (!form.intro.trim()) nextErrors.push("Intro is required");
-    if (!form.language.trim()) nextErrors.push("Language is required");
+    if (!form.name.trim()) nextErrors.name = "Name is required";
+    if (!form.prompt.trim()) nextErrors.prompt = "Prompt is required";
+    if (!form.voice.trim()) nextErrors.voice = "Voice is required";
+    if (!form.intro.trim()) nextErrors.intro = "Intro is required";
+    if (!form.language.trim()) nextErrors.language = "Language is required";
 
-    setErrors(nextErrors);
-    return nextErrors.length === 0;
+    if (form.imageSelect.trim() && !isHttpUrl(form.imageSelect.trim())) {
+      nextErrors.imageSelect = "Image select must be a valid http/https URL";
+    }
+
+    if (form.imageCall.trim() && !isHttpUrl(form.imageCall.trim())) {
+      nextErrors.imageCall = "Image call must be a valid http/https URL";
+    }
+
+    if (form.imageStart.trim() && !isHttpUrl(form.imageStart.trim())) {
+      nextErrors.imageStart = "Image start must be a valid http/https URL";
+    }
+
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   const onFormChange = (
@@ -248,6 +273,7 @@ export default function TrainerAdminPage() {
   ) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name as TrainerField]: undefined }));
   };
 
   const scheduleDelete = (trainer: Trainer) => {
@@ -292,14 +318,14 @@ export default function TrainerAdminPage() {
   };
 
   const openCreate = () => {
-    setErrors([]);
+    setFieldErrors({});
     setForm(emptyForm);
     setEditingTrainerId(null);
     setView("create");
   };
 
   const openEdit = (trainerId: number) => {
-    setErrors([]);
+    setFieldErrors({});
     setEditingTrainerId(trainerId);
     setView("edit");
     showToast("Opening trainer edit page...");
@@ -445,8 +471,13 @@ export default function TrainerAdminPage() {
                     name="name"
                     value={form.name}
                     onChange={onFormChange}
-                    className="rounded-lg border p-3"
+                    className={`rounded-lg border p-3 ${
+                      fieldErrors.name ? "border-red-500" : ""
+                    }`}
                   />
+                  {fieldErrors.name && (
+                    <span className="text-xs text-red-500">{fieldErrors.name}</span>
+                  )}
                 </label>
 
                 <label className="flex flex-col gap-1">
@@ -455,8 +486,15 @@ export default function TrainerAdminPage() {
                     name="language"
                     value={form.language}
                     onChange={onFormChange}
-                    className="rounded-lg border p-3"
+                    className={`rounded-lg border p-3 ${
+                      fieldErrors.language ? "border-red-500" : ""
+                    }`}
                   />
+                  {fieldErrors.language && (
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.language}
+                    </span>
+                  )}
                 </label>
 
                 <label className="flex flex-col gap-1">
@@ -465,8 +503,13 @@ export default function TrainerAdminPage() {
                     name="voice"
                     value={form.voice}
                     onChange={onFormChange}
-                    className="rounded-lg border p-3"
+                    className={`rounded-lg border p-3 ${
+                      fieldErrors.voice ? "border-red-500" : ""
+                    }`}
                   />
+                  {fieldErrors.voice && (
+                    <span className="text-xs text-red-500">{fieldErrors.voice}</span>
+                  )}
                 </label>
 
                 <label className="flex flex-col gap-1">
@@ -475,8 +518,13 @@ export default function TrainerAdminPage() {
                     name="intro"
                     value={form.intro}
                     onChange={onFormChange}
-                    className="rounded-lg border p-3"
+                    className={`rounded-lg border p-3 ${
+                      fieldErrors.intro ? "border-red-500" : ""
+                    }`}
                   />
+                  {fieldErrors.intro && (
+                    <span className="text-xs text-red-500">{fieldErrors.intro}</span>
+                  )}
                 </label>
 
                 <label className="md:col-span-2 flex flex-col gap-1">
@@ -485,8 +533,15 @@ export default function TrainerAdminPage() {
                     name="prompt"
                     value={form.prompt}
                     onChange={onFormChange}
-                    className="min-h-[140px] rounded-lg border p-3"
+                    className={`min-h-[140px] rounded-lg border p-3 ${
+                      fieldErrors.prompt ? "border-red-500" : ""
+                    }`}
                   />
+                  {fieldErrors.prompt && (
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.prompt}
+                    </span>
+                  )}
                 </label>
 
                 <label className="flex flex-col gap-1">
@@ -495,8 +550,15 @@ export default function TrainerAdminPage() {
                     name="imageSelect"
                     value={form.imageSelect}
                     onChange={onFormChange}
-                    className="rounded-lg border p-3"
+                    className={`rounded-lg border p-3 ${
+                      fieldErrors.imageSelect ? "border-red-500" : ""
+                    }`}
                   />
+                  {fieldErrors.imageSelect && (
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.imageSelect}
+                    </span>
+                  )}
                 </label>
 
                 <label className="flex flex-col gap-1">
@@ -505,8 +567,15 @@ export default function TrainerAdminPage() {
                     name="imageCall"
                     value={form.imageCall}
                     onChange={onFormChange}
-                    className="rounded-lg border p-3"
+                    className={`rounded-lg border p-3 ${
+                      fieldErrors.imageCall ? "border-red-500" : ""
+                    }`}
                   />
+                  {fieldErrors.imageCall && (
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.imageCall}
+                    </span>
+                  )}
                 </label>
 
                 <label className="md:col-span-2 flex flex-col gap-1">
@@ -515,18 +584,17 @@ export default function TrainerAdminPage() {
                     name="imageStart"
                     value={form.imageStart}
                     onChange={onFormChange}
-                    className="rounded-lg border p-3"
+                    className={`rounded-lg border p-3 ${
+                      fieldErrors.imageStart ? "border-red-500" : ""
+                    }`}
                   />
+                  {fieldErrors.imageStart && (
+                    <span className="text-xs text-red-500">
+                      {fieldErrors.imageStart}
+                    </span>
+                  )}
                 </label>
               </div>
-
-              {errors.length > 0 && (
-                <div className="rounded-lg border border-red-500 bg-red-500/10 p-3 text-red-500">
-                  {errors.map((message) => (
-                    <p key={message}>{message}</p>
-                  ))}
-                </div>
-              )}
 
               <div className="flex items-center gap-3">
                 <button
