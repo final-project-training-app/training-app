@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/react";
 import { useCreateWorkout } from "../../hooks/useCreateWorkoutHook";
-import { fetchTrainers } from "../../api/trainers";
+import { fetchTrainersWithToken } from "../../api/trainers";
 
 type TrainerOption = {
   id: number;
@@ -24,6 +25,11 @@ type WorkoutForm = {
   trainerId: string;
 };
 
+type Props = {
+  onBack?: () => void;
+  onStatusChange?: (message: string) => void;
+};
+
 const isValidUrl = (url: string): boolean => {
   try {
     new URL(url);
@@ -33,7 +39,8 @@ const isValidUrl = (url: string): boolean => {
   }
 };
 
-export default function AddWorkoutPage() {
+export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
+  const { getToken } = useAuth();
   const [form, setForm] = useState<WorkoutForm>({
     name: "",
     description: "",
@@ -50,7 +57,7 @@ export default function AddWorkoutPage() {
     beginnerFriendly: false,
     trainerId: "",
   });
-  const { mutateAsync, isPending } = useCreateWorkout();
+  const { mutateAsync, isPending } = useCreateWorkout(getToken);
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
   const [trainers, setTrainers] = useState<TrainerOption[]>([]);
@@ -64,7 +71,13 @@ export default function AddWorkoutPage() {
     async function loadTrainers() {
       try {
         setTrainersLoading(true);
-        const data = await fetchTrainers();
+        const token = await getToken();
+
+        if (!token) {
+          throw new Error("Missing Clerk token");
+        }
+
+        const data = await fetchTrainersWithToken(token);
 
         if (!isMounted) return;
 
@@ -75,6 +88,7 @@ export default function AddWorkoutPage() {
 
         console.error(error);
         setTrainersError("Could not load trainers.");
+        onStatusChange?.("Failed to load trainers.");
       } finally {
         if (isMounted) {
           setTrainersLoading(false);
@@ -87,7 +101,7 @@ export default function AddWorkoutPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [getToken, onStatusChange]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -150,6 +164,7 @@ export default function AddWorkoutPage() {
     if (!validate()) return;
 
     setSuccess(false);
+    onStatusChange?.("Saving workout...");
 
     try {
       await mutateAsync({
@@ -172,17 +187,31 @@ export default function AddWorkoutPage() {
       });
 
       setSuccess(true);
+      onStatusChange?.("Workout saved.");
 
       // optional reset
       // setForm(initialState)
     } catch (err) {
       console.error(err);
+      onStatusChange?.("Failed to save workout.");
     }
   }
   return (
     <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
       <div className="w-full max-w-4xl bg-white backdrop-blur rounded-2xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold mb-8">Add Workout</h1>
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <h1 className="text-3xl font-bold">Add Workout</h1>
+          <button
+            type="button"
+            onClick={() => {
+              onStatusChange?.("Cancelling...");
+              onBack?.();
+            }}
+            className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
+          >
+            Back
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
           {/* Basic Info */}
@@ -372,28 +401,41 @@ export default function AddWorkoutPage() {
           )}
 
           {/* Submit */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`relative flex items-center justify-center gap-2 p-3 rounded-lg mt-2 font-medium text-white transition
+          <div className="mt-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                onStatusChange?.("Cancelling...");
+                onBack?.();
+              }}
+              className="rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-3 text-sm font-medium"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`relative flex items-center justify-center gap-2 p-3 rounded-lg font-medium text-white transition
     ${
       isSubmitting
         ? "bg-purple-400 cursor-not-allowed"
         : "bg-purple-600 hover:bg-purple-700"
     }
   `}
-          >
-            {isSubmitting ? (
-              <>
-                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Creating...
-              </>
-            ) : success ? (
-              "✔ Workout Created"
-            ) : (
-              "Create Workout"
-            )}
-          </button>
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : success ? (
+                "Saved"
+              ) : (
+                "Save"
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </main>
