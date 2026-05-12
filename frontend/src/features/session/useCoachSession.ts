@@ -1,5 +1,4 @@
 import {
-  type FunctionCall,
   type FunctionResponse
 } from "@google/genai";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -7,7 +6,6 @@ import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
 import {
   executeLiveToolCall,
-  liveSystemInstruction,
   liveTools,
 } from "../ai-dev/live/tools";
 import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
@@ -20,117 +18,29 @@ import {
 } from "./audio";
 import {
   COACH_PROMPTS,
-  READY_ACK_PHRASE,
-  SESSION_CONTROL_TOOLS,
+  liveSystemInstruction,
+  SESSION_CONTROL_TOOLS
 } from "./coachPrompts";
-import type { CoachCallSession } from "./types";
+import {
+  type CoachSessionDebugEvent,
+  type CoachSessionStep,
+  type UseCoachSessionOptions,
+  getModelText,
+  getQueuedActionForStep,
+  hasReadyAckPhrase,
+  readFeedbackSummary,
+  readWorkoutFromResponse,
+  sleep,
+} from "./coachSessionHelpers";
 
-export type CoachSessionStep =
-  | "idle"
- // | "choosing_workout"
-  | "live_intro"
-  | "waiting_instruction_approval"
-  | "playing_instructions"
-  | "asking_ready"
-  | "playing_workout"
-  | "collecting_feedback"
-  | "completed"
-  | "error";
 
-type UseCoachSessionOptions = {
-  session: CoachCallSession;
-  autoStart?: boolean;
-};
 
-type PendingCoachAction = "start_instructions" | "start_workout" | null;
-export type CoachSessionDebugEvent = {
-  id: number;
-  elapsedMs: number;
-  label: string;
-  detail?: string;
-};
-
-//──────────────────────
-// Simple sleep helper
-//──────────────────────
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 //──────────────────────
 // Build system instruction
 //──────────────────────
 function buildSessionInstruction() {
   return liveSystemInstruction;
-}
-
-//──────────────────────
-// Read feedback summary from tool call
-//──────────────────────
-function readFeedbackSummary(functionCall: FunctionCall) {
-  const args = functionCall.args ?? {};
-  const summary = args.summary;
-  return typeof summary === "string" ? summary : "";
-}
-
-//──────────────────────
-// Read workout from tool response
-//──────────────────────
-function readWorkoutFromResponse(response: FunctionResponse) {
-  if (response.name !== "get_workout_details") {
-    return null;
-  }
-
-  const body = response.response;
-  if (!body || typeof body !== "object" || !("output" in body)) {
-    return null;
-  }
-
-  const output = (body as { output?: { workout?: unknown } }).output;
-  const workout = output?.workout;
-  return workout && typeof workout === "object"
-    ? (workout as BackendWorkoutResponse)
-    : null;
-}
-
-//──────────────────────
-// Map session step to queued action
-//──────────────────────
-function getQueuedActionForStep(step: CoachSessionStep): PendingCoachAction {
-  if (step === "waiting_instruction_approval") {
-    return "start_instructions";
-  }
-
-  if (step === "asking_ready") {
-    return "start_workout";
-  }
-
-  return null;
-}
-
-//──────────────────────
-// Extract model text from Gemini message
-//──────────────────────
-function getModelText(message: unknown) {
-  const parts =
-    (
-      message as {
-        serverContent?: { modelTurn?: { parts?: Array<{ text?: string }> } };
-      }
-    ).serverContent?.modelTurn?.parts ?? [];
-
-  return parts
-    .map((part) => part.text)
-    .filter(Boolean)
-    .join(" ");
-}
-
-//──────────────────────
-// Check ready acknowledgement phrase
-//──────────────────────
-function hasReadyAckPhrase(text: string) {
-  return text
-    .toLocaleLowerCase("sv-SE")
-    .replace(/\s+/g, " ")
-    .includes(READY_ACK_PHRASE);
 }
 
 export function useCoachSession(options: UseCoachSessionOptions) {
@@ -233,6 +143,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-instructions", String(queuedAction));
+        await sleep(500);
         void startInstructionsRef.current();
         return {
           id: functionCall.id,
@@ -253,6 +164,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       if (name === "start_workout") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-workout", String(queuedAction));
+        await sleep(500);
         void startWorkoutRef.current();
         return {
           id: functionCall.id,
