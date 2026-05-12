@@ -1,11 +1,16 @@
 package com.example.trainingapp.entity;
 
+import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "workouts")
 public class Workout {
@@ -14,10 +19,16 @@ public class Workout {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private String instructions;
+
+    @Column(name = "description")
+    private String description;
+
     private Integer level;
     private String type;
-    private Integer durationMinutes;
+
+    @Column(name = "duration_seconds")
+    private Integer durationSeconds;
+
     private String instructionsAudio;
     private String workoutAudio;
     private String instructionsImage;
@@ -27,116 +38,28 @@ public class Workout {
     private Boolean seated;
     private Boolean beginnerFriendly;
 
-    public Long getId() {
-        return id;
+    @ManyToOne
+    @JoinColumn(name = "trainer_id")
+    private Trainer trainer;
+
+
+    @JsonProperty("durationSeconds")
+    public Integer getDurationSeconds() {
+        return durationSeconds;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @JsonProperty("durationSeconds")
+    public void setDurationSeconds(Integer durationSeconds) {
+        if (durationSeconds == null) {
+            this.durationSeconds = null;
+            return;
+        }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getInstructions() {
-        return instructions;
-    }
-
-    public void setInstructions(String instructions) {
-        this.instructions = instructions;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public void setLevel(Integer level) {
-        this.level = level;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public Integer getDurationMinutes() {
-        return durationMinutes;
-    }
-
-    public void setDurationMinutes(Integer durationMinutes) {
-        this.durationMinutes = durationMinutes;
-    }
-
-    public String getInstructionsAudio() {
-        return instructionsAudio;
-    }
-
-    public void setInstructionsAudio(String instructionsAudio) {
-        this.instructionsAudio = instructionsAudio;
-    }
-
-    public String getWorkoutAudio() {
-        return workoutAudio;
-    }
-
-    public void setWorkoutAudio(String workoutAudio) {
-        this.workoutAudio = workoutAudio;
+        if (durationSeconds < 0) {
+            throw new IllegalArgumentException("durationSeconds cannot be negative");
+        }
+        this.durationSeconds = durationSeconds;
     }
 
 
-    public String getInstructionsImage() {
-        return instructionsImage;
-    }
-
-    public void setInstructionsImage(String instructionsImage) {
-        this.instructionsImage = instructionsImage;
-    }
-
-    public String getWorkoutImage() {
-        return workoutImage;
-    }
-
-    public void setWorkoutImage(String workoutImage) {
-        this.workoutImage = workoutImage;
-    }
-
-    public Boolean getKneeFriendly() {
-        return kneeFriendly;
-    }
-
-    public void setKneeFriendly(Boolean kneeFriendly) {
-        this.kneeFriendly = kneeFriendly;
-    }
-
-    public Boolean getLowImpact() {
-        return lowImpact;
-    }
-
-    public void setLowImpact(Boolean lowImpact) {
-        this.lowImpact = lowImpact;
-    }
-
-    public Boolean getSeated() {
-        return seated;
-    }
-
-    public void setSeated(Boolean seated) {
-        this.seated = seated;
-    }
-
-    public Boolean getBeginnerFriendly() {
-        return beginnerFriendly;
-    }
-
-    public void setBeginnerFriendly(Boolean beginnerFriendly) {
-        this.beginnerFriendly = beginnerFriendly;
-    }
 }
