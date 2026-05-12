@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Type,
   type FunctionCall,
-  type FunctionResponse,
-  type ToolListUnion,
+  type FunctionResponse
 } from "@google/genai";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
 import {
@@ -20,6 +18,11 @@ import {
   startSessionAudio,
   stopSessionAudio,
 } from "./audio";
+import {
+  COACH_PROMPTS,
+  READY_ACK_PHRASE,
+  SESSION_CONTROL_TOOLS,
+} from "./coachPrompts";
 import type { CoachCallSession } from "./types";
 
 export type CoachSessionStep =
@@ -47,53 +50,12 @@ export type CoachSessionDebugEvent = {
   detail?: string;
 };
 
-// Minimal fixed pauses are implemented with `sleep(ms)` helper below.
-const READY_ACK_PHRASE = "vad bra! nu kör vi igång";
-
 // Simple sleep helper used to add a short human-like pause before playback.
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const sessionControlTools: ToolListUnion = [
-  {
-    functionDeclarations: [
-      {
-        name: "start_instructions",
-        description:
-          "Queue instruction audio only after the user clearly says they are ready for the instructions, for example 'ja', 'okej', 'kör igång', or 'det blir bra'. Use this during the first ready question, before instruction audio has played. Before calling this, say exactly: 'Vad bra! Nu kör vi igång.'",
-        parameters: {
-          type: Type.OBJECT,
-          properties: {},
-        },
-      },
-      {
-        name: "start_workout",
-        description:
-          "Queue workout audio only after instruction audio has finished and the user clearly says they are ready to start the workout, for example 'ja', 'kör igång', 'jag är redo', or 'starta'. Do not use this before instruction audio has played. Before calling this, say exactly: 'Vad bra! Nu kör vi igång.'",
-        parameters: {
-          type: Type.OBJECT,
-          properties: {},
-        },
-      },
-      {
-        name: "finish_session_feedback",
-        description:
-          "Finish the session after the user has given workout feedback. Include a short Swedish summary.",
-        parameters: {
-          type: Type.OBJECT,
-          properties: {
-            summary: {
-              type: Type.STRING,
-              description: "A short Swedish summary of the user's feedback.",
-            },
-          },
-        },
-      },
-    ],
-  },
-];
+
 
 function buildSessionInstruction() {
-  // Minimal system instruction for MVP sessions — keep voice-friendly behaviour.
   return liveSystemInstruction;
 }
 
@@ -120,7 +82,6 @@ function readWorkoutFromResponse(response: FunctionResponse) {
     : null;
 }
 
-// formatWorkoutCatalogForCoach removed for MVP — selection is fixed to workout id 1.
 
 function getQueuedActionForStep(step: CoachSessionStep): PendingCoachAction {
   if (step === "waiting_instruction_approval") {
@@ -228,10 +189,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     connectionError,
     currentTurn,
     getSession,
-    // no longer using playback remaining helper in MVP
   } = useGeminiLive({
     token,
-    tools: [...liveTools, ...sessionControlTools],
+    tools: [...liveTools, ...SESSION_CONTROL_TOOLS],
     systemInstruction: buildSessionInstruction(),
     onToolCall: async (functionCall): Promise<FunctionResponse> => {
       const name = functionCall.name ?? "unknown_tool";
@@ -240,7 +200,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-instructions", String(queuedAction));
-        // start immediately in MVP
         void startInstructionsRef.current();
         return {
           id: functionCall.id,
@@ -319,9 +278,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         if (selectedWorkoutRef.current) {
           setSessionStep("waiting_instruction_approval");
         } else {
-          sendCoachPrompt(
-            "Välj först en workout genom get_workout_catalog och get_workout_details. Säg sedan kort varför den passar.",
-          );
+          sendCoachPrompt(COACH_PROMPTS.ASK_PLAY_INSTRUCTIONS("workout"));
         }
       }
     },
@@ -356,10 +313,10 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     const freshToken = await loadToken();
 
     if (!freshToken) {
-      addDebugEvent("live token failed");
-      setError("Kunde inte starta coach-samtalet.");
+      setError(COACH_PROMPTS.NO_TOKEN_ERROR);
       setSessionStep("error");
-      return false;
+      hasStartedRef.current = false;
+      return;
     }
 
     addDebugEvent("connect live", stepRef.current);
@@ -465,8 +422,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
 
     const freshToken = await loadToken();
     if (!freshToken) {
-      addDebugEvent("initial token failed");
-      setError("Kunde inte starta coach-samtalet.");
+      setError(COACH_PROMPTS.NO_TOKEN_ERROR);
       setSessionStep("error");
       hasStartedRef.current = false;
       return;
@@ -475,8 +431,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     // MVP: always use workout id 1
     const workoutResp = await getWorkoutEndpoint(1).catch(() => null);
     if (!workoutResp || !workoutResp.ok) {
-      addDebugEvent("workout fetch failed");
-      setError("Kunde inte hämta workout.");
+      setError(COACH_PROMPTS.NO_WORKOUT_ERROR);
       setSessionStep("error");
       hasStartedRef.current = false;
       return;
@@ -505,12 +460,8 @@ export function useCoachSession(options: UseCoachSessionOptions) {
 
     // Ask the user straightforwardly about the single MVP workout.
     setSessionStep("waiting_instruction_approval");
-    sendCoachPrompt(
-      [
-        `Vi har ett kort träningspass: "${workout.name}". Vill du att jag spelar instruktionerna?`,
-        "Fråga: 'Okej — är du nu redo att köra igång med träningen?'. När användaren svarar ja, säg exakt 'Vad bra! Nu kör vi igång.' och kalla start_instructions.",
-      ].join(" "),
-    );
+    sendCoachPrompt(COACH_PROMPTS.ASK_PLAY_INSTRUCTIONS(workout.name));
+
   }, [
     addDebugEvent,
     geminiConnect,
@@ -533,7 +484,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     const workoutAudioUrl = workout?.workoutAudio;
 
     if (!workoutAudioUrl) {
-      setError("Workout-ljud saknas.");
+      setError(COACH_PROMPTS.NO_WORKOUT_AUDIO);
       setSessionStep("error");
       return;
     }
@@ -622,14 +573,10 @@ export function useCoachSession(options: UseCoachSessionOptions) {
             }
 
             sendCoachPrompt(
-              [
-                `Workouten "${selectedWorkoutRef.current?.name ?? "workout"}" är klar.`,
-                progressSummary
-                  ? `Jag har sparat passet åt dig. ${progressSummary}`
-                  : "Jag har sparat passet åt dig.",
-                "Fråga: 'Hur kändes det i kroppen?'",
-                "När användaren svarar, kalla `create_feedback` med `userId`, `workoutId` och `comment`. Efter att feedback sparats, säg en varm bekräftelse att feedbacken är sparad och att den kommer användas nästa gång, och kalla `finish_session_feedback` med en kort svensk sammanfattning.",
-              ].join(" "),
+              COACH_PROMPTS.WORKOUT_DONE(
+                selectedWorkoutRef.current?.name ?? "workout",
+                progressSummary,
+              ),
             );
           } catch (e) {
             addDebugEvent("activity save failed", String(e));
@@ -642,12 +589,10 @@ export function useCoachSession(options: UseCoachSessionOptions) {
             addDebugEvent("mic after workout (fallback)", started);
 
             sendCoachPrompt(
-              [
-                `Workouten "${selectedWorkoutRef.current?.name ?? "workout"}" är klar.`,
+              COACH_PROMPTS.WORKOUT_DONE(
+                selectedWorkoutRef.current?.name ?? "workout",
                 "Kunde inte spara passet just nu, men vi försöker igen senare.",
-                "Fråga: 'Hur kändes det i kroppen?'",
-                "När användaren svarar, kalla `create_feedback` med `userId`, `workoutId` och `comment`.",
-              ].join(" "),
+              ),
             );
           }
         },
@@ -689,16 +634,11 @@ export function useCoachSession(options: UseCoachSessionOptions) {
           JSON.stringify(feedbackResp?.response ?? {}),
         );
 
-        const closing = `Tack — jag har sparat din feedback. Det hjälper mig att anpassa nästa pass. Ta hand om dig, vi hörs snart igen. Hej då!`;
+        const closing =
+          COACH_PROMPTS.FEEDBACK_SAVED;
 
-        // Ask Gemini to speak a warm closing message so the UX feels complete.
         getSession()?.sendClientContent({
-          turns: [
-            {
-              role: "user",
-              parts: [{ text: `Säg exakt: '${closing}'` }],
-            },
-          ],
+          turns: [{ role: "user", parts: [{ text: `Säg exakt: '${closing}'` }] }],
           turnComplete: true,
         });
 
