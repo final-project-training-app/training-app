@@ -31,3 +31,74 @@ export async function fetchTrainersWithToken(token: string) {
 
   return res.json();
 }
+
+export async function fetchTrainerByIdWithToken(id: number, token: string) {
+  const res = await fetch(`${API_BASE}/api/trainers/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Failed to load trainer.");
+  }
+
+  return res.json();
+}
+
+export async function createTrainerWithToken(data: unknown, token: string) {
+  const res = await fetch(`${API_BASE}/api/trainers`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Failed to create trainer.");
+  }
+
+  return res.json();
+}
+
+export async function updateTrainerWithToken(
+  id: number,
+  data: unknown,
+  token: string,
+) {
+  const res = await fetch(`${API_BASE}/api/trainers/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Failed to update trainer.");
+  }
+
+  return res.json();
+}
+
+export async function deleteTrainerWithToken(id: number, token: string) {
+  const res = await fetch(`${API_BASE}/api/trainers/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Failed to delete trainer.");
+  }
+
+  return true;
+}
