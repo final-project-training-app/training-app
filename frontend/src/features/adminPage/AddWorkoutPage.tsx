@@ -25,9 +25,13 @@ type WorkoutForm = {
   trainerId: string;
 };
 
+import { ToastType } from "../../hooks/useToast";
+
+type StatusFn = (message: string, options?: { type?: ToastType; duration?: number }) => void;
+
 type Props = {
   onBack?: () => void;
-  onStatusChange?: (message: string) => void;
+  onStatusChange?: StatusFn;
 };
 
 const isValidUrl = (url: string): boolean => {
@@ -88,7 +92,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
 
         console.error(error);
         setTrainersError("Could not load trainers.");
-        onStatusChange?.("Failed to load trainers.");
+        onStatusChange?.("Failed to load trainers.", { type: "error" });
       } finally {
         if (isMounted) {
           setTrainersLoading(false);
@@ -164,7 +168,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
     if (!validate()) return;
 
     setSuccess(false);
-    onStatusChange?.("Saving workout...");
+    onStatusChange?.("Saving workout...", { type: "info" });
 
     try {
       await mutateAsync({
@@ -187,13 +191,13 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
       });
 
       setSuccess(true);
-      onStatusChange?.("Workout saved.");
+      onStatusChange?.("Workout saved.", { type: "success" });
 
       // optional reset
       // setForm(initialState)
     } catch (err) {
       console.error(err);
-      onStatusChange?.("Failed to save workout.");
+      onStatusChange?.("Failed to save workout.", { type: "error" });
     }
   }
   return (
@@ -204,9 +208,9 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
           <button
             type="button"
             onClick={() => {
-              onStatusChange?.("Cancelling...");
-              onBack?.();
-            }}
+                onStatusChange?.("Cancelling...", { type: "info" });
+                onBack?.();
+              }}
             className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
             Back

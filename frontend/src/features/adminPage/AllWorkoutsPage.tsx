@@ -1,6 +1,8 @@
 import { useAuth } from "@clerk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import ConfirmModal from "../../components/ConfirmModal";
+import { ToastType } from "../../hooks/useToast";
 import { fetchWorkouts, deleteWorkout } from "../../api/workouts";
 
 type Workout = {
@@ -11,10 +13,12 @@ type Workout = {
   durationSeconds?: number;
 };
 
+type StatusFn = (message: string, options?: { type?: ToastType; duration?: number }) => void;
+
 type Props = {
   onEdit: (workoutId: number) => void;
   onCreate: () => void;
-  onStatusChange?: (message: string) => void;
+  onStatusChange?: StatusFn;
 };
 
 type PendingDelete = {
@@ -62,16 +66,16 @@ export default function AllWorkoutsPage({
         throw new Error("Missing Clerk token");
       }
 
-      onStatusChange?.("Deleting workout...");
+      onStatusChange?.("Deleting workout...", { type: "info" });
 
       return deleteWorkout(workoutId, token);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workouts"] });
-      onStatusChange?.("Workout deleted.");
+      onStatusChange?.("Workout deleted.", { type: "success" });
     },
     onError: () => {
-      onStatusChange?.("Failed to delete workout.");
+      onStatusChange?.("Failed to delete workout.", { type: "error" });
     },
   });
 
@@ -83,41 +87,18 @@ export default function AllWorkoutsPage({
     };
   }, [pendingDelete]);
 
+  const [confirmModal, setConfirmModal] = useState<
+    | { open: true; workout: Workout }
+    | { open: false }
+  >({ open: false });
+
   const scheduleDelete = (workout: Workout) => {
     if (pendingDelete != null) {
-      onStatusChange?.("Undo current delete first.");
+      onStatusChange?.("Undo current delete first.", { type: "info" });
       return;
     }
 
-    const confirmed = window.confirm(
-      `Delete workout "${workout.name}"? You can undo for 5 seconds.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const typed = window.prompt("Type DELETE to confirm workout deletion.");
-    if (typed?.trim().toUpperCase() !== "DELETE") {
-      onStatusChange?.("Delete cancelled.");
-      return;
-    }
-
-    const timerId = window.setTimeout(async () => {
-      try {
-        await deleteMutation.mutateAsync(workout.id);
-      } finally {
-        setPendingDelete(null);
-      }
-    }, 5000);
-
-    setPendingDelete({
-      id: workout.id,
-      name: workout.name,
-      timerId,
-    });
-
-    onStatusChange?.("Delete scheduled. Undo within 5 seconds.");
+    setConfirmModal({ open: true, workout });
   };
 
   const undoDelete = () => {
@@ -127,8 +108,27 @@ export default function AllWorkoutsPage({
 
     window.clearTimeout(pendingDelete.timerId);
     setPendingDelete(null);
-    onStatusChange?.("Delete cancelled.");
+    onStatusChange?.("Delete cancelled.", { type: "info" });
   };
+
+  const onConfirmDelete = async () => {
+    if (confirmModal.open !== true) return;
+    const workout = confirmModal.workout;
+
+    const timerId = window.setTimeout(async () => {
+      try {
+        await deleteMutation.mutateAsync(workout.id);
+      } finally {
+        setPendingDelete(null);
+      }
+    }, 5000);
+
+    setPendingDelete({ id: workout.id, name: workout.name, timerId });
+    setConfirmModal({ open: false });
+    onStatusChange?.("Delete scheduled. Undo within 5 seconds.", { type: "info" });
+  };
+
+  const onCancelDelete = () => setConfirmModal({ open: false });
 
   if (isLoading) {
     return <p className="text-sm text-(--brand-muted)">Loading workouts...</p>;
@@ -153,6 +153,19 @@ export default function AllWorkoutsPage({
             Undo
           </button>
         </div>
+      )}
+
+      {confirmModal.open && (
+        <ConfirmModal
+          open={true}
+          title="Delete workout"
+          body={`Delete workout "${confirmModal.workout.name}"? You can undo within 5 seconds.`}
+          requireTyping={"DELETE"}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          onConfirm={onConfirmDelete}
+          onCancel={onCancelDelete}
+        />
       )}
 
       {/* Header */}

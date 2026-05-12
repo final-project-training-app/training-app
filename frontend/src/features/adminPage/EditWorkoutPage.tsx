@@ -45,10 +45,14 @@ type WorkoutResponse = {
   } | null;
 };
 
+import { ToastType } from "../../hooks/useToast";
+
+type StatusFn = (message: string, options?: { type?: ToastType; duration?: number }) => void;
+
 type Props = {
   workoutId: number;
   onBack: () => void;
-  onStatusChange?: (message: string) => void;
+  onStatusChange?: StatusFn;
 };
 
 const isValidUrl = (url: string): boolean => {
@@ -132,7 +136,7 @@ export default function EditWorkoutPage({
         });
       } catch (error) {
         console.error(error);
-        onStatusChange?.("Failed to load workout.");
+        onStatusChange?.("Failed to load workout.", { type: "error" });
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -202,7 +206,7 @@ export default function EditWorkoutPage({
 
     try {
       setSaving(true);
-      onStatusChange?.("Saving changes...");
+      onStatusChange?.("Saving changes...", { type: "info" });
 
       const token = await getToken();
       if (!token) {
@@ -232,11 +236,11 @@ export default function EditWorkoutPage({
         token,
       );
 
-      onStatusChange?.("Changes saved.");
+      onStatusChange?.("Changes saved.", { type: "success" });
       onBack();
     } catch (error) {
       console.error(error);
-      onStatusChange?.("Failed to save changes.");
+      onStatusChange?.("Failed to save changes.", { type: "error" });
     } finally {
       setSaving(false);
     }
@@ -257,10 +261,10 @@ export default function EditWorkoutPage({
           <h1 className="text-3xl font-bold">Edit Workout</h1>
           <button
             type="button"
-            onClick={() => {
-              onStatusChange?.("Back to workouts.");
-              onBack();
-            }}
+              onClick={() => {
+                onStatusChange?.("Back to workouts.", { type: "info" });
+                onBack();
+              }}
             className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
             Back

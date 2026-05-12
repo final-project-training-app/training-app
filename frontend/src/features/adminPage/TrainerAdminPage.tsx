@@ -233,7 +233,9 @@ export default function TrainerAdminPage() {
         });
       } catch (loadError) {
         if (!active) return;
-        showToast((loadError as Error).message || "Failed to load trainer.", { type: "error" });
+        showToast((loadError as Error).message || "Failed to load trainer.", {
+          type: "error",
+        });
         setView("all");
         setEditingTrainerId(null);
       }
@@ -306,8 +308,7 @@ export default function TrainerAdminPage() {
 
   // confirm modal state
   const [confirmModal, setConfirmModal] = useState<
-    | { open: true; trainer: Trainer }
-    | { open: false }
+    { open: true; trainer: Trainer } | { open: false }
   >({ open: false });
 
   const onConfirmDelete = async () => {
@@ -485,10 +486,10 @@ export default function TrainerAdminPage() {
                 <button
                   type="button"
                   onClick={() => {
-                      showToast("Back to trainers.", { type: "info" });
-                      setView("all");
-                      setEditingTrainerId(null);
-                    }}
+                    showToast("Back to trainers.", { type: "info" });
+                    setView("all");
+                    setEditingTrainerId(null);
+                  }}
                   className="mr-4 rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
                 >
                   Back
