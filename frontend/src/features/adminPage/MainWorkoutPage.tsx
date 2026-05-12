@@ -1,19 +1,20 @@
 import { useState } from "react";
 import AddWorkoutPage from "./AddWorkoutPage";
+import AllWorkoutsPage from "./AllWorkoutsPage";
 
-type WorkoutView = "list" | "create" | "edit";
+type View = "all" | "create";
 
 export default function MainWorkoutPage() {
-  const [activeTab, setActiveTab] = useState<WorkoutView>("list");
+  const [view, setView] = useState<View>("all");
 
   return (
     <main className="flex min-h-dvh flex-col bg-(--brand-page) text-(--brand-ink)">
       {/* Top Navigation */}
       <div className="flex gap-3 border-b border-(--brand-border) px-6 py-4">
         <button
-          onClick={() => setActiveTab("list")}
+          onClick={() => setView("all")}
           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-            activeTab === "list"
+            view === "all"
               ? "bg-(--brand-primary) text-(--brand-on-primary)"
               : "bg-(--brand-surface-glass) text-(--brand-muted)"
           }`}
@@ -22,9 +23,9 @@ export default function MainWorkoutPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab("create")}
+          onClick={() => setView("create")}
           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-            activeTab === "create"
+            view === "create"
               ? "bg-(--brand-primary) text-(--brand-on-primary)"
               : "bg-(--brand-surface-glass) text-(--brand-muted)"
           }`}
@@ -35,20 +36,15 @@ export default function MainWorkoutPage() {
 
       {/* Page Content */}
       <div className="flex-1 p-6">
-        {activeTab === "list" && (
-          <div className="text-sm text-(--brand-muted)">
-            {/* TODO: replace with WorkoutList component */}
-            Show all workouts here (table/list)
-          </div>
+        {view === "all" && (
+          <AllWorkoutsPage
+            onEdit={(workout) => {
+              console.log("edit later", workout);
+            }}
+          />
         )}
 
-        {activeTab === "create" && <AddWorkoutPage />}
-
-        {activeTab === "edit" && (
-          <div className="text-sm text-(--brand-muted)">
-            Edit workout view coming next...
-          </div>
-        )}
+        {view === "create" && <AddWorkoutPage />}
       </div>
     </main>
   );
