@@ -256,6 +256,7 @@ export default function AddWorkoutPage() {
                   name="durationSeconds"
                   value={form.durationSeconds}
                   onChange={handleChange}
+                  min="0"
                   className="p-3 border rounded-lg bg-white/10"
                 />
               </label>
