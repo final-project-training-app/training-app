@@ -6,6 +6,7 @@ type AdminTab = "workouts" | "trainers" | "feedback";
 
 import AddWorkoutPage from "./AddWorkoutPage";
 import { useState, type JSX } from "react";
+import MainWorkoutPage from "./MainWorkoutPage";
 // If AddWorkoutPage's props aren't typed as expected, cast to a compatible component type for this usage
 const AddWorkout = AddWorkoutPage as unknown as (props: {
   workoutData?: string | undefined;
@@ -144,21 +145,9 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* Page Content */}
+      {/* Workout Content */}
       <div className="flex-1 p-6">
-        {activeTab === "workouts" && <AddWorkout workoutData={data} />}
-
-        {activeTab === "trainers" && (
-          <div className="text-sm text-(--brand-muted)">
-            Trainers management coming soon...
-          </div>
-        )}
-
-        {activeTab === "feedback" && (
-          <div className="text-sm text-(--brand-muted)">
-            User feedback view coming soon...
-          </div>
-        )}
+        <MainWorkoutPage/>
       </div>
     </main>
   );
