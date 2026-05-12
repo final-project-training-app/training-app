@@ -13,6 +13,7 @@ type Workout = {
 
 type Props = {
   onEdit: (workoutId: number) => void;
+  onCreate: () => void;
   onStatusChange?: (message: string) => void;
 };
 
@@ -22,7 +23,11 @@ type PendingDelete = {
   timerId: number;
 };
 
-export default function AllWorkoutsPage({ onEdit, onStatusChange }: Props) {
+export default function AllWorkoutsPage({
+  onEdit,
+  onCreate,
+  onStatusChange,
+}: Props) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
@@ -147,6 +152,13 @@ export default function AllWorkoutsPage({ onEdit, onStatusChange }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">All Workouts</h2>
+        <button
+          type="button"
+          onClick={onCreate}
+          className="rounded-full bg-(--brand-primary) px-4 py-2 text-sm font-semibold text-(--brand-on-primary)"
+        >
+          + Add Workout
+        </button>
       </div>
 
       {/* List */}

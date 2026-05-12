@@ -32,17 +32,6 @@ export default function MainWorkoutPage() {
           All Workouts
         </button>
 
-        <button
-          onClick={() => setView("create")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-            view === "create"
-              ? "bg-(--brand-primary) text-(--brand-on-primary)"
-              : "bg-(--brand-surface-glass) text-(--brand-muted)"
-          }`}
-        >
-          + Create Workout
-        </button>
-
         {view === "edit" && (
           <button
             onClick={() => {
@@ -64,6 +53,10 @@ export default function MainWorkoutPage() {
               setEditingWorkoutId(workoutId);
               setView("edit");
               showToast("Opening edit page...");
+            }}
+            onCreate={() => {
+              setView("create");
+              showToast("Opening add workout page...");
             }}
             onStatusChange={showToast}
           />
