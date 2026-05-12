@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 
 type Props = {
   open: boolean;
@@ -21,11 +21,7 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }: Props) {
-  const [typed, setTyped] = React.useState("");
-
-  React.useEffect(() => {
-    if (!open) setTyped("");
-  }, [open]);
+  const [typed, setTyped] = useState("");
 
   if (!open) return null;
 
@@ -34,8 +30,8 @@ export default function ConfirmModal({
     : true;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-lg">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-2xl border border-(--brand-border) bg-(--brand-page) p-6 shadow-2xl">
         <div className="mb-4 flex items-start justify-between">
           <h3 className="text-lg font-semibold">{title}</h3>
         </div>
@@ -46,21 +42,21 @@ export default function ConfirmModal({
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
             placeholder={`Type ${requireTyping} to confirm`}
-            className="mb-4 w-full rounded border p-2"
+            className="mb-4 w-full rounded-lg border border-(--brand-border) bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
           />
         )}
 
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-lg border px-4 py-2 text-sm"
+            className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={!canConfirm}
-            className={`rounded-lg px-4 py-2 text-sm text-white ${
+            className={`rounded-full px-4 py-2 text-sm font-semibold text-white ${
               canConfirm ? "bg-red-600" : "bg-red-300"
             }`}
           >

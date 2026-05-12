@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/react";
 import { useCreateWorkout } from "../../hooks/useCreateWorkoutHook";
 import { fetchTrainersWithToken } from "../../api/trainers";
+import type { ToastType } from "../../hooks/useToast";
 
 type TrainerOption = {
   id: number;
@@ -25,9 +26,10 @@ type WorkoutForm = {
   trainerId: string;
 };
 
-import { ToastType } from "../../hooks/useToast";
-
-type StatusFn = (message: string, options?: { type?: ToastType; duration?: number }) => void;
+type StatusFn = (
+  message: string,
+  options?: { type?: ToastType; duration?: number },
+) => void;
 
 type Props = {
   onBack?: () => void;
@@ -201,16 +203,16 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
     }
   }
   return (
-    <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-white backdrop-blur rounded-2xl shadow-lg p-8">
+    <main className="flex min-h-dvh items-center justify-center bg-(--brand-page) p-6 text-(--brand-ink)">
+      <div className="w-full max-w-4xl rounded-2xl border border-(--brand-border) bg-white p-8 shadow-lg">
         <div className="mb-8 flex items-center justify-between gap-3">
           <h1 className="text-3xl font-bold">Add Workout</h1>
           <button
             type="button"
             onClick={() => {
-                onStatusChange?.("Cancelling...", { type: "info" });
-                onBack?.();
-              }}
+              onStatusChange?.("Cancelling...", { type: "info" });
+              onBack?.();
+            }}
             className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
             Back
@@ -229,7 +231,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   placeholder="Morning Yoga"
                   value={form.name}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
                 />
               </label>
 
@@ -240,7 +242,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   placeholder="Strength, Cardio..."
                   value={form.type}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10 focus:ring-2 focus:ring-blue-500"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
                 />
               </label>
 
@@ -251,7 +253,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   value={form.trainerId}
                   onChange={handleChange}
                   disabled={trainersLoading}
-                  className="p-3 border rounded-lg bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
                 >
                   <option value="">
                     {trainersLoading
@@ -265,7 +267,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   ))}
                 </select>
                 {trainersError && (
-                  <span className="text-sm text-red-400">{trainersError}</span>
+                  <span className="text-sm text-red-600">{trainersError}</span>
                 )}
               </label>
 
@@ -278,7 +280,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   onChange={handleChange}
                   min="0"
                   max="4"
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
 
@@ -290,7 +292,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   value={form.durationSeconds}
                   onChange={handleChange}
                   min="0"
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
             </div>
@@ -306,7 +308,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                 placeholder="Describe the workout..."
                 value={form.description}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10 min-h-[120px]"
+                className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
           </div>
@@ -324,7 +326,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   placeholder="https://example.com/audio.mp3"
                   value={form.instructionsAudio}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
 
@@ -337,7 +339,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   placeholder="https://example.com/audio.mp3"
                   value={form.workoutAudio}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
 
@@ -350,7 +352,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   placeholder="https://example.com/image.jpg"
                   value={form.instructionsImage}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
 
@@ -363,7 +365,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   placeholder="https://example.com/image.jpg"
                   value={form.workoutImage}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
             </div>
@@ -381,7 +383,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               ].map((item) => (
                 <label
                   key={item.name}
-                  className="flex items-center gap-2 p-3 border rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) p-3 hover:border-(--brand-primary)"
                 >
                   <input
                     type="checkbox"
@@ -397,7 +399,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
 
           {/* Errors */}
           {errors.length > 0 && (
-            <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
               {errors.map((err, i) => (
                 <p key={i}>{err}</p>
               ))}
@@ -420,13 +422,11 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`relative flex items-center justify-center gap-2 p-3 rounded-lg font-medium text-white transition
-    ${
-      isSubmitting
-        ? "bg-purple-400 cursor-not-allowed"
-        : "bg-purple-600 hover:bg-purple-700"
-    }
-  `}
+              className={`relative flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium text-(--brand-on-primary) transition ${
+                isSubmitting
+                  ? "cursor-not-allowed bg-(--brand-primary)/60"
+                  : "bg-(--brand-primary) hover:bg-(--brand-primary)/90"
+              }`}
             >
               {isSubmitting ? (
                 <>

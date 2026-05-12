@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/react";
 import { fetchWorkoutById, updateWorkout } from "../../api/workouts";
 import { fetchTrainersWithToken } from "../../api/trainers";
+import type { ToastType } from "../../hooks/useToast";
 
 type TrainerOption = {
   id: number;
@@ -45,9 +46,10 @@ type WorkoutResponse = {
   } | null;
 };
 
-import { ToastType } from "../../hooks/useToast";
-
-type StatusFn = (message: string, options?: { type?: ToastType; duration?: number }) => void;
+type StatusFn = (
+  message: string,
+  options?: { type?: ToastType; duration?: number },
+) => void;
 
 type Props = {
   workoutId: number;
@@ -255,16 +257,16 @@ export default function EditWorkoutPage({
   }
 
   return (
-    <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-8">
+    <main className="flex min-h-dvh items-center justify-center bg-(--brand-page) p-6 text-(--brand-ink)">
+      <div className="w-full max-w-4xl rounded-2xl border border-(--brand-border) bg-white p-8 shadow-lg">
         <div className="mb-8 flex items-center justify-between gap-3">
           <h1 className="text-3xl font-bold">Edit Workout</h1>
           <button
             type="button"
-              onClick={() => {
-                onStatusChange?.("Back to workouts.", { type: "info" });
-                onBack();
-              }}
+            onClick={() => {
+              onStatusChange?.("Back to workouts.", { type: "info" });
+              onBack();
+            }}
             className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
             Back
@@ -279,7 +281,7 @@ export default function EditWorkoutPage({
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
 
@@ -289,7 +291,7 @@ export default function EditWorkoutPage({
                 name="type"
                 value={form.type}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
 
@@ -299,7 +301,7 @@ export default function EditWorkoutPage({
                 name="trainerId"
                 value={form.trainerId}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               >
                 <option value="">Choose a trainer</option>
                 {trainers.map((trainer) => (
@@ -319,7 +321,7 @@ export default function EditWorkoutPage({
                 name="level"
                 value={form.level}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
 
@@ -331,7 +333,7 @@ export default function EditWorkoutPage({
                 name="durationSeconds"
                 value={form.durationSeconds}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
           </div>
@@ -342,7 +344,7 @@ export default function EditWorkoutPage({
               name="description"
               value={form.description}
               onChange={handleChange}
-              className="p-3 border rounded-lg bg-white/10 min-h-[120px]"
+              className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
             />
           </label>
 
@@ -353,7 +355,7 @@ export default function EditWorkoutPage({
                 name="instructionsAudio"
                 value={form.instructionsAudio}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -362,7 +364,7 @@ export default function EditWorkoutPage({
                 name="workoutAudio"
                 value={form.workoutAudio}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -371,7 +373,7 @@ export default function EditWorkoutPage({
                 name="instructionsImage"
                 value={form.instructionsImage}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -380,7 +382,7 @@ export default function EditWorkoutPage({
                 name="workoutImage"
                 value={form.workoutImage}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10"
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
           </div>
@@ -394,7 +396,7 @@ export default function EditWorkoutPage({
             ].map((item) => (
               <label
                 key={item.name}
-                className="flex items-center gap-2 p-3 border rounded-lg bg-white/5"
+                className="flex items-center gap-2 rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) p-3"
               >
                 <input
                   type="checkbox"
@@ -408,7 +410,7 @@ export default function EditWorkoutPage({
           </div>
 
           {errors.length > 0 && (
-            <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
               {errors.map((error) => (
                 <p key={error}>{error}</p>
               ))}
@@ -419,7 +421,7 @@ export default function EditWorkoutPage({
             <button
               type="button"
               onClick={() => {
-                onStatusChange?.("Cancelling...");
+                onStatusChange?.("Cancelling...", { type: "info" });
                 onBack();
               }}
               className="rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-3 text-sm font-medium"
@@ -430,10 +432,10 @@ export default function EditWorkoutPage({
             <button
               type="submit"
               disabled={saving}
-              className={`rounded-lg px-4 py-3 text-sm font-medium text-white ${
+              className={`rounded-lg px-4 py-3 text-sm font-medium text-(--brand-on-primary) ${
                 saving
-                  ? "bg-purple-400 cursor-not-allowed"
-                  : "bg-purple-600 hover:bg-purple-700"
+                  ? "cursor-not-allowed bg-(--brand-primary)/60"
+                  : "bg-(--brand-primary) hover:bg-(--brand-primary)/90"
               }`}
             >
               {saving ? "Saving..." : "Save"}

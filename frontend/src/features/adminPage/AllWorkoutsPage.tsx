@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import ConfirmModal from "../../components/ConfirmModal";
-import { ToastType } from "../../hooks/useToast";
+import type { ToastType } from "../../hooks/useToast";
 import { fetchWorkouts, deleteWorkout } from "../../api/workouts";
 
 type Workout = {
@@ -13,7 +13,10 @@ type Workout = {
   durationSeconds?: number;
 };
 
-type StatusFn = (message: string, options?: { type?: ToastType; duration?: number }) => void;
+type StatusFn = (
+  message: string,
+  options?: { type?: ToastType; duration?: number },
+) => void;
 
 type Props = {
   onEdit: (workoutId: number) => void;
@@ -88,8 +91,7 @@ export default function AllWorkoutsPage({
   }, [pendingDelete]);
 
   const [confirmModal, setConfirmModal] = useState<
-    | { open: true; workout: Workout }
-    | { open: false }
+    { open: true; workout: Workout } | { open: false }
   >({ open: false });
 
   const scheduleDelete = (workout: Workout) => {
@@ -125,7 +127,9 @@ export default function AllWorkoutsPage({
 
     setPendingDelete({ id: workout.id, name: workout.name, timerId });
     setConfirmModal({ open: false });
-    onStatusChange?.("Delete scheduled. Undo within 5 seconds.", { type: "info" });
+    onStatusChange?.("Delete scheduled. Undo within 5 seconds.", {
+      type: "info",
+    });
   };
 
   const onCancelDelete = () => setConfirmModal({ open: false });
