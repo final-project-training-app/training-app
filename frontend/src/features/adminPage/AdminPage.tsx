@@ -15,7 +15,9 @@ export default function AdminPage() {
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const isAdmin = profile?.isAdmin === true;
   const { isLoading, error } = useAdminPage(isAdmin);
-  const [activeTab, setActiveTab] = useState<AdminTab>("workouts");
+  const path = typeof window !== "undefined" ? window.location.pathname : "/admin";
+  const initialTab = path.endsWith("/trainers") ? "trainers" : path.endsWith("/feedback") ? "feedback" : "workouts";
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
 
   if (!isLoaded || profileLoading) {
     return (
@@ -126,7 +128,10 @@ export default function AdminPage() {
 
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setActiveTab("workouts")}
+              onClick={() => {
+                setActiveTab("workouts");
+                navigate({ to: "/admin/workouts" });
+              }}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeTab === "workouts"
                   ? "bg-(--brand-primary) text-(--brand-on-primary)"
@@ -137,7 +142,10 @@ export default function AdminPage() {
             </button>
 
             <button
-              onClick={() => setActiveTab("trainers")}
+              onClick={() => {
+                setActiveTab("trainers");
+                navigate({ to: "/admin/trainers" });
+              }}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeTab === "trainers"
                   ? "bg-(--brand-primary) text-(--brand-on-primary)"
@@ -148,7 +156,10 @@ export default function AdminPage() {
             </button>
 
             <button
-              onClick={() => setActiveTab("feedback")}
+              onClick={() => {
+                setActiveTab("feedback");
+                navigate({ to: "/admin/feedback" });
+              }}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeTab === "feedback"
                   ? "bg-(--brand-primary) text-(--brand-on-primary)"

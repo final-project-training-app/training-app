@@ -94,7 +94,9 @@ export default function FeedbackAdminPage() {
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-(--brand-muted)">No feedback summary found.</p>
+        <p className="text-sm text-(--brand-muted)">
+          No feedback summary found.
+        </p>
       ) : (
         <div className="space-y-3">
           {rows.map((row) => (

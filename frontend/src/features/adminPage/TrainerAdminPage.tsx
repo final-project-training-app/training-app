@@ -9,6 +9,7 @@ import {
   updateTrainerWithToken,
 } from "../../api/trainers";
 import { useToast } from "../../hooks/useToast";
+import ConfirmModal from "../../components/ConfirmModal";
 
 type Trainer = {
   id: number;
@@ -119,7 +120,7 @@ export default function TrainerAdminPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
       setSubmitError(null);
-      showToast("Trainer saved.");
+      showToast("Trainer saved.", { type: "success" });
       setForm(emptyForm);
       setView("all");
     },
@@ -127,7 +128,7 @@ export default function TrainerAdminPage() {
       const message =
         (mutationError as Error).message || "Failed to save trainer.";
       setSubmitError(message);
-      showToast(message);
+      showToast(message, { type: "error" });
     },
   });
 
@@ -157,7 +158,7 @@ export default function TrainerAdminPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
       setSubmitError(null);
-      showToast("Trainer updated.");
+      showToast("Trainer updated.", { type: "success" });
       setView("all");
       setEditingTrainerId(null);
     },
@@ -165,7 +166,7 @@ export default function TrainerAdminPage() {
       const message =
         (mutationError as Error).message || "Failed to update trainer.";
       setSubmitError(message);
-      showToast(message);
+      showToast(message, { type: "error" });
     },
   });
 
@@ -179,11 +180,12 @@ export default function TrainerAdminPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
-      showToast("Trainer deleted.");
+      showToast("Trainer deleted.", { type: "success" });
     },
     onError: (mutationError) => {
       showToast(
         (mutationError as Error).message || "Failed to delete trainer.",
+        { type: "error" },
       );
     },
   });
@@ -231,7 +233,7 @@ export default function TrainerAdminPage() {
         });
       } catch (loadError) {
         if (!active) return;
-        showToast((loadError as Error).message || "Failed to load trainer.");
+        showToast((loadError as Error).message || "Failed to load trainer.", { type: "error" });
         setView("all");
         setEditingTrainerId(null);
       }
@@ -285,23 +287,32 @@ export default function TrainerAdminPage() {
 
   const scheduleDelete = (trainer: Trainer) => {
     if (pendingDelete != null) {
-      showToast("Undo current delete first.");
+      showToast("Undo current delete first.", { type: "info" });
       return;
     }
 
-    const confirmed = window.confirm(
-      `Delete trainer "${trainer.name}"? You can undo for 5 seconds.`,
-    );
+    // open modal to request typed confirmation
+    setConfirmModal({ open: true, trainer });
+  };
 
-    if (!confirmed) {
+  const undoDelete = () => {
+    if (pendingDelete == null) {
       return;
     }
+    window.clearTimeout(pendingDelete.timerId);
+    setPendingDelete(null);
+    showToast("Delete cancelled.", { type: "info" });
+  };
 
-    const typed = window.prompt("Type DELETE to confirm trainer deletion.");
-    if (typed?.trim().toUpperCase() !== "DELETE") {
-      showToast("Delete cancelled.");
-      return;
-    }
+  // confirm modal state
+  const [confirmModal, setConfirmModal] = useState<
+    | { open: true; trainer: Trainer }
+    | { open: false }
+  >({ open: false });
+
+  const onConfirmDelete = async () => {
+    if (confirmModal.open !== true) return;
+    const trainer = confirmModal.trainer;
 
     const timerId = window.setTimeout(async () => {
       try {
@@ -312,17 +323,11 @@ export default function TrainerAdminPage() {
     }, 5000);
 
     setPendingDelete({ id: trainer.id, name: trainer.name, timerId });
-    showToast("Delete scheduled. Undo within 5 seconds.");
+    setConfirmModal({ open: false });
+    showToast("Delete scheduled. Undo within 5 seconds.", { type: "info" });
   };
 
-  const undoDelete = () => {
-    if (pendingDelete == null) {
-      return;
-    }
-    window.clearTimeout(pendingDelete.timerId);
-    setPendingDelete(null);
-    showToast("Delete cancelled.");
-  };
+  const onCancelDelete = () => setConfirmModal({ open: false });
 
   const openCreate = () => {
     setFieldErrors({});
@@ -337,14 +342,14 @@ export default function TrainerAdminPage() {
     setSubmitError(null);
     setEditingTrainerId(trainerId);
     setView("edit");
-    showToast("Opening trainer edit page...");
+    showToast("Opening trainer edit page...", { type: "info" });
   };
 
   const submitCreate = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitError(null);
     if (!validate()) return;
-    showToast("Saving trainer...");
+    showToast("Saving trainer...", { type: "info" });
     await createMutation.mutateAsync(form);
   };
 
@@ -352,7 +357,7 @@ export default function TrainerAdminPage() {
     event.preventDefault();
     setSubmitError(null);
     if (!validate() || editingTrainerId == null) return;
-    showToast("Saving changes...");
+    showToast("Saving changes...", { type: "info" });
     await updateMutation.mutateAsync({ id: editingTrainerId, payload: form });
   };
 
@@ -367,8 +372,16 @@ export default function TrainerAdminPage() {
   return (
     <section className="space-y-4">
       {toast && (
-        <div className="pointer-events-none fixed right-6 top-6 z-20 rounded-lg bg-(--brand-ink) px-4 py-2 text-sm font-medium text-(--brand-on-primary)">
-          {toast}
+        <div
+          className={`pointer-events-none fixed right-6 top-6 z-20 rounded-lg px-4 py-2 text-sm font-medium ${
+            toast.type === "error"
+              ? "bg-red-600 text-white"
+              : toast.type === "success"
+                ? "bg-green-600 text-white"
+                : "bg-(--brand-ink) text-(--brand-on-primary)"
+          }`}
+        >
+          {toast.message}
         </div>
       )}
 
@@ -385,6 +398,19 @@ export default function TrainerAdminPage() {
             Undo
           </button>
         </div>
+      )}
+
+      {confirmModal.open && (
+        <ConfirmModal
+          open={true}
+          title="Delete trainer"
+          body={`Delete trainer "${confirmModal.trainer.name}"? You can undo within 5 seconds.`}
+          requireTyping={"DELETE"}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          onConfirm={onConfirmDelete}
+          onCancel={onCancelDelete}
+        />
       )}
 
       {view === "all" && (
@@ -455,20 +481,23 @@ export default function TrainerAdminPage() {
         <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
           <div className="w-full max-w-4xl rounded-2xl bg-white p-8 shadow-lg">
             <div className="mb-8 flex items-center justify-between gap-3">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                      showToast("Back to trainers.", { type: "info" });
+                      setView("all");
+                      setEditingTrainerId(null);
+                    }}
+                  className="mr-4 rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
+                >
+                  Back
+                </button>
+              </div>
               <h1 className="text-3xl font-bold">
                 {view === "create" ? "Add Trainer" : "Edit Trainer"}
               </h1>
-              <button
-                type="button"
-                onClick={() => {
-                  showToast("Back to trainers.");
-                  setView("all");
-                  setEditingTrainerId(null);
-                }}
-                className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
-              >
-                Back
-              </button>
+              <div />
             </div>
 
             {submitError && (

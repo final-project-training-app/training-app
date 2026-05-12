@@ -19,8 +19,16 @@ export default function MainWorkoutPage({ onSwitchTab }: Props) {
   return (
     <main className="flex min-h-dvh flex-col bg-(--brand-page) text-(--brand-ink)">
       {toast && (
-        <div className="pointer-events-none fixed right-6 top-6 z-20 rounded-lg bg-(--brand-ink) px-4 py-2 text-sm font-medium text-(--brand-on-primary)">
-          {toast}
+        <div
+          className={`pointer-events-none fixed right-6 top-6 z-20 rounded-lg px-4 py-2 text-sm font-medium ${
+            toast.type === "error"
+              ? "bg-red-600 text-white"
+              : toast.type === "success"
+                ? "bg-green-600 text-white"
+                : "bg-(--brand-ink) text-(--brand-on-primary)"
+          }`}
+        >
+          {toast.message}
         </div>
       )}
 
@@ -46,7 +54,7 @@ export default function MainWorkoutPage({ onSwitchTab }: Props) {
             type="button"
             onClick={() => {
               setView("all");
-              showToast("Back to workouts.");
+              showToast("Back to workouts.", { type: "info" });
             }}
             className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
@@ -82,11 +90,11 @@ export default function MainWorkoutPage({ onSwitchTab }: Props) {
             onEdit={(workoutId) => {
               setEditingWorkoutId(workoutId);
               setView("edit");
-              showToast("Opening edit page...");
+              showToast("Opening edit page...", { type: "info" });
             }}
             onCreate={() => {
               setView("create");
-              showToast("Opening add workout page...");
+              showToast("Opening add workout page...", { type: "info" });
             }}
             onStatusChange={showToast}
           />

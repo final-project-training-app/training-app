@@ -1,15 +1,26 @@
 import { useCallback, useState } from "react";
 
+export type ToastType = "info" | "success" | "error";
+export type Toast = { message: string; type?: ToastType } | null;
+
 export function useToast() {
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast>(null);
 
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
+  const showToast = useCallback(
+    (msg: string, options?: { duration?: number; type?: ToastType }) => {
+      setToast({ message: msg, type: options?.type ?? "info" });
 
-    setTimeout(() => {
-      setToast(null);
-    }, 2000);
-  }, []);
+      const duration = options?.duration ?? 2000;
+      if (duration > 0) {
+        setTimeout(() => {
+          setToast(null);
+        }, duration);
+      }
+    },
+    [],
+  );
 
-  return { toast, showToast };
+  const clearToast = useCallback(() => setToast(null), []);
+
+  return { toast, showToast, clearToast };
 }
