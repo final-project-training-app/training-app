@@ -62,27 +62,28 @@ export default function HomePage() {
 
   return (
     <main className="relative flex h-dvh items-center justify-center overflow-hidden bg-(--brand-page) text-(--brand-ink)">
-      <div className="absolute right-3 top-[max(10px,env(safe-area-inset-top))] z-30 flex flex-col gap-2">
-        {isLoaded && isSignedIn ? (
-          <>
+      <div className="absolute right-3 top-[max(10px,env(safe-area-inset-top))] z-30">
+        {!isLoaded ? null : isSignedIn ? (
+          <div className="flex flex-col gap-2 sm:flex-row">
             {profile?.isAdmin && (
               <button
                 onClick={() =>
                   navigate({
-                    to: "/admin",
+                    to: "/admin/workouts",
                   })
                 }
-                className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3 py-1.5 text-xs font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95"
+                className="rounded-full bg-(--brand-primary) px-4 py-2.5 text-sm font-bold text-(--brand-on-primary) shadow-sm transition active:scale-95"
               >
                 Admin page
               </button>
             )}
+
             <SignOutButton>
               <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2.5 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
                 Logga ut
               </button>
             </SignOutButton>
-          </>
+          </div>
         ) : (
           <SignInButton>
             <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3.5 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">

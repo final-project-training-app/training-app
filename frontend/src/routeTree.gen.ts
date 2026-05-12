@@ -13,6 +13,9 @@ import { Route as AiDevRouteImport } from './routes/ai-dev'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionWorkoutIdRouteImport } from './routes/session.$workoutId'
+import { Route as AdminWorkoutsRouteImport } from './routes/admin.workouts'
+import { Route as AdminTrainersRouteImport } from './routes/admin.trainers'
+import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 
 const AiDevRoute = AiDevRouteImport.update({
   id: '/ai-dev',
@@ -34,37 +37,83 @@ const SessionWorkoutIdRoute = SessionWorkoutIdRouteImport.update({
   path: '/session/$workoutId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminWorkoutsRoute = AdminWorkoutsRouteImport.update({
+  id: '/workouts',
+  path: '/workouts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTrainersRoute = AdminTrainersRouteImport.update({
+  id: '/trainers',
+  path: '/trainers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/ai-dev': typeof AiDevRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/trainers': typeof AdminTrainersRoute
+  '/admin/workouts': typeof AdminWorkoutsRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/ai-dev': typeof AiDevRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/trainers': typeof AdminTrainersRoute
+  '/admin/workouts': typeof AdminWorkoutsRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/ai-dev': typeof AiDevRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/trainers': typeof AdminTrainersRoute
+  '/admin/workouts': typeof AdminWorkoutsRoute
   '/session/$workoutId': typeof SessionWorkoutIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/ai-dev' | '/session/$workoutId'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/ai-dev'
+    | '/admin/feedback'
+    | '/admin/trainers'
+    | '/admin/workouts'
+    | '/session/$workoutId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/ai-dev' | '/session/$workoutId'
-  id: '__root__' | '/' | '/admin' | '/ai-dev' | '/session/$workoutId'
+  to:
+    | '/'
+    | '/admin'
+    | '/ai-dev'
+    | '/admin/feedback'
+    | '/admin/trainers'
+    | '/admin/workouts'
+    | '/session/$workoutId'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/ai-dev'
+    | '/admin/feedback'
+    | '/admin/trainers'
+    | '/admin/workouts'
+    | '/session/$workoutId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AiDevRoute: typeof AiDevRoute
   SessionWorkoutIdRoute: typeof SessionWorkoutIdRoute
 }
@@ -99,12 +148,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionWorkoutIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/workouts': {
+      id: '/admin/workouts'
+      path: '/workouts'
+      fullPath: '/admin/workouts'
+      preLoaderRoute: typeof AdminWorkoutsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/trainers': {
+      id: '/admin/trainers'
+      path: '/trainers'
+      fullPath: '/admin/trainers'
+      preLoaderRoute: typeof AdminTrainersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/feedback': {
+      id: '/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminFeedbackRoute: typeof AdminFeedbackRoute
+  AdminTrainersRoute: typeof AdminTrainersRoute
+  AdminWorkoutsRoute: typeof AdminWorkoutsRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminFeedbackRoute: AdminFeedbackRoute,
+  AdminTrainersRoute: AdminTrainersRoute,
+  AdminWorkoutsRoute: AdminWorkoutsRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   AiDevRoute: AiDevRoute,
   SessionWorkoutIdRoute: SessionWorkoutIdRoute,
 }

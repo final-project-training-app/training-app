@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/react";
 import { useCreateWorkout } from "../../hooks/useCreateWorkoutHook";
-import { fetchTrainers } from "../../api/trainers";
+import { fetchTrainersWithToken } from "../../api/trainers";
+import type { ToastType } from "../../hooks/useToast";
 
 type TrainerOption = {
   id: number;
@@ -24,6 +26,16 @@ type WorkoutForm = {
   trainerId: string;
 };
 
+type StatusFn = (
+  message: string,
+  options?: { type?: ToastType; duration?: number },
+) => void;
+
+type Props = {
+  onBack?: () => void;
+  onStatusChange?: StatusFn;
+};
+
 const isValidUrl = (url: string): boolean => {
   try {
     new URL(url);
@@ -33,7 +45,8 @@ const isValidUrl = (url: string): boolean => {
   }
 };
 
-export default function AddWorkoutPage() {
+export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
+  const { getToken } = useAuth();
   const [form, setForm] = useState<WorkoutForm>({
     name: "",
     description: "",
@@ -50,7 +63,7 @@ export default function AddWorkoutPage() {
     beginnerFriendly: false,
     trainerId: "",
   });
-  const { mutateAsync, isPending } = useCreateWorkout();
+  const { mutateAsync, isPending } = useCreateWorkout(getToken);
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
   const [trainers, setTrainers] = useState<TrainerOption[]>([]);
@@ -64,7 +77,13 @@ export default function AddWorkoutPage() {
     async function loadTrainers() {
       try {
         setTrainersLoading(true);
-        const data = await fetchTrainers();
+        const token = await getToken();
+
+        if (!token) {
+          throw new Error("Missing Clerk token");
+        }
+
+        const data = await fetchTrainersWithToken(token);
 
         if (!isMounted) return;
 
@@ -75,6 +94,7 @@ export default function AddWorkoutPage() {
 
         console.error(error);
         setTrainersError("Could not load trainers.");
+        onStatusChange?.("Failed to load trainers.", { type: "error" });
       } finally {
         if (isMounted) {
           setTrainersLoading(false);
@@ -87,7 +107,7 @@ export default function AddWorkoutPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [getToken, onStatusChange]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -150,6 +170,7 @@ export default function AddWorkoutPage() {
     if (!validate()) return;
 
     setSuccess(false);
+    onStatusChange?.("Saving workout...", { type: "info" });
 
     try {
       await mutateAsync({
@@ -172,17 +193,31 @@ export default function AddWorkoutPage() {
       });
 
       setSuccess(true);
+      onStatusChange?.("Workout saved.", { type: "success" });
 
       // optional reset
       // setForm(initialState)
     } catch (err) {
       console.error(err);
+      onStatusChange?.("Failed to save workout.", { type: "error" });
     }
   }
   return (
-    <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
-      <div className="w-full max-w-4xl bg-white backdrop-blur rounded-2xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold mb-8">Add Workout</h1>
+    <main className="flex min-h-dvh items-center justify-center bg-(--brand-page) p-6 text-(--brand-ink)">
+      <div className="w-full max-w-4xl rounded-2xl border border-(--brand-border) bg-white p-8 shadow-lg">
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <h1 className="text-3xl font-bold">Add Workout</h1>
+          <button
+            type="button"
+            onClick={() => {
+              onStatusChange?.("Cancelling...", { type: "info" });
+              onBack?.();
+            }}
+            className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
+          >
+            Back
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
           {/* Basic Info */}
@@ -196,7 +231,7 @@ export default function AddWorkoutPage() {
                   placeholder="Morning Yoga"
                   value={form.name}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
                 />
               </label>
 
@@ -207,7 +242,7 @@ export default function AddWorkoutPage() {
                   placeholder="Strength, Cardio..."
                   value={form.type}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10 focus:ring-2 focus:ring-blue-500"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
                 />
               </label>
 
@@ -218,7 +253,7 @@ export default function AddWorkoutPage() {
                   value={form.trainerId}
                   onChange={handleChange}
                   disabled={trainersLoading}
-                  className="p-3 border rounded-lg bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
                 >
                   <option value="">
                     {trainersLoading
@@ -232,7 +267,7 @@ export default function AddWorkoutPage() {
                   ))}
                 </select>
                 {trainersError && (
-                  <span className="text-sm text-red-400">{trainersError}</span>
+                  <span className="text-sm text-red-600">{trainersError}</span>
                 )}
               </label>
 
@@ -245,7 +280,7 @@ export default function AddWorkoutPage() {
                   onChange={handleChange}
                   min="0"
                   max="4"
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
 
@@ -257,7 +292,7 @@ export default function AddWorkoutPage() {
                   value={form.durationSeconds}
                   onChange={handleChange}
                   min="0"
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
             </div>
@@ -273,7 +308,7 @@ export default function AddWorkoutPage() {
                 placeholder="Describe the workout..."
                 value={form.description}
                 onChange={handleChange}
-                className="p-3 border rounded-lg bg-white/10 min-h-[120px]"
+                className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
           </div>
@@ -291,7 +326,7 @@ export default function AddWorkoutPage() {
                   placeholder="https://example.com/audio.mp3"
                   value={form.instructionsAudio}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
 
@@ -304,7 +339,7 @@ export default function AddWorkoutPage() {
                   placeholder="https://example.com/audio.mp3"
                   value={form.workoutAudio}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
 
@@ -317,7 +352,7 @@ export default function AddWorkoutPage() {
                   placeholder="https://example.com/image.jpg"
                   value={form.instructionsImage}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
 
@@ -330,7 +365,7 @@ export default function AddWorkoutPage() {
                   placeholder="https://example.com/image.jpg"
                   value={form.workoutImage}
                   onChange={handleChange}
-                  className="p-3 border rounded-lg bg-white/10"
+                  className="rounded-lg border border-(--brand-border) bg-white p-3"
                 />
               </label>
             </div>
@@ -348,7 +383,7 @@ export default function AddWorkoutPage() {
               ].map((item) => (
                 <label
                   key={item.name}
-                  className="flex items-center gap-2 p-3 border rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) p-3 hover:border-(--brand-primary)"
                 >
                   <input
                     type="checkbox"
@@ -364,7 +399,7 @@ export default function AddWorkoutPage() {
 
           {/* Errors */}
           {errors.length > 0 && (
-            <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
               {errors.map((err, i) => (
                 <p key={i}>{err}</p>
               ))}
@@ -372,28 +407,39 @@ export default function AddWorkoutPage() {
           )}
 
           {/* Submit */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`relative flex items-center justify-center gap-2 p-3 rounded-lg mt-2 font-medium text-white transition
-    ${
-      isSubmitting
-        ? "bg-purple-400 cursor-not-allowed"
-        : "bg-purple-600 hover:bg-purple-700"
-    }
-  `}
-          >
-            {isSubmitting ? (
-              <>
-                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Creating...
-              </>
-            ) : success ? (
-              "✔ Workout Created"
-            ) : (
-              "Create Workout"
-            )}
-          </button>
+          <div className="mt-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                onStatusChange?.("Cancelling...");
+                onBack?.();
+              }}
+              className="rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-3 text-sm font-medium"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`relative flex items-center justify-center gap-2 rounded-lg px-4 py-3 font-medium text-(--brand-on-primary) transition ${
+                isSubmitting
+                  ? "cursor-not-allowed bg-(--brand-primary)/60"
+                  : "bg-(--brand-primary) hover:bg-(--brand-primary)/90"
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : success ? (
+                "Saved"
+              ) : (
+                "Save"
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </main>

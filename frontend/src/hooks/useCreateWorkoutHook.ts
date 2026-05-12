@@ -1,8 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
-import { createWorkout } from "../api/workouts";
+import { createWorkoutWithToken } from "../api/workouts";
 
-export function useCreateWorkout() {
+export function useCreateWorkout(getToken: () => Promise<string | null>) {
   return useMutation({
-    mutationFn: createWorkout,
+    mutationFn: async (data: unknown) => {
+      const token = await getToken();
+
+      if (!token) {
+        throw new Error("Missing Clerk token");
+      }
+
+      return createWorkoutWithToken(data, token);
+    },
   });
 }
