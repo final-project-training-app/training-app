@@ -53,13 +53,18 @@ export default function FeedbackAdminPage() {
             className="rounded-xl border border-(--brand-border) bg-(--brand-surface-glass) p-4"
           >
             <p className="text-sm font-semibold">
-              Workout #{feedback.workoutId ?? "-"} | User #{feedback.userId ?? "-"}
+              Workout #{feedback.workoutId ?? "-"} | User #
+              {feedback.userId ?? "-"}
             </p>
             <p className="text-xs text-(--brand-muted)">
-              Rating: {feedback.rating ?? "-"} | Liked: {String(feedback.liked ?? "-")} | Difficulty: {feedback.difficulty ?? "-"}
+              Rating: {feedback.rating ?? "-"} | Liked:{" "}
+              {String(feedback.liked ?? "-")} | Difficulty:{" "}
+              {feedback.difficulty ?? "-"}
             </p>
             {feedback.comment && (
-              <p className="mt-2 text-sm text-(--brand-ink)">{feedback.comment}</p>
+              <p className="mt-2 text-sm text-(--brand-ink)">
+                {feedback.comment}
+              </p>
             )}
           </article>
         ))}

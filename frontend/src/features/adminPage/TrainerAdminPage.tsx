@@ -48,7 +48,9 @@ export default function TrainerAdminPage({ onStatusChange }: Props) {
         <h2 className="text-lg font-bold">Trainers</h2>
         <button
           type="button"
-          onClick={() => onStatusChange?.("Trainer create page can be added next.")}
+          onClick={() =>
+            onStatusChange?.("Trainer create page can be added next.")
+          }
           className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-xs font-semibold"
         >
           Add Trainer
@@ -63,7 +65,8 @@ export default function TrainerAdminPage({ onStatusChange }: Props) {
           >
             <p className="font-semibold">{trainer.name ?? "Unnamed trainer"}</p>
             <p className="text-xs text-(--brand-muted)">
-              Language: {trainer.language ?? "-"} | Voice: {trainer.voice ?? "-"}
+              Language: {trainer.language ?? "-"} | Voice:{" "}
+              {trainer.voice ?? "-"}
             </p>
           </article>
         ))}

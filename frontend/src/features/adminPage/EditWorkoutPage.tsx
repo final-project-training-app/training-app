@@ -126,7 +126,9 @@ export default function EditWorkoutPage({
           seated: workoutData.seated ?? false,
           beginnerFriendly: workoutData.beginnerFriendly ?? false,
           trainerId:
-            workoutData.trainer?.id != null ? String(workoutData.trainer.id) : "",
+            workoutData.trainer?.id != null
+              ? String(workoutData.trainer.id)
+              : "",
         });
       } catch (error) {
         console.error(error);
