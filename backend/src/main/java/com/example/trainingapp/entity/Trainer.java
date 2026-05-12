@@ -1,10 +1,8 @@
 package com.example.trainingapp.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "trainers")
@@ -23,6 +21,9 @@ public class Trainer {
     private String intro;
 
     private String language;
+
+    @OneToMany(mappedBy = "trainer")
+    private List<Workout> workouts;
 
     public Long getId() {
         return id;

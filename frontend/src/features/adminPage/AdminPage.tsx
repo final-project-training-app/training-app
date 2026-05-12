@@ -3,6 +3,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAdminPage } from "../../hooks/useAdminPage";
 import { useMyProfile } from "../../hooks/useMyProfile";
 import AddWorkoutPage from "./AddWorkoutPage";
+import type { JSX } from "react";
+// If AddWorkoutPage's props aren't typed as expected, cast to a compatible component type for this usage
+const AddWorkout = AddWorkoutPage as unknown as (props: {
+  workoutData?: string | undefined;
+}) => JSX.Element;
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -100,7 +105,7 @@ export default function AdminPage() {
 
   return (
     <>
-      <AddWorkoutPage workoutData={data} />
+      <AddWorkout workoutData={data} />
     </>
   );
 }

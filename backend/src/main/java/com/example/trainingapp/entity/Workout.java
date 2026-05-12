@@ -1,5 +1,6 @@
 package com.example.trainingapp.entity;
 
+import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +35,10 @@ public class Workout {
     private Boolean lowImpact;
     private Boolean seated;
     private Boolean beginnerFriendly;
+
+    @ManyToOne
+    @JoinColumn(name = "trainer_id")
+    private Trainer trainer;
 
     public Long getId() {
         return id;
