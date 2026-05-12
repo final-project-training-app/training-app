@@ -1,5 +1,7 @@
 package com.example.trainingapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,10 +16,16 @@ public class Workout {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private String instructions;
+
+    @Column(name = "description")
+    private String description;
+
     private Integer level;
     private String type;
-    private Integer durationMinutes;
+
+    @Column(name = "duration_seconds")
+    private Integer durationSeconds;
+
     private String instructionsAudio;
     private String workoutAudio;
     private String instructionsImage;
@@ -43,12 +51,12 @@ public class Workout {
         this.name = name;
     }
 
-    public String getInstructions() {
-        return instructions;
+    public String getDescription() {
+        return description;
     }
 
-    public void setInstructions(String instructions) {
-        this.instructions = instructions;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Integer getLevel() {
@@ -67,12 +75,22 @@ public class Workout {
         this.type = type;
     }
 
-    public Integer getDurationMinutes() {
-        return durationMinutes;
+    @JsonProperty("durationSeconds")
+    public Integer getDurationSeconds() {
+        return durationSeconds;
     }
 
-    public void setDurationMinutes(Integer durationMinutes) {
-        this.durationMinutes = durationMinutes;
+    @JsonProperty("durationSeconds")
+    public void setDurationSeconds(Integer durationSeconds) {
+        if (durationSeconds == null) {
+            this.durationSeconds = null;
+            return;
+        }
+
+        if (durationSeconds < 0) {
+            throw new IllegalArgumentException("durationSeconds cannot be negative");
+        }
+        this.durationSeconds = durationSeconds;
     }
 
     public String getInstructionsAudio() {

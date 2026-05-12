@@ -2,10 +2,10 @@ package com.example.trainingapp.dto;
 
 public record WorkoutRequestDTO(
         String name,
-        String instructions,
+        String description,
         Integer level,
         String type,
-        Integer durationMinutes,
+        Integer durationSeconds,
         String instructionsAudio,
         String workoutAudio,
         String instructionsImage,
