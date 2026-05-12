@@ -50,21 +50,30 @@ export type CoachSessionDebugEvent = {
   detail?: string;
 };
 
-// Simple sleep helper used to add a short human-like pause before playback.
+//──────────────────────
+// Simple sleep helper
+//──────────────────────
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-
-
+//──────────────────────
+// Build system instruction
+//──────────────────────
 function buildSessionInstruction() {
   return liveSystemInstruction;
 }
 
+//──────────────────────
+// Read feedback summary from tool call
+//──────────────────────
 function readFeedbackSummary(functionCall: FunctionCall) {
   const args = functionCall.args ?? {};
   const summary = args.summary;
   return typeof summary === "string" ? summary : "";
 }
 
+//──────────────────────
+// Read workout from tool response
+//──────────────────────
 function readWorkoutFromResponse(response: FunctionResponse) {
   if (response.name !== "get_workout_details") {
     return null;
@@ -82,7 +91,9 @@ function readWorkoutFromResponse(response: FunctionResponse) {
     : null;
 }
 
-
+//──────────────────────
+// Map session step to queued action
+//──────────────────────
 function getQueuedActionForStep(step: CoachSessionStep): PendingCoachAction {
   if (step === "waiting_instruction_approval") {
     return "start_instructions";
@@ -95,6 +106,9 @@ function getQueuedActionForStep(step: CoachSessionStep): PendingCoachAction {
   return null;
 }
 
+//──────────────────────
+// Extract model text from Gemini message
+//──────────────────────
 function getModelText(message: unknown) {
   const parts =
     (
@@ -109,6 +123,9 @@ function getModelText(message: unknown) {
     .join(" ");
 }
 
+//──────────────────────
+// Check ready acknowledgement phrase
+//──────────────────────
 function hasReadyAckPhrase(text: string) {
   return text
     .toLocaleLowerCase("sv-SE")
@@ -131,7 +148,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
   const selectedWorkoutRef = useRef<BackendWorkoutResponse | null>(null);
   const hasStartedRef = useRef(false);
 
-  // playback remaining helper removed for MVP
+  //──────────────────────
+  // Stable callback refs
+  //──────────────────────
   const disconnectRef = useRef<() => void>(() => {});
   const startInstructionsRef = useRef<() => Promise<void>>(async () => {});
   const startWorkoutRef = useRef<() => Promise<void>>(async () => {});
@@ -139,6 +158,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
 
   const { token, loadToken, tokenLoading, tokenError } = useLiveToken();
 
+  //──────────────────────
+  // Add debug event
+  //──────────────────────
   const addDebugEvent = useCallback(
     (label: string, detail?: string | number | boolean | null) => {
       const event: CoachSessionDebugEvent = {
@@ -158,9 +180,13 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     [],
   );
 
+  //──────────────────────
+  // Update session step
+  //──────────────────────
   const setSessionStep = useCallback((nextStep: CoachSessionStep) => {
     stepRef.current = nextStep;
     setStep(nextStep);
+
     const event: CoachSessionDebugEvent = {
       id: debugIdRef.current + 1,
       elapsedMs: startedAtRef.current
@@ -175,10 +201,10 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     setDebugEvents((current) => [event, ...current].slice(0, 12));
   }, []);
 
-  // No pending timers in MVP — keep function for compatibility but noop.
+  //──────────────────────
+  // Clear pending timer
+  //──────────────────────
   const clearPendingCoachTimer = useCallback(() => {}, []);
-
-  // Simplified flow: no queued actions or polling — actions start directly.
 
   const {
     geminiConnect,
@@ -194,16 +220,16 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     tools: [...liveTools, ...SESSION_CONTROL_TOOLS],
     systemInstruction: buildSessionInstruction(),
 
-    // ─────────────────────────────────────────────────────────
+    //──────────────────────
     // Step 1: Handle Gemini tool calls
-    // ─────────────────────────────────────────────────────────
+    //──────────────────────
     onToolCall: async (functionCall): Promise<FunctionResponse> => {
       const name = functionCall.name ?? "unknown_tool";
       addDebugEvent("tool call", `${name}, step=${stepRef.current}`);
 
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       // Step 1a: Start instructions
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-instructions", String(queuedAction));
@@ -221,9 +247,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         };
       }
 
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       // Step 1b: Start workout
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       if (name === "start_workout") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-workout", String(queuedAction));
@@ -241,9 +267,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         };
       }
 
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       // Step 1c: Finish session feedback
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       if (name === "finish_session_feedback") {
         finishSessionRef.current(readFeedbackSummary(functionCall));
         return {
@@ -253,9 +279,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         };
       }
 
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       // Step 1d: Forward all other tool calls
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       const response = await executeLiveToolCall(functionCall);
       const workout = readWorkoutFromResponse(response);
 
@@ -271,15 +297,15 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       return response;
     },
 
-    // ─────────────────────────────────────────────────────────
+    //──────────────────────
     // Step 2: Handle Gemini messages
-    // ─────────────────────────────────────────────────────────
+    //──────────────────────
     onMessage: (message) => {
       const modelText = getModelText(message);
 
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       // Step 2a: Detect ready acknowledgement phrase
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       if (modelText && hasReadyAckPhrase(modelText)) {
         const action = getQueuedActionForStep(stepRef.current);
         if (action) {
@@ -293,13 +319,14 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         }
       }
 
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       // Step 2b: Advance after intro turn completes
-      // ───────────────────────────────────────────────────────
+      //──────────────────────
       if (
         (
-          //stepRef.current === "choosing_workout" ||
-          stepRef.current === "live_intro") &&
+          // stepRef.current === "choosing_workout" ||
+          stepRef.current === "live_intro"
+        ) &&
         message.serverContent?.turnComplete
       ) {
         if (selectedWorkoutRef.current) {
@@ -311,17 +338,19 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     },
   });
 
-  // playback remaining tracking removed for MVP
-
+  //──────────────────────
+  // Sync disconnect ref
+  //──────────────────────
   useEffect(() => {
     disconnectRef.current = geminiDisconnect;
   }, [geminiDisconnect]);
 
+  //──────────────────────
+  // Pause live audio capture
+  //──────────────────────
   const pauseLive = useCallback(() => {
     addDebugEvent("pauseAI-called", stepRef.current);
     try {
-      // Stop sending microphone audio but keep the Gemini session alive.
-      // This prevents reconnects and keeps context intact.
       stopAudioCapture?.();
     } catch (e) {
       console.warn("pauseLive failed", e);
@@ -329,12 +358,18 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     setAudioCapturing(false);
   }, [addDebugEvent, stopAudioCapture]);
 
+  //──────────────────────
+  // Disconnect live session
+  //──────────────────────
   const disconnectLive = useCallback(() => {
     addDebugEvent("stopAI-called", stepRef.current);
     geminiDisconnect();
     setAudioCapturing(false);
   }, [addDebugEvent, geminiDisconnect]);
 
+  //──────────────────────
+  // Connect with fresh token
+  //──────────────────────
   const connectFreshLive = useCallback(async () => {
     addDebugEvent("load live token", stepRef.current);
     const freshToken = await loadToken();
@@ -351,6 +386,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     return true;
   }, [addDebugEvent, geminiConnect, loadToken, setSessionStep]);
 
+  //──────────────────────
+  // Send prompt to Gemini
+  //──────────────────────
   const sendCoachPrompt = useCallback(
     (text: string) => {
       getSession()?.sendClientContent({
@@ -361,6 +399,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     [getSession],
   );
 
+  //──────────────────────
+  // Ask if ready for workout
+  //──────────────────────
   const askIfReadyForWorkout = useCallback(async () => {
     addDebugEvent("reconnect after instructions");
     setSessionStep("asking_ready");
@@ -392,6 +433,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     startAudioCapture,
   ]);
 
+  //──────────────────────
+  // Play instructions
+  //──────────────────────
   const playInstructions = useCallback(async () => {
     if (stepRef.current !== "waiting_instruction_approval") {
       addDebugEvent("skip instructions", `step=${stepRef.current}`);
@@ -411,7 +455,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     }
 
     try {
-      // Small human-like pause before starting audio so it doesn't feel abrupt.
       addDebugEvent("pre-play-sleep", "instructions 1000ms");
       await sleep(1000);
 
@@ -430,15 +473,12 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     }
   }, [addDebugEvent, askIfReadyForWorkout, pauseLive, setSessionStep]);
 
+  //──────────────────────
+  // Start session
+  //──────────────────────
   const startSession = useCallback(async () => {
-    // ─────────────────────────────────────────────────────────
-    // Guard: prevent double-start
-    // ─────────────────────────────────────────────────────────
     if (hasStartedRef.current) return;
 
-    // ─────────────────────────────────────────────────────────
-    // Initialize session timing & debug tracking
-    // ─────────────────────────────────────────────────────────
     startedAtRef.current = performance.now();
     debugIdRef.current = 0;
     setDebugEvents([]);
@@ -447,9 +487,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     setError(null);
     setSessionStep("live_intro");
 
-    // ─────────────────────────────────────────────────────────
-    // Step 1: Acquire auth token
-    // ─────────────────────────────────────────────────────────
     const freshToken = await loadToken();
     if (!freshToken) {
       setError(COACH_PROMPTS.NO_TOKEN_ERROR);
@@ -458,9 +495,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       return;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Step 2: Fetch workout (MVP hardcoded to id 1)
-    // ─────────────────────────────────────────────────────────
     const workoutResp = await getWorkoutEndpoint(1).catch(() => null);
     if (!workoutResp || !workoutResp.ok) {
       setError(COACH_PROMPTS.NO_WORKOUT_ERROR);
@@ -469,24 +503,15 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       return;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Step 3: Cache workout & preload audio assets
-    // ─────────────────────────────────────────────────────────
     const workout = workoutResp.data as BackendWorkoutResponse;
     selectedWorkoutRef.current = workout;
     setSelectedWorkout(workout);
     preloadSessionAudio(workout.instructionsAudio);
     preloadSessionAudio(workout.workoutAudio);
 
-    // ─────────────────────────────────────────────────────────
-    // Step 4: Connect to Gemini Live session
-    // ─────────────────────────────────────────────────────────
     await geminiConnect(freshToken);
     addDebugEvent("initial live connected");
 
-    // ─────────────────────────────────────────────────────────
-    // Step 5: Request microphone access & start audio capture
-    // ─────────────────────────────────────────────────────────
     const started = await startAudioCapture();
     setAudioCapturing(started);
     addDebugEvent("initial mic", started);
@@ -498,17 +523,10 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       return;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Step 6: Brief pause to allow Gemini to initialize
-    // ─────────────────────────────────────────────────────────
     await sleep(250);
 
-    // ─────────────────────────────────────────────────────────
-    // Step 7: Transition to instruction approval & send prompt
-    // ─────────────────────────────────────────────────────────
     setSessionStep("waiting_instruction_approval");
     sendCoachPrompt(COACH_PROMPTS.ASK_PLAY_INSTRUCTIONS(workout.name));
-
   }, [
     addDebugEvent,
     geminiConnect,
@@ -518,24 +536,18 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     startAudioCapture,
   ]);
 
+  //──────────────────────
+  // Start workout
+  //──────────────────────
   const startWorkout = useCallback(async () => {
-    // ─────────────────────────────────────────────────────────
-    // Guard: only proceed if in "asking_ready" state
-    // ─────────────────────────────────────────────────────────
     if (stepRef.current !== "asking_ready") {
       addDebugEvent("skip workout", `step=${stepRef.current}`);
       return;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Step 1: Pause AI (stop mic capture, keep session alive)
-    // ─────────────────────────────────────────────────────────
     pauseLive();
     setSessionStep("playing_workout");
 
-    // ─────────────────────────────────────────────────────────
-    // Step 2: Validate workout audio URL exists
-    // ─────────────────────────────────────────────────────────
     const workout = selectedWorkoutRef.current;
     const workoutAudioUrl = workout?.workoutAudio;
 
@@ -546,24 +558,15 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     }
 
     try {
-      // ─────────────────────────────────────────────────────────
-      // Step 3: Play workout audio with human-like pause
-      // ─────────────────────────────────────────────────────────
       addDebugEvent("pre-play-sleep", "workout 1000ms");
       await sleep(1000);
 
       addDebugEvent("play workout", workoutAudioUrl);
       await startSessionAudio(workoutAudioUrl, {
         onEnded: async () => {
-          // ───────────────────────────────────────────────────
-          // Step 4a: Workout complete - transition to feedback
-          // ───────────────────────────────────────────────────
           addDebugEvent("workout ended");
           setSessionStep("collecting_feedback");
 
-          // ───────────────────────────────────────────────────
-          // Step 4b: Persist activity & fetch progress update
-          // ───────────────────────────────────────────────────
           try {
             const workoutId =
               (selectedWorkoutRef.current?.id as number | undefined) ?? null;
@@ -578,9 +581,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
               JSON.stringify(activityResult?.response ?? {}),
             );
 
-            // ─────────────────────────────────────────────────
-            // Step 4c: Extract progress data (streak, latest)
-            // ─────────────────────────────────────────────────
             const activityRespObj = activityResult as FunctionResponse | null;
             const output = activityRespObj?.response?.output ?? {};
 
@@ -598,9 +598,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
               }
             }
 
-            // ─────────────────────────────────────────────────
-            // Step 4d: Build progress summary for AI
-            // ─────────────────────────────────────────────────
             let progressSummary = "";
             if (progress) {
               const streak =
@@ -625,9 +622,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
               }
             }
 
-            // ─────────────────────────────────────────────────
-            // Step 4e: Reconnect to Gemini & restart mic
-            // ─────────────────────────────────────────────────
             const connected = await connectFreshLive();
             if (!connected) {
               return;
@@ -644,9 +638,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
               return;
             }
 
-            // ─────────────────────────────────────────────────
-            // Step 4f: Send feedback prompt with progress
-            // ─────────────────────────────────────────────────
             sendCoachPrompt(
               COACH_PROMPTS.WORKOUT_DONE(
                 selectedWorkoutRef.current?.name ?? "workout",
@@ -654,9 +645,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
               ),
             );
           } catch (e) {
-            // ─────────────────────────────────────────────────
-            // Fallback: reconnect & ask for feedback anyway
-            // ─────────────────────────────────────────────────
             addDebugEvent("activity save failed", String(e));
             const connected = await connectFreshLive();
             if (!connected) return;
@@ -676,9 +664,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       });
       addDebugEvent("play-started", "workout");
     } catch {
-      // ─────────────────────────────────────────────────────────
-      // Error: audio playback failed
-      // ─────────────────────────────────────────────────────────
       addDebugEvent("workout audio failed");
       setError("Kunde inte spela upp workouten.");
       setSessionStep("error");
@@ -692,10 +677,16 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     startAudioCapture,
   ]);
 
+  //──────────────────────
+  // Finalize session
+  //──────────────────────
   const finishSession = useCallback(() => {
     finishSessionRef.current();
   }, []);
 
+  //──────────────────────
+  // Finish session with summary
+  //──────────────────────
   const finishSessionWithSummary = useCallback(
     async (summary = "") => {
       clearPendingCoachTimer();
@@ -714,15 +705,13 @@ export function useCoachSession(options: UseCoachSessionOptions) {
           JSON.stringify(feedbackResp?.response ?? {}),
         );
 
-        const closing =
-          COACH_PROMPTS.FEEDBACK_SAVED;
+        const closing = COACH_PROMPTS.FEEDBACK_SAVED;
 
         getSession()?.sendClientContent({
           turns: [{ role: "user", parts: [{ text: `Säg exakt: '${closing}'` }] }],
           turnComplete: true,
         });
 
-        // Wait a fixed short time to let Gemini finish speaking, then give a short tail.
         await sleep(1800);
       } catch (e) {
         addDebugEvent("create_feedback_failed", String(e));
@@ -761,12 +750,18 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     ],
   );
 
+  //──────────────────────
+  // Sync latest callbacks into refs
+  //──────────────────────
   useEffect(() => {
     startInstructionsRef.current = playInstructions;
     startWorkoutRef.current = startWorkout;
     finishSessionRef.current = finishSessionWithSummary;
   }, [finishSessionWithSummary, playInstructions, startWorkout]);
 
+  //──────────────────────
+  // Manual end session
+  //──────────────────────
   const endSession = useCallback(() => {
     clearPendingCoachTimer();
     addDebugEvent("manual end");
@@ -776,6 +771,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     setSessionStep("idle");
   }, [addDebugEvent, clearPendingCoachTimer, disconnectLive, setSessionStep]);
 
+  //──────────────────────
+  // Cleanup on unmount
+  //──────────────────────
   useEffect(() => {
     return () => {
       clearPendingCoachTimer();
@@ -784,6 +782,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     };
   }, [clearPendingCoachTimer]);
 
+  //──────────────────────
+  // Auto-start on mount
+  //──────────────────────
   useEffect(() => {
     if (!autoStart) {
       return;
