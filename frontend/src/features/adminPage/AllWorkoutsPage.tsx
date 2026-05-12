@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ConfirmModal from "../../components/ConfirmModal";
 import type { ToastType } from "../../hooks/useToast";
 import { fetchWorkouts, deleteWorkout } from "../../api/workouts";
@@ -24,12 +24,6 @@ type Props = {
   onStatusChange?: StatusFn;
 };
 
-type PendingDelete = {
-  id: number;
-  name: string;
-  timerId: number;
-};
-
 export default function AllWorkoutsPage({
   onEdit,
   onCreate,
@@ -37,7 +31,7 @@ export default function AllWorkoutsPage({
 }: Props) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
-  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
+  const [deletingWorkoutId, setDeletingWorkoutId] = useState<number | null>(
     null,
   );
 
@@ -60,7 +54,6 @@ export default function AllWorkoutsPage({
     },
   });
 
-  //  DELETE workout
   const deleteMutation = useMutation({
     mutationFn: async (workoutId: number) => {
       const token = await getToken();
@@ -69,6 +62,7 @@ export default function AllWorkoutsPage({
         throw new Error("Missing Clerk token");
       }
 
+      setDeletingWorkoutId(workoutId);
       onStatusChange?.("Deleting workout...", { type: "info" });
 
       return deleteWorkout(workoutId, token);
@@ -76,60 +70,31 @@ export default function AllWorkoutsPage({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workouts"] });
       onStatusChange?.("Workout deleted.", { type: "success" });
+      setDeletingWorkoutId(null);
     },
     onError: () => {
       onStatusChange?.("Failed to delete workout.", { type: "error" });
+      setDeletingWorkoutId(null);
     },
   });
-
-  useEffect(() => {
-    return () => {
-      if (pendingDelete != null) {
-        window.clearTimeout(pendingDelete.timerId);
-      }
-    };
-  }, [pendingDelete]);
 
   const [confirmModal, setConfirmModal] = useState<
     { open: true; workout: Workout } | { open: false }
   >({ open: false });
 
   const scheduleDelete = (workout: Workout) => {
-    if (pendingDelete != null) {
-      onStatusChange?.("Undo current delete first.", { type: "info" });
+    if (deletingWorkoutId != null) {
+      onStatusChange?.("Finish the current delete first.", { type: "info" });
       return;
     }
 
     setConfirmModal({ open: true, workout });
   };
 
-  const undoDelete = () => {
-    if (pendingDelete == null) {
-      return;
-    }
-
-    window.clearTimeout(pendingDelete.timerId);
-    setPendingDelete(null);
-    onStatusChange?.("Delete cancelled.", { type: "info" });
-  };
-
   const onConfirmDelete = async () => {
     if (confirmModal.open !== true) return;
-    const workout = confirmModal.workout;
-
-    const timerId = window.setTimeout(async () => {
-      try {
-        await deleteMutation.mutateAsync(workout.id);
-      } finally {
-        setPendingDelete(null);
-      }
-    }, 5000);
-
-    setPendingDelete({ id: workout.id, name: workout.name, timerId });
     setConfirmModal({ open: false });
-    onStatusChange?.("Delete scheduled. Undo within 5 seconds.", {
-      type: "info",
-    });
+    await deleteMutation.mutateAsync(confirmModal.workout.id);
   };
 
   const onCancelDelete = () => setConfirmModal({ open: false });
@@ -144,26 +109,11 @@ export default function AllWorkoutsPage({
 
   return (
     <div className="space-y-4">
-      {pendingDelete != null && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3">
-          <p className="text-sm text-amber-800">
-            Delete pending for {pendingDelete.name}. You can undo now.
-          </p>
-          <button
-            type="button"
-            onClick={undoDelete}
-            className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white"
-          >
-            Undo
-          </button>
-        </div>
-      )}
-
       {confirmModal.open && (
         <ConfirmModal
           open={true}
           title="Delete workout"
-          body={`Delete workout "${confirmModal.workout.name}"? You can undo within 5 seconds.`}
+          body={`Delete workout "${confirmModal.workout.name}"? This removes it immediately.`}
           requireTyping={"DELETE"}
           confirmLabel="Delete"
           cancelLabel="Cancel"
@@ -218,10 +168,10 @@ export default function AllWorkoutsPage({
                   event.stopPropagation();
                   scheduleDelete(workout);
                 }}
-                disabled={deleteMutation.isPending}
+                disabled={deletingWorkoutId === workout.id}
                 className="rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
               >
-                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                {deletingWorkoutId === workout.id ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
