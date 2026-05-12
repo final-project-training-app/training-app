@@ -22,6 +22,12 @@ public class Trainer {
 
     private String language;
 
+    private String imageSelect;
+
+    private String imageCall;
+
+    private String imageStart;
+
     @OneToMany(mappedBy = "trainer")
     private List<Workout> workouts;
 
@@ -71,6 +77,30 @@ public class Trainer {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public String getImageSelect() {
+        return imageSelect;
+    }
+
+    public void setImageSelect(String imageSelect) {
+        this.imageSelect = imageSelect;
+    }
+
+    public String getImageCall() {
+        return imageCall;
+    }
+
+    public void setImageCall(String imageCall) {
+        this.imageCall = imageCall;
+    }
+
+    public String getImageStart() {
+        return imageStart;
+    }
+
+    public void setImageStart(String imageStart) {
+        this.imageStart = imageStart;
     }
 }
 
