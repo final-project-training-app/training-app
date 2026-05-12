@@ -15,8 +15,13 @@ export default function AdminPage() {
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const isAdmin = profile?.isAdmin === true;
   const { isLoading, error } = useAdminPage(isAdmin);
-  const path = typeof window !== "undefined" ? window.location.pathname : "/admin";
-  const initialTab = path.endsWith("/trainers") ? "trainers" : path.endsWith("/feedback") ? "feedback" : "workouts";
+  const path =
+    typeof window !== "undefined" ? window.location.pathname : "/admin";
+  const initialTab = path.endsWith("/trainers")
+    ? "trainers"
+    : path.endsWith("/feedback")
+      ? "feedback"
+      : "workouts";
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
 
   if (!isLoaded || profileLoading) {

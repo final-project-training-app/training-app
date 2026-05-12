@@ -29,7 +29,9 @@ export default function ConfirmModal({
 
   if (!open) return null;
 
-  const canConfirm = requireTyping ? typed.trim().toUpperCase() === requireTyping : true;
+  const canConfirm = requireTyping
+    ? typed.trim().toUpperCase() === requireTyping
+    : true;
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
