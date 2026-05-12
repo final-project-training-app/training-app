@@ -9,3 +9,6 @@ target/
 .env
 .envlocal
 
+# JVM GC rotated logs generated at runtime
+logs/gc.log.*
+
