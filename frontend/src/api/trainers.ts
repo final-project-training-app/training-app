@@ -15,3 +15,19 @@ export async function fetchTrainers() {
 
   return res.json();
 }
+
+export async function fetchTrainersWithToken(token: string) {
+  const url = `${API_BASE}/api/trainers`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Failed to load trainers.");
+  }
+
+  return res.json();
+}

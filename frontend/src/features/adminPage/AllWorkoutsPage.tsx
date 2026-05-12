@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchWorkouts, deleteWorkout } from "../../api/workouts";
 
@@ -6,14 +7,16 @@ type Workout = {
   name: string;
   type?: string;
   level?: number;
-  durationMinutes?: number;
+  durationSeconds?: number;
 };
 
 type Props = {
-  onEdit: (workout: Workout) => void;
+  onEdit: (workoutId: number) => void;
+  onStatusChange?: (message: string) => void;
 };
 
-export default function AllWorkoutsPage({ onEdit }: Props) {
+export default function AllWorkoutsPage({ onEdit, onStatusChange }: Props) {
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
   //  FETCH workouts
@@ -24,14 +27,36 @@ export default function AllWorkoutsPage({ onEdit }: Props) {
     error,
   } = useQuery({
     queryKey: ["workouts"],
-    queryFn: fetchWorkouts,
+    queryFn: async () => {
+      const token = await getToken();
+
+      if (!token) {
+        throw new Error("Missing Clerk token");
+      }
+
+      return fetchWorkouts(token);
+    },
   });
 
   //  DELETE workout
   const deleteMutation = useMutation({
-    mutationFn: deleteWorkout,
+    mutationFn: async (workoutId: number) => {
+      const token = await getToken();
+
+      if (!token) {
+        throw new Error("Missing Clerk token");
+      }
+
+      onStatusChange?.("Deleting workout...");
+
+      return deleteWorkout(workoutId, token);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workouts"] });
+      onStatusChange?.("Workout deleted.");
+    },
+    onError: () => {
+      onStatusChange?.("Failed to delete workout.");
     },
   });
 
@@ -62,14 +87,14 @@ export default function AllWorkoutsPage({ onEdit }: Props) {
               <p className="font-semibold">{workout.name}</p>
               <p className="text-xs text-(--brand-muted)">
                 {workout.type ?? "No type"} • Level {workout.level ?? "-"} •{" "}
-                {workout.durationMinutes ?? "-"} min
+                {workout.durationSeconds ?? "-"} sec
               </p>
             </div>
 
             {/* Actions */}
             <div className="flex gap-2">
               <button
-                onClick={() => onEdit(workout)}
+                onClick={() => onEdit(workout.id)}
                 className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
               >
                 Edit
