@@ -1,8 +1,8 @@
 const API_BASE =
-  import.meta.env.VITE_API_BASE ??
+  import.meta.env.VITE_API_URL ??
   (typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:8080"
-    : "");
+    : "https://backend-training.up.railway.app");
 
 export async function fetchTrainers() {
   const url = `${API_BASE}/api/trainers`;
