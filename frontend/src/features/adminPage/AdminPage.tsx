@@ -114,7 +114,7 @@ export default function AdminPage() {
   return (
     <main className="flex min-h-dvh flex-col bg-(--brand-page) text-(--brand-ink)">
       <header className="border-b border-(--brand-border) bg-(--brand-surface-glass)">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-5">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-5">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--brand-primary)">
@@ -125,22 +125,32 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => navigate({ to: "/" })}
-              className="rounded-full border border-(--brand-border) bg-white px-4 py-2 text-sm font-semibold"
+              className="rounded-full border border-(--brand-border) bg-white px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:border-(--brand-primary) hover:shadow-md"
             >
               Back Home
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-(--brand-border) bg-white/70 px-3 py-3 shadow-sm backdrop-blur-sm">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--brand-muted)">
+                Sections
+              </p>
+              <p className="text-sm text-(--brand-muted)">
+                Switch between the main admin tools.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
                 setActiveTab("workouts");
                 navigate({ to: "/admin/workouts" });
               }}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              className={`rounded-full px-4 py-2.5 text-sm font-semibold transition duration-200 ${
                 activeTab === "workouts"
-                  ? "bg-(--brand-primary) text-(--brand-on-primary)"
-                  : "bg-white text-(--brand-muted)"
+                  ? "bg-(--brand-primary) text-(--brand-on-primary) shadow-[0_10px_20px_rgba(0,0,0,0.12)] ring-2 ring-(--brand-primary)/20"
+                  : "bg-(--brand-surface-glass) text-(--brand-muted) hover:-translate-y-0.5 hover:bg-white hover:text-(--brand-ink) hover:shadow-md"
               }`}
             >
               Workouts
@@ -151,10 +161,10 @@ export default function AdminPage() {
                 setActiveTab("trainers");
                 navigate({ to: "/admin/trainers" });
               }}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              className={`rounded-full px-4 py-2.5 text-sm font-semibold transition duration-200 ${
                 activeTab === "trainers"
-                  ? "bg-(--brand-primary) text-(--brand-on-primary)"
-                  : "bg-white text-(--brand-muted)"
+                  ? "bg-(--brand-primary) text-(--brand-on-primary) shadow-[0_10px_20px_rgba(0,0,0,0.12)] ring-2 ring-(--brand-primary)/20"
+                  : "bg-(--brand-surface-glass) text-(--brand-muted) hover:-translate-y-0.5 hover:bg-white hover:text-(--brand-ink) hover:shadow-md"
               }`}
             >
               Trainers
@@ -165,14 +175,15 @@ export default function AdminPage() {
                 setActiveTab("feedback");
                 navigate({ to: "/admin/feedback" });
               }}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              className={`rounded-full px-4 py-2.5 text-sm font-semibold transition duration-200 ${
                 activeTab === "feedback"
-                  ? "bg-(--brand-primary) text-(--brand-on-primary)"
-                  : "bg-white text-(--brand-muted)"
+                  ? "bg-(--brand-primary) text-(--brand-on-primary) shadow-[0_10px_20px_rgba(0,0,0,0.12)] ring-2 ring-(--brand-primary)/20"
+                  : "bg-(--brand-surface-glass) text-(--brand-muted) hover:-translate-y-0.5 hover:bg-white hover:text-(--brand-ink) hover:shadow-md"
               }`}
             >
               User Feedback
             </button>
+          </div>
           </div>
         </div>
       </header>
