@@ -6,6 +6,8 @@ type AdminTab = "workouts" | "trainers" | "feedback";
 
 import { useState } from "react";
 import MainWorkoutPage from "./MainWorkoutPage";
+import TrainerAdminPage from "./TrainerAdminPage";
+import FeedbackAdminPage from "./FeedbackAdminPage";
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -104,45 +106,65 @@ export default function AdminPage() {
 
   return (
     <main className="flex min-h-dvh flex-col bg-(--brand-page) text-(--brand-ink)">
-      {/* Admin Navigation */}
-      <div className="flex gap-3 border-b border-(--brand-border) px-6 py-4">
-        <button
-          onClick={() => setActiveTab("workouts")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-            activeTab === "workouts"
-              ? "bg-(--brand-primary) text-(--brand-on-primary)"
-              : "bg-(--brand-surface-glass) text-(--brand-muted)"
-          }`}
-        >
-          Workouts
-        </button>
+      <header className="border-b border-(--brand-border) bg-(--brand-surface-glass)">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--brand-primary)">
+                Admin Console
+              </p>
+              <h1 className="text-2xl font-extrabold">Manage Training App</h1>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/" })}
+              className="rounded-full border border-(--brand-border) bg-white px-4 py-2 text-sm font-semibold"
+            >
+              Back Home
+            </button>
+          </div>
 
-        <button
-          onClick={() => setActiveTab("trainers")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-            activeTab === "trainers"
-              ? "bg-(--brand-primary) text-(--brand-on-primary)"
-              : "bg-(--brand-surface-glass) text-(--brand-muted)"
-          }`}
-        >
-          Trainers
-        </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveTab("workouts")}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                activeTab === "workouts"
+                  ? "bg-(--brand-primary) text-(--brand-on-primary)"
+                  : "bg-white text-(--brand-muted)"
+              }`}
+            >
+              Workouts
+            </button>
 
-        <button
-          onClick={() => setActiveTab("feedback")}
-          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-            activeTab === "feedback"
-              ? "bg-(--brand-primary) text-(--brand-on-primary)"
-              : "bg-(--brand-surface-glass) text-(--brand-muted)"
-          }`}
-        >
-          User Feedback
-        </button>
-      </div>
+            <button
+              onClick={() => setActiveTab("trainers")}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                activeTab === "trainers"
+                  ? "bg-(--brand-primary) text-(--brand-on-primary)"
+                  : "bg-white text-(--brand-muted)"
+              }`}
+            >
+              Trainers
+            </button>
 
-      {/* Workout Content */}
-      <div className="flex-1 p-6">
-        <MainWorkoutPage />
+            <button
+              onClick={() => setActiveTab("feedback")}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                activeTab === "feedback"
+                  ? "bg-(--brand-primary) text-(--brand-on-primary)"
+                  : "bg-white text-(--brand-muted)"
+              }`}
+            >
+              User Feedback
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto w-full max-w-6xl flex-1 p-6">
+        {activeTab === "workouts" && <MainWorkoutPage />}
+        {activeTab === "trainers" && <TrainerAdminPage />}
+        {activeTab === "feedback" && <FeedbackAdminPage />}
       </div>
     </main>
   );
