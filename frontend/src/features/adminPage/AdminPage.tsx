@@ -2,8 +2,10 @@ import { SignInButton, useAuth } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAdminPage } from "../../hooks/useAdminPage";
 import { useMyProfile } from "../../hooks/useMyProfile";
+type AdminTab = "workouts" | "trainers" | "feedback";
+
 import AddWorkoutPage from "./AddWorkoutPage";
-import type { JSX } from "react";
+import { useState, type JSX } from "react";
 // If AddWorkoutPage's props aren't typed as expected, cast to a compatible component type for this usage
 const AddWorkout = AddWorkoutPage as unknown as (props: {
   workoutData?: string | undefined;
@@ -15,6 +17,7 @@ export default function AdminPage() {
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const isAdmin = profile?.isAdmin === true;
   const { data, isLoading, error } = useAdminPage(isAdmin);
+  const [activeTab, setActiveTab] = useState<AdminTab>("workouts");
 
   if (!isLoaded || profileLoading) {
     return (
@@ -104,8 +107,59 @@ export default function AdminPage() {
   }
 
   return (
-    <>
-      <AddWorkout workoutData={data} />
-    </>
+    <main className="flex min-h-dvh flex-col bg-(--brand-page) text-(--brand-ink)">
+      {/* Admin Navigation */}
+      <div className="flex gap-3 border-b border-(--brand-border) px-6 py-4">
+        <button
+          onClick={() => setActiveTab("workouts")}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+            activeTab === "workouts"
+              ? "bg-(--brand-primary) text-(--brand-on-primary)"
+              : "bg-(--brand-surface-glass) text-(--brand-muted)"
+          }`}
+        >
+          Workouts
+        </button>
+
+        <button
+          onClick={() => setActiveTab("trainers")}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+            activeTab === "trainers"
+              ? "bg-(--brand-primary) text-(--brand-on-primary)"
+              : "bg-(--brand-surface-glass) text-(--brand-muted)"
+          }`}
+        >
+          Trainers
+        </button>
+
+        <button
+          onClick={() => setActiveTab("feedback")}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+            activeTab === "feedback"
+              ? "bg-(--brand-primary) text-(--brand-on-primary)"
+              : "bg-(--brand-surface-glass) text-(--brand-muted)"
+          }`}
+        >
+          User Feedback
+        </button>
+      </div>
+
+      {/* Page Content */}
+      <div className="flex-1 p-6">
+        {activeTab === "workouts" && <AddWorkout workoutData={data} />}
+
+        {activeTab === "trainers" && (
+          <div className="text-sm text-(--brand-muted)">
+            Trainers management coming soon...
+          </div>
+        )}
+
+        {activeTab === "feedback" && (
+          <div className="text-sm text-(--brand-muted)">
+            User feedback view coming soon...
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
