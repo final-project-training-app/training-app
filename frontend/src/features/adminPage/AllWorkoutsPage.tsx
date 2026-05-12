@@ -97,7 +97,7 @@ export default function AllWorkoutsPage({
       return;
     }
 
-    const typed = window.prompt('Type DELETE to confirm workout deletion.');
+    const typed = window.prompt("Type DELETE to confirm workout deletion.");
     if (typed?.trim().toUpperCase() !== "DELETE") {
       onStatusChange?.("Delete cancelled.");
       return;
