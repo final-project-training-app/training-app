@@ -1,10 +1,6 @@
 package com.example.trainingapp.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "workouts")
@@ -26,6 +22,10 @@ public class Workout {
     private Boolean lowImpact;
     private Boolean seated;
     private Boolean beginnerFriendly;
+
+    @ManyToOne
+    @JoinColumn(name = "trainer_id")
+    private Trainer trainer;
 
     public Long getId() {
         return id;
