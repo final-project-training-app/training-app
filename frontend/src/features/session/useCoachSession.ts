@@ -27,7 +27,7 @@ import type { CoachCallSession } from "./types";
 
 export type CoachSessionStep =
   | "idle"
-  | "choosing_workout"
+ // | "choosing_workout"
   | "live_intro"
   | "waiting_instruction_approval"
   | "playing_instructions"
@@ -193,10 +193,17 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     token,
     tools: [...liveTools, ...SESSION_CONTROL_TOOLS],
     systemInstruction: buildSessionInstruction(),
+
+    // ─────────────────────────────────────────────────────────
+    // Step 1: Handle Gemini tool calls
+    // ─────────────────────────────────────────────────────────
     onToolCall: async (functionCall): Promise<FunctionResponse> => {
       const name = functionCall.name ?? "unknown_tool";
       addDebugEvent("tool call", `${name}, step=${stepRef.current}`);
 
+      // ───────────────────────────────────────────────────────
+      // Step 1a: Start instructions
+      // ───────────────────────────────────────────────────────
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-instructions", String(queuedAction));
@@ -214,10 +221,12 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         };
       }
 
+      // ───────────────────────────────────────────────────────
+      // Step 1b: Start workout
+      // ───────────────────────────────────────────────────────
       if (name === "start_workout") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-workout", String(queuedAction));
-        // start immediately in MVP
         void startWorkoutRef.current();
         return {
           id: functionCall.id,
@@ -232,6 +241,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         };
       }
 
+      // ───────────────────────────────────────────────────────
+      // Step 1c: Finish session feedback
+      // ───────────────────────────────────────────────────────
       if (name === "finish_session_feedback") {
         finishSessionRef.current(readFeedbackSummary(functionCall));
         return {
@@ -241,6 +253,9 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         };
       }
 
+      // ───────────────────────────────────────────────────────
+      // Step 1d: Forward all other tool calls
+      // ───────────────────────────────────────────────────────
       const response = await executeLiveToolCall(functionCall);
       const workout = readWorkoutFromResponse(response);
 
@@ -255,8 +270,16 @@ export function useCoachSession(options: UseCoachSessionOptions) {
 
       return response;
     },
+
+    // ─────────────────────────────────────────────────────────
+    // Step 2: Handle Gemini messages
+    // ─────────────────────────────────────────────────────────
     onMessage: (message) => {
       const modelText = getModelText(message);
+
+      // ───────────────────────────────────────────────────────
+      // Step 2a: Detect ready acknowledgement phrase
+      // ───────────────────────────────────────────────────────
       if (modelText && hasReadyAckPhrase(modelText)) {
         const action = getQueuedActionForStep(stepRef.current);
         if (action) {
@@ -270,8 +293,12 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         }
       }
 
+      // ───────────────────────────────────────────────────────
+      // Step 2b: Advance after intro turn completes
+      // ───────────────────────────────────────────────────────
       if (
-        (stepRef.current === "choosing_workout" ||
+        (
+          //stepRef.current === "choosing_workout" ||
           stepRef.current === "live_intro") &&
         message.serverContent?.turnComplete
       ) {
