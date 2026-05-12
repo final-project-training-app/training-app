@@ -52,15 +52,6 @@ const emptyForm: TrainerForm = {
   imageStart: "",
 };
 
-const isHttpUrl = (value: string) => {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-};
-
 function normalizeOptional(value: string) {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
@@ -245,10 +236,7 @@ export default function TrainerAdminPage() {
     if (!form.name.trim()) nextErrors.push("Name is required");
     if (!form.prompt.trim()) nextErrors.push("Prompt is required");
     if (!form.voice.trim()) nextErrors.push("Voice is required");
-    if (!form.intro.trim()) nextErrors.push("Intro URL is required");
-    if (form.intro.trim() && !isHttpUrl(form.intro.trim())) {
-      nextErrors.push("Intro must be a valid http/https URL");
-    }
+    if (!form.intro.trim()) nextErrors.push("Intro is required");
     if (!form.language.trim()) nextErrors.push("Language is required");
 
     setErrors(nextErrors);
@@ -276,7 +264,7 @@ export default function TrainerAdminPage() {
       return;
     }
 
-    const typed = window.prompt('Type DELETE to confirm trainer deletion.');
+    const typed = window.prompt("Type DELETE to confirm trainer deletion.");
     if (typed?.trim().toUpperCase() !== "DELETE") {
       showToast("Delete cancelled.");
       return;
@@ -482,7 +470,7 @@ export default function TrainerAdminPage() {
                 </label>
 
                 <label className="flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Intro URL *</span>
+                  <span className="text-sm opacity-80">Intro *</span>
                   <input
                     name="intro"
                     value={form.intro}

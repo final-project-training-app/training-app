@@ -69,6 +69,12 @@ public class TrainerController {
         return ResponseEntity.ok(trainerService.updateTrainer(id, trainer));
     }
 
+    @PostMapping("/{id}")
+    public ResponseEntity<Trainer> updateTrainerViaPost(@PathVariable Long id, @RequestBody Trainer trainer, Authentication authentication) {
+        assertAdmin(authentication);
+        return ResponseEntity.ok(trainerService.updateTrainer(id, trainer));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Trainer> getTrainerById(@PathVariable Long id) {
         return ResponseEntity.ok().body(trainerService.getTrainerById(id));

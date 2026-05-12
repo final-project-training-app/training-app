@@ -5,7 +5,6 @@ import com.example.trainingapp.repository.TrainerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.URI;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -35,8 +34,6 @@ public class TrainerService {
         String voice = normalizeRequired(request.getVoice(), "voice", 120);
         String intro = normalizeRequired(request.getIntro(), "intro", 2048);
         String language = normalizeRequired(request.getLanguage(), "language", 40);
-
-        validateIntroUrl(intro);
 
         if (trainerRepository.existsByNameIgnoreCaseAndLanguageIgnoreCase(name, language)) {
             throw new ResponseStatusException(CONFLICT, "Trainer already exists for this language");
@@ -70,8 +67,6 @@ public class TrainerService {
         String voice = normalizeRequired(request.getVoice(), "voice", 120);
         String intro = normalizeRequired(request.getIntro(), "intro", 2048);
         String language = normalizeRequired(request.getLanguage(), "language", 40);
-
-        validateIntroUrl(intro);
 
         if (trainerRepository.existsByNameIgnoreCaseAndLanguageIgnoreCase(name, language)
                 && (!name.equalsIgnoreCase(trainer.getName())
@@ -145,21 +140,4 @@ public class TrainerService {
         return normalized;
     }
 
-    private void validateIntroUrl(String intro) {
-        URI uri;
-        try {
-            uri = URI.create(intro);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(BAD_REQUEST, "intro must be a valid URL");
-        }
-
-        String scheme = uri.getScheme();
-        if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
-            throw new ResponseStatusException(BAD_REQUEST, "intro must use http or https");
-        }
-
-        if (uri.getHost() == null || uri.getHost().isBlank()) {
-            throw new ResponseStatusException(BAD_REQUEST, "intro must include a valid host");
-        }
-    }
 }
