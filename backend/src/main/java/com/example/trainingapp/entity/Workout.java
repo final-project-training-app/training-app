@@ -8,7 +8,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "workouts")
 public class Workout {
@@ -40,45 +42,6 @@ public class Workout {
     @JoinColumn(name = "trainer_id")
     private Trainer trainer;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public void setLevel(Integer level) {
-        this.level = level;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 
     @JsonProperty("durationSeconds")
     public Integer getDurationSeconds() {
@@ -98,68 +61,5 @@ public class Workout {
         this.durationSeconds = durationSeconds;
     }
 
-    public String getInstructionsAudio() {
-        return instructionsAudio;
-    }
 
-    public void setInstructionsAudio(String instructionsAudio) {
-        this.instructionsAudio = instructionsAudio;
-    }
-
-    public String getWorkoutAudio() {
-        return workoutAudio;
-    }
-
-    public void setWorkoutAudio(String workoutAudio) {
-        this.workoutAudio = workoutAudio;
-    }
-
-
-    public String getInstructionsImage() {
-        return instructionsImage;
-    }
-
-    public void setInstructionsImage(String instructionsImage) {
-        this.instructionsImage = instructionsImage;
-    }
-
-    public String getWorkoutImage() {
-        return workoutImage;
-    }
-
-    public void setWorkoutImage(String workoutImage) {
-        this.workoutImage = workoutImage;
-    }
-
-    public Boolean getKneeFriendly() {
-        return kneeFriendly;
-    }
-
-    public void setKneeFriendly(Boolean kneeFriendly) {
-        this.kneeFriendly = kneeFriendly;
-    }
-
-    public Boolean getLowImpact() {
-        return lowImpact;
-    }
-
-    public void setLowImpact(Boolean lowImpact) {
-        this.lowImpact = lowImpact;
-    }
-
-    public Boolean getSeated() {
-        return seated;
-    }
-
-    public void setSeated(Boolean seated) {
-        this.seated = seated;
-    }
-
-    public Boolean getBeginnerFriendly() {
-        return beginnerFriendly;
-    }
-
-    public void setBeginnerFriendly(Boolean beginnerFriendly) {
-        this.beginnerFriendly = beginnerFriendly;
-    }
 }

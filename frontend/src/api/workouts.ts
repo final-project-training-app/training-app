@@ -1,4 +1,4 @@
-const API_BASE = (import.meta.env as any).VITE_API_BASE ??
+const API_BASE = import.meta.env.VITE_API_BASE ??
   (typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:8080"
     : "");

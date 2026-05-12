@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCreateWorkout } from "../../hooks/useCreateWorkoutHook";
+import { fetchTrainers } from "../../api/trainers";
+
+type TrainerOption = {
+  id: number;
+  name: string;
+};
 
 type WorkoutForm = {
   name: string;
-  instructions: string;
+  description: string;
   level: number;
   type: string;
-  durationMinutes: number;
+  durationSeconds: number;
   instructionsAudio: string;
   workoutAudio: string;
   instructionsImage: string;
@@ -15,6 +21,7 @@ type WorkoutForm = {
   lowImpact: boolean;
   seated: boolean;
   beginnerFriendly: boolean;
+  trainerId: string;
 };
 
 const isValidUrl = (url: string): boolean => {
@@ -29,10 +36,10 @@ const isValidUrl = (url: string): boolean => {
 export default function AddWorkoutPage() {
   const [form, setForm] = useState<WorkoutForm>({
     name: "",
-    instructions: "",
+    description: "",
     level: 2,
     type: "",
-    durationMinutes: 0,
+    durationSeconds: 0,
     instructionsAudio: "",
     workoutAudio: "",
     instructionsImage: "",
@@ -41,14 +48,51 @@ export default function AddWorkoutPage() {
     lowImpact: false,
     seated: false,
     beginnerFriendly: false,
+    trainerId: "",
   });
   const { mutateAsync, isPending } = useCreateWorkout();
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
+  const [trainers, setTrainers] = useState<TrainerOption[]>([]);
+  const [trainersLoading, setTrainersLoading] = useState(true);
+  const [trainersError, setTrainersError] = useState("");
   const isSubmitting = isPending;
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadTrainers() {
+      try {
+        setTrainersLoading(true);
+        const data = await fetchTrainers();
+
+        if (!isMounted) return;
+
+        setTrainers(Array.isArray(data) ? data : []);
+        setTrainersError("");
+      } catch (error) {
+        if (!isMounted) return;
+
+        console.error(error);
+        setTrainersError("Could not load trainers.");
+      } finally {
+        if (isMounted) {
+          setTrainersLoading(false);
+        }
+      }
+    }
+
+    loadTrainers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value, type } = e.target;
 
@@ -74,12 +118,13 @@ export default function AddWorkoutPage() {
     const newErrors: string[] = [];
 
     if (!form.name) newErrors.push("Name is required");
-    if (!form.instructions) newErrors.push("Instructions are required");
+    if (!form.description) newErrors.push("Description is required");
     if (!form.type) newErrors.push("Type is required");
-    if (form.durationMinutes <= 0)
+    if (form.durationSeconds <= 0)
       newErrors.push("Duration must be greater than 0");
     if (form.level < 0 || form.level > 4)
       newErrors.push("Level must be between 0 and 4");
+    if (!form.trainerId) newErrors.push("Trainer is required");
     if (!form.instructionsAudio)
       newErrors.push("Instructions Audio is required");
     else if (!isValidUrl(form.instructionsAudio))
@@ -107,7 +152,24 @@ export default function AddWorkoutPage() {
     setSuccess(false);
 
     try {
-      await mutateAsync(form);
+      await mutateAsync({
+        name: form.name,
+        description: form.description,
+        level: form.level,
+        type: form.type,
+        durationSeconds: form.durationSeconds,
+        instructionsAudio: form.instructionsAudio,
+        workoutAudio: form.workoutAudio,
+        instructionsImage: form.instructionsImage,
+        workoutImage: form.workoutImage,
+        kneeFriendly: form.kneeFriendly,
+        lowImpact: form.lowImpact,
+        seated: form.seated,
+        beginnerFriendly: form.beginnerFriendly,
+        trainer: {
+          id: Number(form.trainerId),
+        },
+      });
 
       setSuccess(true);
 
@@ -150,6 +212,31 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">Trainer *</span>
+                <select
+                  name="trainerId"
+                  value={form.trainerId}
+                  onChange={handleChange}
+                  disabled={trainersLoading}
+                  className="p-3 border rounded-lg bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">
+                    {trainersLoading
+                      ? "Loading trainers..."
+                      : "Choose a trainer"}
+                  </option>
+                  {trainers.map((trainer) => (
+                    <option key={trainer.id} value={trainer.id}>
+                      {trainer.name}
+                    </option>
+                  ))}
+                </select>
+                {trainersError && (
+                  <span className="text-sm text-red-400">{trainersError}</span>
+                )}
+              </label>
+
+              <label className="flex flex-col gap-1">
                 <span className="text-sm opacity-80">Level *</span>
                 <input
                   type="number"
@@ -163,12 +250,13 @@ export default function AddWorkoutPage() {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Duration (minutes) *</span>
+                <span className="text-sm opacity-80">Duration (seconds) *</span>
                 <input
                   type="number"
-                  name="durationMinutes"
-                  value={form.durationMinutes}
+                  name="durationSeconds"
+                  value={form.durationSeconds}
                   onChange={handleChange}
+                  min="0"
                   className="p-3 border rounded-lg bg-white/10"
                 />
               </label>
@@ -177,13 +265,13 @@ export default function AddWorkoutPage() {
 
           {/* Instructions */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Instructions</h2>
+            <h2 className="text-xl font-semibold mb-4">Description</h2>
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">Instructions *</span>
+              <span className="text-sm opacity-80">Description *</span>
               <textarea
-                name="instructions"
+                name="description"
                 placeholder="Describe the workout..."
-                value={form.instructions}
+                value={form.description}
                 onChange={handleChange}
                 className="p-3 border rounded-lg bg-white/10 min-h-[120px]"
               />
