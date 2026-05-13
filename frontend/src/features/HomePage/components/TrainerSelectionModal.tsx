@@ -11,7 +11,8 @@ type Trainer = {
   name: string;
   imageSelect?: string | null;
   voice?: string;
-  intro?: string;
+  intro?: string | null;
+  language?: string;
 };
 
 export default function TrainerSelectionModal({
@@ -155,7 +156,7 @@ export default function TrainerSelectionModal({
                         if (playingId === trainerId) {
                           stop();
                         } else {
-                          play(trainerId, trainer.voice);
+                          play(trainerId, trainer.intro);
                         }
                       }}
                       loading={loadingId === String(trainer.id)}

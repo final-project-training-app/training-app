@@ -5,7 +5,7 @@ type Trainer = {
   id: number;
   name: string;
   imageSelect?: string | null;
-  voice?: string;
+  intro?: string | null;
 };
 
 type Props = {
