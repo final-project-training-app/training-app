@@ -19,7 +19,6 @@ import {
 import {
   getModelText,
   getQueuedActionForStep,
-  hasReadyAckPhrase,
   readFeedbackSummary,
   readWorkoutFromResponse,
   sleep,
@@ -142,6 +141,8 @@ export function useCoachSession(
     geminiDisconnect,
     startAudioCapture,
     stopAudioCapture,
+    suppressAiOutput,
+    allowAiOutput,
     isActive,
     connectionError,
     currentTurn,
@@ -177,6 +178,7 @@ export function useCoachSession(
         }
         addDebugEvent("tool-start-instructions", String(queuedAction));
 
+        suppressAiOutput();
         void startInstructionsRef.current();
         return {
           id: functionCall.id,
@@ -208,6 +210,7 @@ export function useCoachSession(
         if (!finished) {
           addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");
         }
+        suppressAiOutput();
         void startWorkoutRef.current();
         return {
           id: functionCall.id,
@@ -280,22 +283,6 @@ export function useCoachSession(
 
       if (generationFinished) {
         aiTurnStateRef.current.complete = true;
-      }
-
-      //──────────────────────
-      // Step 2a: Detect ready acknowledgement phrase
-      //──────────────────────
-      if (modelText && hasReadyAckPhrase(modelText)) {
-        const action = getQueuedActionForStep(stepRef.current);
-        if (action) {
-          addDebugEvent("phrase-match", action);
-          if (action === "start_instructions") {
-            void startInstructionsRef.current();
-          } else if (action === "start_workout") {
-            void startWorkoutRef.current();
-          }
-          return;
-        }
       }
 
       //──────────────────────
@@ -381,6 +368,7 @@ export function useCoachSession(
   // Ask if ready for workout
   //──────────────────────
   const askIfReadyForWorkout = useCallback(async () => {
+    allowAiOutput();
     addDebugEvent("reconnect after instructions");
     setSessionStep("asking_ready");
 
@@ -405,6 +393,7 @@ export function useCoachSession(
     sendCoachPrompt(COACH_PROMPTS.INSTRUCTIONS_DONE);
   }, [
     addDebugEvent,
+    allowAiOutput,
     connectFreshLive,
     sendCoachPrompt,
     setSessionStep,
@@ -471,7 +460,7 @@ export function useCoachSession(
       return;
     }
 
-    const workoutResp = await getWorkoutEndpoint(17).catch(() => null);
+    const workoutResp = await getWorkoutEndpoint(1).catch(() => null);
     if (!workoutResp || !workoutResp.ok) {
       setError(COACH_PROMPTS.NO_WORKOUT_ERROR);
       setSessionStep("error");
@@ -502,10 +491,12 @@ export function useCoachSession(
     await sleep(250);
 
     setSessionStep("waiting_instruction_approval");
+    sendCoachPrompt("Starta samtalet.");
   }, [
     addDebugEvent,
     geminiConnect,
     loadToken,
+    sendCoachPrompt,
     setSessionStep,
     startAudioCapture,
   ]);
@@ -537,6 +528,7 @@ export function useCoachSession(
       addDebugEvent("play workout", workoutAudioUrl);
       await startSessionAudio(workoutAudioUrl, {
         onEnded: async () => {
+          allowAiOutput();
           addDebugEvent("workout ended");
           setSessionStep("collecting_feedback");
 
@@ -642,6 +634,7 @@ export function useCoachSession(
       setSessionStep("error");
     }
   }, [
+    allowAiOutput,
     pauseLive,
     setSessionStep,
     addDebugEvent,

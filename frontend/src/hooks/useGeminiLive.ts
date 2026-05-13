@@ -76,6 +76,7 @@ export const useGeminiLive = ({
   const reconnectTimerRef = useRef<number | null>(null);
   const connectingRef = useRef(false);
   const autoReconnectDisabledRef = useRef(false);
+  const suppressAiAudioRef = useRef(false);
 
   useEffect(() => {
     tokenRef.current = token;
@@ -293,7 +294,9 @@ export const useGeminiLive = ({
           );
           */
           onAudioRef.current?.(bytes.buffer);
-          void playAiPcm16(bytes.buffer);
+          if (!suppressAiAudioRef.current) {
+            void playAiPcm16(bytes.buffer);
+          }
           audioParts++;
         }
 
@@ -356,6 +359,18 @@ export const useGeminiLive = ({
     playingUntilWallMsRef.current = 0;
     reconnectAttemptsRef.current = 0;
     connectingRef.current = false;
+  }
+
+  function suppressAiOutput() {
+    suppressAiAudioRef.current = true;
+    aiAudioCtxRef.current?.close();
+    aiAudioCtxRef.current = null;
+    aiPlayheadRef.current = 0;
+    playingUntilWallMsRef.current = 0;
+  }
+
+  function allowAiOutput() {
+    suppressAiAudioRef.current = false;
   }
 
   function getSession() {
@@ -623,6 +638,8 @@ export const useGeminiLive = ({
     geminiDisconnect,
     startAudioCapture,
     stopAudioCapture,
+    suppressAiOutput,
+    allowAiOutput,
     endUserTurn,
     isActive,
     connectionError,
