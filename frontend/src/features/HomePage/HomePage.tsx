@@ -172,13 +172,22 @@ export default function HomePage() {
           </div>
 
           {/* Buttons - locked bottom */}
+          {/* White background behind buttons: full-width anchored to bottom, above trainer but under buttons */}
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[15]">
+            <div
+              className={`absolute bottom-0 left-0 right-0 rounded-t-3xl bg-white  ${
+                isLoaded && isSignedIn ? "h-[140px]" : "h-[100px]"
+              }`}
+            />
+          </div>
+
           <footer className="absolute inset-x-5 bottom-[20px] z-20 flex flex-col items-center gap-3">
             <button
               type="button"
               onClick={() => {
                 void handleStartCall();
               }}
-              className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white shadow-[0_16px_34px_rgba(65,45,150,0.35)] transition active:scale-[0.98]"
+              className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition active:scale-[0.98]"
             >
               <Phone size={22} strokeWidth={2.5} />
               Ring tränaren
@@ -188,7 +197,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-[0.98]"
+                className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition active:scale-[0.98]"
               >
                 <Settings size={16} strokeWidth={2.2} />
                 Inställningar
