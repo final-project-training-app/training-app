@@ -1,9 +1,7 @@
 import { type FunctionResponse } from "@google/genai";
-import { type FunctionResponse } from "@google/genai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
-import { executeLiveToolCall, liveTools } from "../ai-dev/live/tools";
 import { executeLiveToolCall, liveTools } from "../ai-dev/live/tools";
 import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
 import { getWorkoutEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
@@ -16,7 +14,6 @@ import {
 import {
   COACH_PROMPTS,
   liveSystemInstruction,
-  SESSION_CONTROL_TOOLS,
   SESSION_CONTROL_TOOLS,
 } from "./coachPrompts";
 import {
