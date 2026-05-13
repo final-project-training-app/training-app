@@ -128,7 +128,7 @@ export default function TrainerSelectionModal({
             aria-label="Trainer carousel"
           >
             {isLoading ? (
-              <div className="flex h-[720px] w-full items-center justify-center gap-3">
+              <div className="flex h-[600px] w-full items-center justify-center gap-3">
                 <div className="animate-spin">
                   <div className="w-6 h-6 border-3 border-[#ddd2ff] border-t-[#5c35c4] rounded-full" />
                 </div>
@@ -145,7 +145,7 @@ export default function TrainerSelectionModal({
                   role="option"
                   aria-selected={localSelectedId === trainer.id}
                 >
-                  <div className="h-full w-64 sm:w-72 md:w-80">
+                  <div className="h-full w-80 sm:w-96">
                     <TrainerCard
                       trainer={trainer}
                       selected={localSelectedId === trainer.id}
@@ -165,7 +165,7 @@ export default function TrainerSelectionModal({
                 </div>
               ))
             ) : (
-              <div className="flex h-[720px] w-full items-center justify-center">
+              <div className="flex h-[600px] w-full items-center justify-center">
                 <p className="text-[#6b59b2]">
                   Inga tränare tillgängliga just nu
                 </p>

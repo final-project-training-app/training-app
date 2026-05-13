@@ -28,7 +28,7 @@ function TrainerCardInner({
   return (
     <div
       onClick={onSelect}
-      className={`relative flex h-[720px] w-full max-w-80 cursor-pointer flex-col rounded-3xl overflow-hidden transition-all duration-300 ease-out
+      className={`relative flex h-[600px] w-96 cursor-pointer flex-col rounded-3xl overflow-hidden transition-all duration-300 ease-out
         ${
           selected
             ? "scale-105 bg-white shadow-2xl ring-3 ring-[#5c35c4]"
@@ -37,8 +37,8 @@ function TrainerCardInner({
       aria-pressed={selected}
       role="button"
     >
-      {/* Image container */}
-      <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff] flex-1 min-h-[500px]">
+      {/* Image container - takes most of space */}
+      <div className="relative flex-1 w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff]">
         {trainer.imageSelect ? (
           <img
             src={trainer.imageSelect}
@@ -58,27 +58,27 @@ function TrainerCardInner({
         )}
       </div>
 
-      {/* Content container */}
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      {/* Content container - compact at bottom */}
+      <div className="flex flex-col gap-2 p-4 bg-white">
         {/* Name and role */}
-        <div>
-          <h3 className="text-xl font-bold text-[#281d7a] leading-tight">
+        <div className="text-center">
+          <h3 className="text-lg font-bold text-[#281d7a] leading-tight">
             {trainer.name}
           </h3>
-          <p className="mt-2 text-sm font-medium text-[#6b59b2]">
+          <p className="text-xs font-medium text-[#6b59b2]">
             Personlig tränare
           </p>
         </div>
 
         {/* Voice button */}
-        <div className="mt-auto">
+        <div>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onPlay?.();
             }}
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150
+            className={`w-full flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-150
               ${
                 playing
                   ? "bg-red-100 text-red-700 border border-red-300 hover:bg-red-200"
