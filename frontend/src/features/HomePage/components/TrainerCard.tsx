@@ -31,7 +31,7 @@ function TrainerCardInner({
       className={`relative flex h-[600px] w-96 cursor-pointer flex-col rounded-3xl overflow-hidden transition-all duration-300 ease-out
         ${
           selected
-            ? "scale-105 bg-white shadow-2xl ring-3 ring-[#5c35c4]"
+            ? "scale-105 bg-white shadow-2xl ring-3 ring-[#5c35c4] motion-safe:shadow-[0_8px_40px_-6px_rgba(92,53,196,0.45)]"
             : "scale-95 bg-white shadow-lg opacity-85 hover:opacity-95"
         }`}
       aria-pressed={selected}

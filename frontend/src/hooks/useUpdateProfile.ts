@@ -20,29 +20,16 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: async (data: ProfileData): Promise<ProfileResponse> => {
-      console.log("[useUpdateProfile] Mutation called with data:", data);
-
       if (!isLoaded || !isSignedIn) {
-        console.error(
-          "[useUpdateProfile] Not signed in - isLoaded:",
-          isLoaded,
-          "isSignedIn:",
-          isSignedIn,
-        );
         throw new Error("Not signed in");
       }
 
       const token = await getToken();
 
       if (!token) {
-        console.error("[useUpdateProfile] Missing token");
         throw new Error("Missing Clerk token");
       }
 
-      console.log(
-        "[useUpdateProfile] Sending PUT request to",
-        API_URL + "/api/users/me/profile",
-      );
       const res = await fetch(`${API_URL}/api/users/me/profile`, {
         method: "PUT",
         headers: {
@@ -55,26 +42,20 @@ export function useUpdateProfile() {
       if (!res.ok) {
         const errorText = await res.text();
         console.error(
-          "[useUpdateProfile] Response not ok:",
+          "[useUpdateProfile] Update failed:",
           res.status,
           errorText,
         );
         throw new Error(`Update failed: ${res.status}`);
       }
 
-      const responseData = await res.json();
-      console.log("[useUpdateProfile] Success! Response:", responseData);
-      return responseData;
+      return res.json();
     },
     onSuccess: (data) => {
-      console.log(
-        "[useUpdateProfile] onSuccess called, updating cache with:",
-        data,
-      );
       queryClient.setQueryData(["myProfile"], data);
     },
     onError: (error) => {
-      console.error("[useUpdateProfile] onError called:", error);
+      console.error("[useUpdateProfile]", error);
     },
   });
 }

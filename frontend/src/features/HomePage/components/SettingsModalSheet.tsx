@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
@@ -23,7 +23,6 @@ export default function SettingsModalSheet({
 
   return (
     <SettingsModalBody
-      key={open ? "open" : "closed"}
       open={open}
       setOpen={setOpen}
       isSuccess={isSuccess}
@@ -79,6 +78,27 @@ function SettingsModalBody({
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateProfile = useUpdateProfile();
+  const prevOpenRef = useRef(open);
+
+  useEffect(() => {
+    setSelectedTrainerId(initialTrainerId ?? 1);
+  }, [initialTrainerId]);
+
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      setSelectedTrainerId(initialTrainerId ?? 1);
+      setFullName(userName);
+      setIntensityLevel(initialIntensityLevel);
+      setContext(initialContext);
+    }
+    prevOpenRef.current = open;
+  }, [
+    open,
+    initialTrainerId,
+    userName,
+    initialIntensityLevel,
+    initialContext,
+  ]);
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
@@ -132,7 +152,7 @@ function SettingsModalBody({
           transform: open ? "translateY(0)" : "translateY(100%)",
           height: `${sheetHeight}dvh`,
         }}
-        className="fixed bottom-0 left-0 right-0 z-50 overflow-y-auto rounded-t-[2.25rem] bg-[#f7f5fc] px-6 pb-7 pt-4 shadow-2xl transition-transform duration-300"
+        className="fixed bottom-0 left-0 right-0 z-50 overflow-y-auto rounded-t-[2.25rem] bg-[linear-gradient(180deg,#faf8ff_0%,#f7f5fc_45%,#f3effb_100%)] px-6 pb-7 pt-4 shadow-[0_-12px_40px_-8px_rgba(40,29,122,0.18)] transition-[transform,box-shadow] duration-300 ease-out"
       >
         <div
           onPointerDown={onHandlePointerDown}
@@ -143,7 +163,7 @@ function SettingsModalBody({
         />
 
         <div className="mx-auto w-full max-w-4xl">
-          <h1 className="text-center text-[clamp(2.15rem,6vw,4.35rem)] font-bold leading-none tracking-tight text-[#281d7a]">
+          <h1 className="text-center text-[clamp(2.15rem,6vw,4.35rem)] font-bold leading-none tracking-tight bg-gradient-to-r from-[#1a0f52] via-[#5c35c4] to-[#281d7a] bg-clip-text text-transparent drop-shadow-sm">
             Installningar
           </h1>
 
@@ -189,6 +209,11 @@ function SettingsModalBody({
           </section>
 
           <section className="mt-6">
+            <p className="mb-3 text-center text-sm font-medium text-[#6b59b2] md:text-base">
+              Byt tränare nedan och tryck sedan{" "}
+              <span className="font-bold text-[#4f3bb8]">Spara ändringar</span>{" "}
+              så valet sparas i din profil.
+            </p>
             <TrainerSelectionModal
               selectedTrainerId={selectedTrainerId}
               onTrainerSelect={setSelectedTrainerId}
@@ -197,7 +222,7 @@ function SettingsModalBody({
 
           <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
             <button
-              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
+              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:shadow-[0_8px_28px_-6px_rgba(74,45,172,0.55)] hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
               disabled={updateProfile.isPending}
               onClick={() => {
                 // Clear existing feedback timeout
@@ -212,19 +237,9 @@ function SettingsModalBody({
                   context,
                   trainerId: selectedTrainerId ?? null,
                 };
-                console.log(
-                  "[SettingsModalSheet] Save button clicked with trainerId:",
-                  selectedTrainerId,
-                  "Full data:",
-                  profileData,
-                );
 
                 updateProfile.mutate(profileData, {
                   onSuccess: () => {
-                    console.log(
-                      "[SettingsModalSheet] Successfully saved trainerId:",
-                      selectedTrainerId,
-                    );
                     setSaveFeedback("Inställningar sparade ✓");
                     // Keep feedback visible for 3 seconds
                     feedbackTimeoutRef.current = setTimeout(() => {
@@ -245,7 +260,14 @@ function SettingsModalBody({
             </button>
 
             {saveFeedback ? (
-              <div className="rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-center text-[1.05rem] font-semibold text-[#3f2a7a] shadow-sm">
+              <div
+                role="status"
+                className={`rounded-2xl border px-4 py-3 text-center text-[1.05rem] font-semibold shadow-sm motion-safe:transition-all motion-safe:duration-300 ${
+                  saveFeedback.includes("✓")
+                    ? "border-emerald-400/45 bg-emerald-50/90 text-emerald-950 ring-1 ring-emerald-500/15"
+                    : "border-rose-300/50 bg-rose-50/90 text-rose-950 ring-1 ring-rose-500/15"
+                }`}
+              >
                 {saveFeedback}
               </div>
             ) : null}
