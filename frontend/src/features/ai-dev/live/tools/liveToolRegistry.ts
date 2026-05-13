@@ -40,7 +40,7 @@ export const liveTools: ToolListUnion = [
 export const coachLiveTools: ToolListUnion = [
   {
     functionDeclarations: liveToolDefinitions
-      .filter((tool) => tool.name !== "get_training_context")
+      .filter((tool) => !["get_training_context", "create_feedback"].includes(tool.name))
       .map((tool) => tool.declaration),
   },
 ];

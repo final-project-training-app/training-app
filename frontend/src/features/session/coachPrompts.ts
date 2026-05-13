@@ -8,8 +8,7 @@ export const liveSystemInstruction = [
   "När användaren svarar ja på frågan om instruktioner ska du köra start_instructions. Du ska inte fortsätta prata under uppspelningen.",
   "När användaren svarar ja på frågan i mp3-filen start_instructions om att starta passet ska du köra start_workout. Du ska INTE prata alls efter start_workout — varken under eller efter uppspelningen. Vänta tyst på användarens nästa yttrande.",
   "Tränings-mp3:n avslutas med en fråga om hur passet kändes. Ställ INTE den frågan — vänta tyst på användarens svar.",
-  "När användaren svarat, kalla `create_feedback` med `userId`, `workoutId` och `comment`.",
-  "När `create_feedback` lyckas, ge en kort återkoppling och kalla `finish_session_feedback`.",
+  "När användaren svarat på hur passet kändes, ge en kort återkoppling och kalla `finish_session_feedback` med en kort summering av vad användaren sade.",
   "Undvik tekniska termer i talet.",
 ].join(" ");
 
