@@ -1,13 +1,8 @@
-import {
-  type FunctionResponse
-} from "@google/genai";
+import { type FunctionResponse } from "@google/genai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
-import {
-  executeLiveToolCall,
-  liveTools,
-} from "../ai-dev/live/tools";
+import { executeLiveToolCall, liveTools } from "../ai-dev/live/tools";
 import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
 import { getWorkoutEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
 import type { BackendWorkoutResponse } from "../ai-dev/live/tools/workout/workoutTypes";
@@ -19,31 +14,52 @@ import {
 import {
   COACH_PROMPTS,
   liveSystemInstruction,
-  SESSION_CONTROL_TOOLS
+  SESSION_CONTROL_TOOLS,
 } from "./coachPrompts";
 import {
-  type CoachSessionDebugEvent,
-  type CoachSessionStep,
-  type UseCoachSessionOptions,
   getModelText,
   getQueuedActionForStep,
   hasReadyAckPhrase,
   readFeedbackSummary,
   readWorkoutFromResponse,
   sleep,
+  waitForAIToFinishSpeaking,
+  type AITurnState,
+  type CoachSessionDebugEvent,
+  type CoachSessionStep,
+  type UseCoachSessionOptions,
 } from "./coachSessionHelpers";
-
-
-
+import { useTrainer } from "./query";
 
 //──────────────────────
 // Build system instruction
 //──────────────────────
-function buildSessionInstruction() {
-  return liveSystemInstruction;
+function buildSessionInstruction(trainerPrompt?: string | null) {
+  if (!trainerPrompt?.trim()) {
+    return liveSystemInstruction;
+  }
+
+  return `${liveSystemInstruction}\n\nTrainer prompt:\n${trainerPrompt.trim()}`;
 }
 
-export function useCoachSession(options: UseCoachSessionOptions) {
+export function useCoachSession(
+  options: UseCoachSessionOptions & {
+    trainerId?: string;
+    session: unknown;
+    autoplay?: boolean;
+  },
+) {
+  const {
+    data: trainer,
+    isLoading: isTrainerLoading,
+    error: trainerError,
+  } = useTrainer(options.trainerId ?? "1");
+  const sessionInstruction = buildSessionInstruction(trainer?.prompt);
+
+  useEffect(() => {
+    console.log("Trainer prompt:", trainer?.prompt);
+  }, [trainer?.prompt]);
+
   const { autoStart = true } = options;
   const [step, setStep] = useState<CoachSessionStep>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +73,11 @@ export function useCoachSession(options: UseCoachSessionOptions) {
   const stepRef = useRef<CoachSessionStep>("idle");
   const selectedWorkoutRef = useRef<BackendWorkoutResponse | null>(null);
   const hasStartedRef = useRef(false);
+
+  const aiTurnStateRef = useRef<AITurnState>({
+    started: false,
+    complete: false,
+  });
 
   //──────────────────────
   // Stable callback refs
@@ -125,10 +146,11 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     connectionError,
     currentTurn,
     getSession,
+    getAiPlaybackRemainingMs,
   } = useGeminiLive({
     token,
     tools: [...liveTools, ...SESSION_CONTROL_TOOLS],
-    systemInstruction: buildSessionInstruction(),
+    systemInstruction: sessionInstruction,
 
     //──────────────────────
     // Step 1: Handle Gemini tool calls
@@ -142,8 +164,19 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       //──────────────────────
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
+        addDebugEvent("waiting for AI to finish before starting instructions");
+        await sleep(1000);
+        const finished = await waitForAIToFinishSpeaking(
+          () => aiTurnStateRef.current,
+          () => getAiPlaybackRemainingMs(),
+          { timeoutMs: 5000 },
+        );
+
+        if (!finished) {
+          addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");
+        }
         addDebugEvent("tool-start-instructions", String(queuedAction));
-        await sleep(500);
+
         void startInstructionsRef.current();
         return {
           id: functionCall.id,
@@ -164,7 +197,17 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       if (name === "start_workout") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-workout", String(queuedAction));
-        await sleep(500);
+        addDebugEvent("waiting for AI to finish before starting instructions");
+        await sleep(1000);
+        const finished = await waitForAIToFinishSpeaking(
+          () => aiTurnStateRef.current,
+          () => getAiPlaybackRemainingMs(),
+          { timeoutMs: 5000 },
+        );
+
+        if (!finished) {
+          addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");
+        }
         void startWorkoutRef.current();
         return {
           id: functionCall.id,
@@ -183,6 +226,15 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       // Step 1c: Finish session feedback
       //──────────────────────
       if (name === "finish_session_feedback") {
+        await sleep(1000);
+        const finished = await waitForAIToFinishSpeaking(
+          () => aiTurnStateRef.current,
+          () => getAiPlaybackRemainingMs(),
+          { timeoutMs: 5000 },
+        );
+        if (!finished) {
+          addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");
+        }
         finishSessionRef.current(readFeedbackSummary(functionCall));
         return {
           id: functionCall.id,
@@ -215,6 +267,21 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     onMessage: (message) => {
       const modelText = getModelText(message);
 
+      if (modelText.trim().length > 0) {
+        aiTurnStateRef.current.started = true;
+      }
+
+      const generationFinished =
+        Boolean(message.serverContent?.turnComplete) ||
+        Boolean(message.serverContent?.generationComplete) ||
+        (messageHasEventType(message) &&
+          (message.event_type === "content.stop" ||
+            message.event_type === "interaction.complete"));
+
+      if (generationFinished) {
+        aiTurnStateRef.current.complete = true;
+      }
+
       //──────────────────────
       // Step 2a: Detect ready acknowledgement phrase
       //──────────────────────
@@ -235,10 +302,8 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       // Step 2b: Advance after intro turn completes
       //──────────────────────
       if (
-        (
-          // stepRef.current === "choosing_workout" ||
-          stepRef.current === "live_intro"
-        ) &&
+        // stepRef.current === "choosing_workout" ||
+        stepRef.current === "live_intro" &&
         message.serverContent?.turnComplete
       ) {
         if (selectedWorkoutRef.current) {
@@ -261,6 +326,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
   // Pause live audio capture
   //──────────────────────
   const pauseLive = useCallback(() => {
+    console.log("Pausing during ", currentTurn + "'s turn");
     addDebugEvent("pauseAI-called", stepRef.current);
     try {
       stopAudioCapture?.();
@@ -303,6 +369,8 @@ export function useCoachSession(options: UseCoachSessionOptions) {
   //──────────────────────
   const sendCoachPrompt = useCallback(
     (text: string) => {
+      aiTurnStateRef.current = { started: false, complete: false };
+
       getSession()?.sendClientContent({
         turns: [{ role: "user", parts: [{ text }] }],
         turnComplete: true,
@@ -365,10 +433,8 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       setSessionStep("error");
       return;
     }
-
     try {
       addDebugEvent("pre-play-sleep", "instructions 1000ms");
-      await sleep(1000);
 
       addDebugEvent("play instructions", instructionsAudioUrl);
       await startSessionAudio(instructionsAudioUrl, {
@@ -471,7 +537,6 @@ export function useCoachSession(options: UseCoachSessionOptions) {
 
     try {
       addDebugEvent("pre-play-sleep", "workout 1000ms");
-      await sleep(1000);
 
       addDebugEvent("play workout", workoutAudioUrl);
       await startSessionAudio(workoutAudioUrl, {
@@ -581,12 +646,12 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       setSessionStep("error");
     }
   }, [
-    addDebugEvent,
-    sendCoachPrompt,
     pauseLive,
-    connectFreshLive,
     setSessionStep,
+    addDebugEvent,
+    connectFreshLive,
     startAudioCapture,
+    sendCoachPrompt,
   ]);
 
   //──────────────────────
@@ -620,11 +685,11 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         const closing = COACH_PROMPTS.FEEDBACK_SAVED;
 
         getSession()?.sendClientContent({
-          turns: [{ role: "user", parts: [{ text: `Säg exakt: '${closing}'` }] }],
+          turns: [
+            { role: "user", parts: [{ text: `Säg exakt: '${closing}'` }] },
+          ],
           turnComplete: true,
         });
-
-        await sleep(1800);
       } catch (e) {
         addDebugEvent("create_feedback_failed", String(e));
         try {
@@ -694,6 +759,10 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     };
   }, [clearPendingCoachTimer]);
 
+  useEffect(() => {
+    console.log("Current turn:", currentTurn, "coach step:", stepRef.current);
+  }, [currentTurn]);
+
   //──────────────────────
   // Auto-start on mount
   //──────────────────────
@@ -722,5 +791,15 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     startWorkout,
     finishSession,
     endSession,
+    trainer,
+    isTrainerLoading,
+    trainerError,
   };
+}
+
+/**
+ * Type guard for messages that may include an `event_type` property.
+ */
+function messageHasEventType(msg: unknown): msg is { event_type?: string } {
+  return typeof msg === "object" && msg !== null && "event_type" in msg;
 }
