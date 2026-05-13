@@ -9,6 +9,9 @@ import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
 
+const DESIGN_WIDTH = 430;
+const DESIGN_HEIGHT = 932;
+
 const trainers = {
   eva: { name: "Eva", image: "/start-page/eva-start.webp" },
   jerry: { name: "Jerry", image: "/start-page/jerry-start.webp" },
@@ -23,12 +26,37 @@ const assets = {
   logo: "/start-page/logo.png",
 };
 
+function getStageScale() {
+  if (typeof window === "undefined") return 1;
+
+  const widthScale = window.innerWidth / DESIGN_WIDTH;
+  const heightScale = window.innerHeight / DESIGN_HEIGHT;
+
+  return Math.min(widthScale, heightScale, 1);
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [stageScale, setStageScale] = useState(getStageScale);
   const { isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
+
+  useEffect(() => {
+    function handleResize() {
+      setStageScale(getStageScale());
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
@@ -65,9 +93,9 @@ export default function HomePage() {
   }
 
   return (
-    <main className="relative flex h-[100svh] max-h-[100svh] justify-center overflow-hidden bg-[#eee7fb] text-[#221447]">
-      {/* Auth / admin layer */}
-      <div className="absolute right-3 top-[max(10px,env(safe-area-inset-top))] z-30">
+    <main className="relative flex h-[100svh] max-h-[100svh] items-center justify-center overflow-hidden bg-[#eee7fb] text-[#221447]">
+      {/* Auth / admin layer - stays relative to desktop viewport */}
+      <div className="fixed right-4 top-4 z-50">
         {!isLoaded ? null : isSignedIn ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             {profile?.isAdmin && (
@@ -98,67 +126,81 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Phone-like app canvas */}
-      <section className="relative h-full w-full max-w-[430px] overflow-hidden bg-[#f7f2ff] shadow-[0_0_70px_rgba(55,38,110,0.16)]">
-        {/* Background only inside phone canvas */}
-        <img
-          src={assets.background}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 z-0 h-full w-full object-cover opacity-95"
-        />
-
-        <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#eadfff]/60 via-[#d9ccf4]/35 to-[#f6f3fb]/88" />
-
-        {/* Logo layer */}
-        <div className="pointer-events-none absolute left-1/2 top-[clamp(22px,4svh,34px)] z-[2] w-[clamp(300px,86vw,370px)] -translate-x-1/2">
+      {/* This wrapper reserves the scaled size in the page */}
+      <div
+        className="relative"
+        style={{
+          width: DESIGN_WIDTH * stageScale,
+          height: DESIGN_HEIGHT * stageScale,
+        }}
+      >
+        {/* Fixed 430x932 stage. Everything inside keeps exact proportions. */}
+        <section
+          className="relative h-[932px] w-[430px] origin-top-left overflow-hidden bg-[#f7f2ff] shadow-[0_0_70px_rgba(55,38,110,0.16)]"
+          style={{
+            transform: `scale(${stageScale})`,
+          }}
+        >
+          {/* Background */}
           <img
-            src={assets.logo}
-            alt="Ring så tränar vi"
-            className="h-auto w-full object-contain"
+            src={assets.background}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 z-0 h-full w-full object-cover opacity-95"
           />
-        </div>
 
-        {/* Trainer layer */}
-        <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden">
-          <div className="absolute left-1/2 bottom-[145px] h-[360px] w-[320px] -translate-x-1/2 rounded-full bg-white/20 blur-[44px]" />
+          <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#eadfff]/60 via-[#d9ccf4]/35 to-[#f6f3fb]/88" />
 
-          <img
-            src={activeTrainer.image}
-            alt={activeTrainer.name}
-            className="absolute left-1/2 bottom-[46px] w-[108%] max-w-[465px] -translate-x-1/2 translate-y-[27%] object-contain"
-          />
-        </div>
+          {/* Logo - locked position */}
+          <div className="pointer-events-none absolute left-1/2 top-[22px] z-[2] w-[370px] -translate-x-1/2">
+            <img
+              src={assets.logo}
+              alt="Ring så tränar vi"
+              className="h-auto w-full object-contain"
+            />
+          </div>
 
-        {/* Buttons layer */}
-        <footer className="absolute inset-x-5 bottom-[max(20px,env(safe-area-inset-bottom))] z-20 flex flex-col items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              void handleStartCall();
-            }}
-            className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white shadow-[0_16px_34px_rgba(65,45,150,0.35)] transition active:scale-[0.98]"
-          >
-            <Phone size={22} strokeWidth={2.5} />
-            Ring tränaren
-          </button>
+          {/* Trainer - locked relation to logo */}
+          <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden">
+            <div className="absolute left-1/2 bottom-[140px] h-[360px] w-[320px] -translate-x-1/2 rounded-full bg-white/20 blur-[44px]" />
 
-          {isLoaded && isSignedIn ? (
+            <img
+              src={activeTrainer.image}
+              alt={activeTrainer.name}
+              className="absolute left-1/2 bottom-[46px] w-[465px] -translate-x-1/2 translate-y-[21%] object-contain"
+            />
+          </div>
+
+          {/* Buttons - locked bottom */}
+          <footer className="absolute inset-x-5 bottom-[20px] z-20 flex flex-col items-center gap-3">
             <button
               type="button"
-              onClick={() => setOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-[0.98]"
+              onClick={() => {
+                void handleStartCall();
+              }}
+              className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white shadow-[0_16px_34px_rgba(65,45,150,0.35)] transition active:scale-[0.98]"
             >
-              <Settings size={16} strokeWidth={2.2} />
-              Inställningar
+              <Phone size={22} strokeWidth={2.5} />
+              Ring tränaren
             </button>
-          ) : null}
-        </footer>
 
-        {isLoaded && isSignedIn ? (
-          <SettingsModalSheet open={open} setOpen={open} />
-        ) : null}
-      </section>
+            {isLoaded && isSignedIn ? (
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-[0.98]"
+              >
+                <Settings size={16} strokeWidth={2.2} />
+                Inställningar
+              </button>
+            ) : null}
+          </footer>
+
+          {isLoaded && isSignedIn ? (
+            <SettingsModalSheet open={open} setOpen={setOpen} />
+          ) : null}
+        </section>
+      </div>
     </main>
   );
 }
