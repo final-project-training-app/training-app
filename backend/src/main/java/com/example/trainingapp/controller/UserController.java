@@ -91,7 +91,8 @@ public class UserController {
                 user.getName(),
                 user.getIntensityLevel(),
                 user.getContext(),
-                userService.isAdmin(clerkId)
+                userService.isAdmin(clerkId),
+                user.getTrainerId()
         );
     }
 
@@ -100,7 +101,8 @@ public class UserController {
                 user.getName(),
                 user.getIntensityLevel(),
                 user.getContext(),
-                "ADMIN".equals(user.getRole())
+                "ADMIN".equals(user.getRole()),
+                user.getTrainerId()
         );
     }
 
@@ -132,7 +134,8 @@ public class UserController {
                 clerkId,
                 userRequest.name(),
                 userRequest.intensityLevel(),
-                userRequest.context()
+                userRequest.context(),
+                userRequest.trainerId()
         );
 
         return ResponseEntity.ok(toResponse(updated, clerkId));
@@ -155,7 +158,8 @@ public class UserController {
                 clerkId,
                 userRequest.name(),
                 userRequest.intensityLevel(),
-                userRequest.context()
+                userRequest.context(),
+                userRequest.trainerId()
         );
 
         return ResponseEntity.ok(toResponse(updated, clerkId));

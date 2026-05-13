@@ -79,13 +79,17 @@ public class UserService {
             String clerkId,
             String name,
             int intensityLevel,
-            String context
+            String context,
+            Long trainerId
     ) {
         User user = getByClerkIdOrThrow(clerkId);
 
         user.setName(sanitizeDisplayName(name));
         user.setIntensityLevel(intensityLevel);
         user.setContext(context);
+        if (trainerId != null) {
+            user.setTrainerId(trainerId);
+        }
 
         return userRepository.save(user);
     }

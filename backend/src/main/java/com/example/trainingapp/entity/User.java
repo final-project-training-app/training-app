@@ -27,7 +27,7 @@ public class User {
         this.context = context;
         this.clerkId = clerkId;
         this.role = "USER";
-        this.trainerId = 1;
+        this.trainerId = 1L;
     }
 
     public Long getId() {
