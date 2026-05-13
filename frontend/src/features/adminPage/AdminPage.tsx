@@ -1,20 +1,28 @@
 import { SignInButton, useAuth } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import FeedbackAdminPage from "./FeedbackAdminPage";
+import MainWorkoutPage from "./MainWorkoutPage";
+import TrainerAdminPage from "./TrainerAdminPage";
 import { useAdminPage } from "../../hooks/useAdminPage";
 import { useMyProfile } from "../../hooks/useMyProfile";
-import AddWorkoutPage from "./AddWorkoutPage";
-import type { JSX } from "react";
-// If AddWorkoutPage's props aren't typed as expected, cast to a compatible component type for this usage
-const AddWorkout = AddWorkoutPage as unknown as (props: {
-  workoutData?: string | undefined;
-}) => JSX.Element;
+
+type AdminTab = "workouts" | "trainers" | "feedback";
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn } = useAuth();
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const isAdmin = profile?.isAdmin === true;
-  const { data, isLoading, error } = useAdminPage(isAdmin);
+  const { isLoading, error } = useAdminPage(isAdmin);
+  const path =
+    typeof window !== "undefined" ? window.location.pathname : "/admin";
+  const initialTab: AdminTab = path.endsWith("/trainers")
+    ? "trainers"
+    : path.endsWith("/feedback")
+      ? "feedback"
+      : "workouts";
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
 
   if (!isLoaded || profileLoading) {
     return (
@@ -104,8 +112,76 @@ export default function AdminPage() {
   }
 
   return (
-    <>
-      <AddWorkout workoutData={data} />
-    </>
+    <main className="flex min-h-dvh flex-col bg-(--brand-page) text-(--brand-ink)">
+      <header className="border-b border-(--brand-border) bg-white/70">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--brand-primary)">
+              Admin Console
+            </p>
+            <h1 className="text-2xl font-extrabold">Manage Training App</h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/" })}
+            className="rounded-full border border-(--brand-border) bg-white px-4 py-2.5 text-sm font-semibold"
+          >
+            Back Home
+          </button>
+        </div>
+      </header>
+
+      <div className="mx-auto w-full max-w-6xl flex-1 px-6 py-6">
+        <div className="mb-5 flex flex-wrap gap-2 rounded-2xl border border-(--brand-border) bg-white px-3 py-3">
+          <button
+            onClick={() => {
+              setActiveTab("workouts");
+              navigate({ to: "/admin/workouts" });
+            }}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              activeTab === "workouts"
+                ? "bg-(--brand-primary) text-(--brand-on-primary)"
+                : "bg-(--brand-surface-glass) text-(--brand-muted)"
+            }`}
+          >
+            Workouts
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab("trainers");
+              navigate({ to: "/admin/trainers" });
+            }}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              activeTab === "trainers"
+                ? "bg-(--brand-primary) text-(--brand-on-primary)"
+                : "bg-(--brand-surface-glass) text-(--brand-muted)"
+            }`}
+          >
+            Trainers
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab("feedback");
+              navigate({ to: "/admin/feedback" });
+            }}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              activeTab === "feedback"
+                ? "bg-(--brand-primary) text-(--brand-on-primary)"
+                : "bg-(--brand-surface-glass) text-(--brand-muted)"
+            }`}
+          >
+            Feedback
+          </button>
+        </div>
+
+        {activeTab === "workouts" && (
+          <MainWorkoutPage onSwitchTab={setActiveTab} />
+        )}
+        {activeTab === "trainers" && <TrainerAdminPage />}
+        {activeTab === "feedback" && <FeedbackAdminPage />}
+      </div>
+    </main>
   );
 }

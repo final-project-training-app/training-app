@@ -2,18 +2,25 @@ package com.example.trainingapp.controller;
 
 import com.example.trainingapp.entity.Trainer;
 import com.example.trainingapp.service.TrainerService;
-import org.springframework.http.HttpStatus;
+import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @RestController
 @RequestMapping("/api/trainers")
@@ -24,9 +31,25 @@ import java.util.List;
 public class TrainerController {
 
     private final TrainerService trainerService;
+    private final UserService userService;
 
-    public TrainerController(TrainerService trainerService) {
+    public TrainerController(TrainerService trainerService, UserService userService) {
         this.trainerService = trainerService;
+        this.userService = userService;
+    }
+
+    private Jwt getJwtOrThrow(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Missing or invalid authentication token");
+        }
+        return jwt;
+    }
+
+    private void assertAdmin(Authentication authentication) {
+        boolean isAdmin = userService.isAdmin(getJwtOrThrow(authentication).getSubject());
+        if (!isAdmin) {
+            throw new ResponseStatusException(FORBIDDEN, "Admin access required");
+        }
     }
 
     @GetMapping
@@ -35,8 +58,21 @@ public class TrainerController {
     }
 
     @PostMapping
-    public ResponseEntity<Trainer> createTrainer(@RequestBody Trainer trainer) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(trainerService.createTrainer(trainer));
+    public ResponseEntity<Trainer> createTrainer(@RequestBody Trainer trainer, Authentication authentication) {
+        assertAdmin(authentication);
+        return ResponseEntity.ok(trainerService.createTrainer(trainer));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Trainer> updateTrainer(@PathVariable Long id, @RequestBody Trainer trainer, Authentication authentication) {
+        assertAdmin(authentication);
+        return ResponseEntity.ok(trainerService.updateTrainer(id, trainer));
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<Trainer> updateTrainerViaPost(@PathVariable Long id, @RequestBody Trainer trainer, Authentication authentication) {
+        assertAdmin(authentication);
+        return ResponseEntity.ok(trainerService.updateTrainer(id, trainer));
     }
 
     @GetMapping("/{id}")
@@ -45,7 +81,8 @@ public class TrainerController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTrainer(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTrainer(@PathVariable Long id, Authentication authentication) {
+        assertAdmin(authentication);
         trainerService.deleteTrainer(id);
         return ResponseEntity.noContent().build();
     }

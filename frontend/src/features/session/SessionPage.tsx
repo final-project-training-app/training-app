@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { SessionCall } from "./components/SessionCall";
 import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
-import { useCoachSession, type CoachSessionStep } from "./useCoachSession";
+import { useCoachSession } from "./useCoachSession";
+import type { CoachSessionStep } from "./coachSessionHelpers";
 
 export function SessionPage() {
   const { workoutId } = useParams({ from: "/session/$workoutId" });
@@ -42,8 +43,8 @@ function getCoachStatusLabel(step: CoachSessionStep) {
   switch (step) {
     case "idle":
       return "Ansluter till tränaren...";
-    case "choosing_workout":
-      return "Tränaren väljer ett pass åt dig...";
+    //case "choosing_workout":
+     // return "Tränaren väljer ett pass åt dig...";
     case "live_intro":
       return "Coach-samtalet är igång.";
     case "waiting_instruction_approval":

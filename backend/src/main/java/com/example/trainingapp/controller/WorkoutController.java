@@ -48,6 +48,7 @@ public class WorkoutController {
 
     @GetMapping
     public ResponseEntity<List<Workout>> getAllWorkouts() {
+
         return ResponseEntity.ok().body(workoutService.getAllWorkouts());
     }
 

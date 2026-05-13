@@ -27,6 +27,17 @@ export type CoachSessionDebugEvent = {
 
 export type PendingCoachAction = "start_instructions" | "start_workout" | null;
 
+export type GeminiServerMessage = {
+  serverContent?: {
+    turnComplete?: boolean;
+    generationComplete?: boolean;
+    waitingForInput?: boolean;
+    interrupted?: boolean;
+    modelTurn?: {
+      parts?: Array<{ text?: string }>;
+    };
+  };
+};
 //──────────────────────
 // Simple sleep helper
 //──────────────────────
@@ -107,4 +118,63 @@ export function hasReadyAckPhrase(text: string): boolean {
     .toLocaleLowerCase("sv-SE")
     .replace(/\s+/g, " ")
     .includes(READY_ACK_PHRASE);
+}
+
+//──────────────────────
+// Wait until the AI's turnComplete flag is true.
+// Returns true if the AI finished before timeout, false on timeout.
+//──────────────────────
+
+export type AITurnState = {
+  started: boolean;
+  complete: boolean;
+  waitingForInput?: boolean;
+  interrupted?: boolean;
+};
+
+export type WaitForAIToFinishSpeakingOptions = {
+  intervalMs?: number;
+  timeoutMs?: number;
+};
+
+export async function waitForAIToFinishSpeaking(
+  getTurnState: () => AITurnState,
+  getRemainingPlaybackMs: () => number,
+  options: WaitForAIToFinishSpeakingOptions = {},
+): Promise<boolean> {
+  const { intervalMs = 50, timeoutMs = 15000 } = options;
+
+  const startedAt = performance.now();
+
+  while (performance.now() - startedAt < timeoutMs) {
+    const state = getTurnState();
+    const remainingAudio = getRemainingPlaybackMs();
+
+    /**
+     * TERMINAL CONDITIONS:
+     * 1. If it never started, it's effectively "finished".
+     * 2. If started:
+     * - The stream is terminal (complete, interrupted, or waiting)
+     * - AND the physical audio buffer has finished playing (remaining <= 0)
+     */
+
+    const isStreamTerminal =
+      !state.started ||
+      state.complete ||
+      state.waitingForInput ||
+      state.interrupted;
+
+    const isAudioSilent = remainingAudio <= 0;
+    console.log("remainingAudio:", remainingAudio);
+    if (isStreamTerminal && isAudioSilent) {
+      return true;
+    }
+
+    // Wait for the next poll
+    await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
+  }
+
+  // If we hit the timeout, we return false so the caller can decide to proceed anyway
+  console.warn("[GeminiLive] waitForAIToFinishSpeaking timed out.");
+  return false;
 }

@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { CoachCallSession, SessionPanel } from "../types";
-import type { CoachSessionDebugEvent } from "../useCoachSession";
 import { SessionInfoPanel } from "./SessionInfoPanel";
+import type { CoachSessionDebugEvent } from "../coachSessionHelpers";
 
 type SessionCallProps = {
   session: CoachCallSession;

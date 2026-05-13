@@ -1,5 +1,8 @@
 const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:8080"
+  import.meta.env.VITE_API_URL ??
+  (typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:8080"
+    : "https://backend-training.up.railway.app")
 ).replace(/\/$/, "");
 
 export default async function fetchAdminPage(token: string) {
