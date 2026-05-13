@@ -3,6 +3,7 @@ import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
+import TrainerSelectionModal from "./TrainerSelectionModal";
 
 const DEFAULT_DISPLAY_NAME = "No name entered";
 
@@ -173,6 +174,10 @@ function SettingsModalBody({
 
           <section className="mt-7">
             <ContextModel value={context} onChange={setContext} />
+          </section>
+
+          <section className="mt-6">
+            <TrainerSelectionModal />
           </section>
 
           <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
