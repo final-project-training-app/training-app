@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
@@ -72,7 +72,13 @@ function SettingsModalBody({
     initialTrainerId ?? 1,
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateProfile = useUpdateProfile();
+
+  // Sync selectedTrainerId when user data changes (reopening settings)
+  useEffect(() => {
+    setSelectedTrainerId(initialTrainerId ?? 1);
+  }, [initialTrainerId]);
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
@@ -194,6 +200,10 @@ function SettingsModalBody({
               className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
               disabled={updateProfile.isPending}
               onClick={() => {
+                // Clear existing feedback timeout
+                if (feedbackTimeoutRef.current) {
+                  clearTimeout(feedbackTimeoutRef.current);
+                }
                 setSaveFeedback(null);
                 updateProfile.mutate(
                   {
@@ -205,9 +215,16 @@ function SettingsModalBody({
                   {
                     onSuccess: () => {
                       setSaveFeedback("Inställningar sparade ✓");
+                      // Keep feedback visible for 3 seconds
+                      feedbackTimeoutRef.current = setTimeout(() => {
+                        setSaveFeedback(null);
+                      }, 3000);
                     },
                     onError: () => {
                       setSaveFeedback("Kunde inte spara ändringarna");
+                      feedbackTimeoutRef.current = setTimeout(() => {
+                        setSaveFeedback(null);
+                      }, 3000);
                     },
                   },
                 );
