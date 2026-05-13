@@ -58,6 +58,7 @@ export default function TrainerSelectionModal({
   }, [trainers]);
 
   const handleSelectTrainer = (id: number) => {
+    console.log("[TrainerSelectionModal] Selecting trainer:", id);
     setLocalSelectedId(id);
     onTrainerSelect?.(id);
     const el = document.getElementById(`trainer-card-${id}`);

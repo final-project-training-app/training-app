@@ -210,29 +210,40 @@ function SettingsModalBody({
                   clearTimeout(feedbackTimeoutRef.current);
                 }
                 setSaveFeedback(null);
-                updateProfile.mutate(
-                  {
-                    name: fullName.trim() || DEFAULT_DISPLAY_NAME,
-                    intensityLevel,
-                    context,
-                    trainerId: selectedTrainerId || null,
-                  },
-                  {
-                    onSuccess: () => {
-                      setSaveFeedback("Inställningar sparade ✓");
-                      // Keep feedback visible for 3 seconds
-                      feedbackTimeoutRef.current = setTimeout(() => {
-                        setSaveFeedback(null);
-                      }, 3000);
-                    },
-                    onError: () => {
-                      setSaveFeedback("Kunde inte spara ändringarna");
-                      feedbackTimeoutRef.current = setTimeout(() => {
-                        setSaveFeedback(null);
-                      }, 3000);
-                    },
-                  },
+
+                const profileData = {
+                  name: fullName.trim() || DEFAULT_DISPLAY_NAME,
+                  intensityLevel,
+                  context,
+                  trainerId: selectedTrainerId || null,
+                };
+                console.log(
+                  "[SettingsModalSheet] Save button clicked with trainerId:",
+                  selectedTrainerId,
+                  "Full data:",
+                  profileData,
                 );
+
+                updateProfile.mutate(profileData, {
+                  onSuccess: () => {
+                    console.log(
+                      "[SettingsModalSheet] Successfully saved trainerId:",
+                      selectedTrainerId,
+                    );
+                    setSaveFeedback("Inställningar sparade ✓");
+                    // Keep feedback visible for 3 seconds
+                    feedbackTimeoutRef.current = setTimeout(() => {
+                      setSaveFeedback(null);
+                    }, 3000);
+                  },
+                  onError: (error) => {
+                    console.error("[SettingsModalSheet] Save failed:", error);
+                    setSaveFeedback("Kunde inte spara ändringarna");
+                    feedbackTimeoutRef.current = setTimeout(() => {
+                      setSaveFeedback(null);
+                    }, 3000);
+                  },
+                });
               }}
             >
               {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
