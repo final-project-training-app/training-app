@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "@clerk/react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
@@ -15,11 +14,7 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
-  const { isSignedIn } = useAuth();
   const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
-
-  // Default to trainer 1 if not logged in, otherwise use trainer from database
-  const defaultTrainerId = isSignedIn ? (user?.trainerId ?? 1) : 1;
 
   return (
     <SettingsModalBody
@@ -32,7 +27,7 @@ export default function SettingsModalSheet({
       userName={user?.name?.trim() ? user.name : DEFAULT_DISPLAY_NAME}
       intensityLevel={user?.intensityLevel ?? 2}
       context={user?.context ?? ""}
-      trainerId={defaultTrainerId}
+      trainerId={user?.trainerId ?? null}
     />
   );
 }
@@ -58,7 +53,7 @@ function SettingsModalBody({
   userName: string;
   intensityLevel: number;
   context: string;
-  trainerId: number;
+  trainerId: number | null;
 }) {
   const DEFAULT_HEIGHT = 96;
   const MIN_HEIGHT = 68;
@@ -73,7 +68,7 @@ function SettingsModalBody({
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
   const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(
-    initialTrainerId ?? 1,
+    initialTrainerId,
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,12 +76,12 @@ function SettingsModalBody({
   const prevOpenRef = useRef(open);
 
   useEffect(() => {
-    setSelectedTrainerId(initialTrainerId ?? 1);
+    setSelectedTrainerId(initialTrainerId);
   }, [initialTrainerId]);
 
   useEffect(() => {
     if (open && !prevOpenRef.current) {
-      setSelectedTrainerId(initialTrainerId ?? 1);
+      setSelectedTrainerId(initialTrainerId);
       setFullName(userName);
       setIntensityLevel(initialIntensityLevel);
       setContext(initialContext);

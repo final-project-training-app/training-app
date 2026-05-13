@@ -23,7 +23,6 @@ export default function TrainerSelectionModal({
   selectedTrainerId?: number | null;
 }) {
   const { getToken, isSignedIn } = useAuth();
-  const resolvedId = selectedTrainerId ?? 1;
   const { play, stop, loadingId, playingId } = useVoicePlayer();
 
   const { data: trainers = [], isLoading } = useQuery({
@@ -42,8 +41,10 @@ export default function TrainerSelectionModal({
     [trainers],
   );
 
+  const resolvedId = selectedTrainerId ?? trainers[0]?.id ?? null;
+
   useEffect(() => {
-    if (!trainersKey) return;
+    if (!trainersKey || resolvedId == null) return;
     const t = window.setTimeout(() => {
       const el = document.getElementById(`trainer-card-${resolvedId}`);
       if (el) {
@@ -70,14 +71,14 @@ export default function TrainerSelectionModal({
   };
 
   const handlePrev = () => {
-    if (!trainers.length) return;
+    if (!trainers.length || resolvedId == null) return;
     const idx = trainers.findIndex((t: Trainer) => t.id === resolvedId);
     const prev = trainers[Math.max(0, idx - 1)];
     if (prev) handleSelectTrainer(prev.id);
   };
 
   const handleNext = () => {
-    if (!trainers.length) return;
+    if (!trainers.length || resolvedId == null) return;
     const idx = trainers.findIndex((t: Trainer) => t.id === resolvedId);
     const next = trainers[Math.min(trainers.length - 1, idx + 1)];
     if (next) handleSelectTrainer(next.id);
