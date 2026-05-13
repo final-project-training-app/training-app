@@ -28,6 +28,7 @@ export default function SettingsModalSheet({
       userName={user?.name?.trim() ? user.name : DEFAULT_DISPLAY_NAME}
       intensityLevel={user?.intensityLevel ?? 2}
       context={user?.context ?? ""}
+      trainerId={user?.trainerId ?? 1}
     />
   );
 }
@@ -42,6 +43,7 @@ function SettingsModalBody({
   userName,
   intensityLevel: initialIntensityLevel,
   context: initialContext,
+  trainerId: initialTrainerId,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -52,6 +54,7 @@ function SettingsModalBody({
   userName: string;
   intensityLevel: number;
   context: string;
+  trainerId: number;
 }) {
   const DEFAULT_HEIGHT = 96;
   const MIN_HEIGHT = 68;
@@ -65,7 +68,7 @@ function SettingsModalBody({
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
-  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null);
+  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(initialTrainerId ?? 1);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const updateProfile = useUpdateProfile();
 
@@ -178,7 +181,10 @@ function SettingsModalBody({
           </section>
 
           <section className="mt-6">
-            <TrainerSelectionModal onTrainerSelect={setSelectedTrainerId} />
+            <TrainerSelectionModal 
+              selectedTrainerId={selectedTrainerId}
+              onTrainerSelect={setSelectedTrainerId} 
+            />
           </section>
 
           <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">

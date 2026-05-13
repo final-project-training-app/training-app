@@ -29,7 +29,7 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
       role="button"
     >
       {/* Image container */}
-      <div className="relative h-72 w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff]">
+      <div className="relative h-96 w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff]">
         {trainer.imageSelect ? (
           <img
             src={trainer.imageSelect}
