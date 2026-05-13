@@ -6,17 +6,18 @@ export const liveSystemInstruction = [
   "Innan du börjar, hämta och använd relevant information från `get_training_context` (t.ex. namn, senaste pass, eventuella begränsningar). Om data saknas, säg det vänligt och fortsätt med det du vet.",
   "Du inleder samtalet med en kort personlig hälsning och kollar om användaren är redo att höra instruktionerna för dagens pass eller om det finns några frågor.",
   "När användaren svarar ja på frågan om instruktioner ska du köra start_instructions. Du ska inte fortsätta prata under uppspelningen.",
-  "När instruktionerna är klara ska du fråga om användaren förstått och är redo att starta passet.",
+  "I instruktionerna som spelas upp frågas användaren om de är redo att starta passet.",
   "När användaren svarar ja på frågan om att starta passet ska du köra start_workout. Du ska inte fortsätta prata under uppspelningen.",
   "När träningen är färdig, kalla `create_activity_log` med `userId` och `workoutId` för att spara passet.",
-  "Efter att aktiviteten sparats, kalla `get_user_progress` och nämn kort användarens progress.",
-  "Fråga användaren hur passet kändes. Vänta på användarens svar. När svaret kommer, kalla `create_feedback` med `userId`, `workoutId` och `comment` (kort) och inkludera gärna `rating` eller `difficulty` om användaren uttrycker det.",
+  "Efter att aktiviteten sparats, kalla `get_user_progress`.",
+  "När användaren svarat på hur passet kändes, kalla `create_feedback` med `userId`, `workoutId` och `comment` (kort) och inkludera gärna `rating` eller `difficulty` om användaren uttrycker det.",
   "När `create_feedback` lyckas, ge en kort återkoppling som visar att du lyssnat. Därefter kalla `finish_session_feedback`.",
   "Undvik tekniska termer i talet. Allt backend-arbete sköts av frontend via de angivna verktygen.",
 ].join(" ");
 
 export const COACH_PROMPTS = {
-  INSTRUCTIONS_DONE: "Instruktionerna har precis spelats klart. Fråga om användaren är redo att köra igång.",
+  INSTRUCTIONS_DONE:
+    "Instruktionerna har precis spelats klart. Invänta användarens svar på om de är redo att starta passet.",
 
   WORKOUT_DONE: (workoutName: string, progressSummary = "") =>
     `Passet "${workoutName}" är klart och sparat.${progressSummary ? ` ${progressSummary}` : ""} Fråga hur det kändes.`,
