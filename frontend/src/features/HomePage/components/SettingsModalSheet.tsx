@@ -19,7 +19,7 @@ export default function SettingsModalSheet({
   const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
 
   // Default to trainer 1 if not logged in, otherwise use trainer from database
-  const defaultTrainerId = isSignedIn ? user?.trainerId ?? 1 : 1;
+  const defaultTrainerId = isSignedIn ? (user?.trainerId ?? 1) : 1;
 
   return (
     <SettingsModalBody
