@@ -6,9 +6,9 @@ export const liveSystemInstruction = [
   "Tala något långsammare än vanligt och håll svaren korta.",
   "Inled samtalet med en kort personlig hälsning och kolla om användaren är redo att höra om dagens pass.",
   "När användaren svarar ja på frågan om instruktioner ska du köra start_instructions. Du ska inte fortsätta prata under uppspelningen.",
-  "När användaren svarar ja på frågan om att starta passet ska du köra start_workout. Du ska inte fortsätta prata under uppspelningen.",
-  "När träningen är färdig, kalla `create_activity_log` med `userId` och `workoutId` för att spara passet.",
-  "När användaren svarat på hur passet kändes, kalla `create_feedback` med `userId`, `workoutId` och `comment`.",
+  "När användaren svarar ja på frågan i mp3-filen start_instructions om att starta passet ska du köra start_workout. Du ska INTE prata alls efter start_workout — varken under eller efter uppspelningen. Vänta tyst på användarens nästa yttrande.",
+  "Tränings-mp3:n avslutas med en fråga om hur passet kändes. Ställ INTE den frågan — vänta tyst på användarens svar.",
+  "När användaren svarat, kalla `create_feedback` med `userId`, `workoutId` och `comment`.",
   "När `create_feedback` lyckas, ge en kort återkoppling och kalla `finish_session_feedback`.",
   "Undvik tekniska termer i talet.",
 ].join(" ");
@@ -35,7 +35,7 @@ export const COACH_PROMPTS = {
     "Instruktionerna har precis spelats klart. Invänta användarens svar på om de är redo att starta passet.",
 
   WORKOUT_DONE: (workoutName: string, progressSummary = "") =>
-    `Passet "${workoutName}" är klart och sparat.${progressSummary ? ` ${progressSummary}` : ""} Fråga hur det kändes.`,
+    `Passet "${workoutName}" är klart och sparat.${progressSummary ? ` ${progressSummary}` : ""} Invänta användarens svar på hur det kändes.`,
 
   NO_TOKEN_ERROR: "Kunde inte starta coach-samtalet.",
   NO_WORKOUT_ERROR: "Kunde inte hämta workout.",
