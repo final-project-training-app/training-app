@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState } from "react";
 
 export function useVoicePlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -12,7 +12,7 @@ export function useVoicePlayer() {
       try {
         audioRef.current.pause();
       } catch {}
-      audioRef.current.src = '';
+      audioRef.current.src = "";
     }
 
     setLoadingId(id);
@@ -51,7 +51,7 @@ export function useVoicePlayer() {
       try {
         audioRef.current.pause();
       } catch {}
-      audioRef.current.src = '';
+      audioRef.current.src = "";
       audioRef.current = null;
     }
     setPlayingId(null);

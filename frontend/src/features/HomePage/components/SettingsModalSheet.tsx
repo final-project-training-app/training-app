@@ -68,7 +68,9 @@ function SettingsModalBody({
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
-  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(initialTrainerId ?? 1);
+  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(
+    initialTrainerId ?? 1,
+  );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const updateProfile = useUpdateProfile();
 
@@ -181,9 +183,9 @@ function SettingsModalBody({
           </section>
 
           <section className="mt-6">
-            <TrainerSelectionModal 
+            <TrainerSelectionModal
               selectedTrainerId={selectedTrainerId}
-              onTrainerSelect={setSelectedTrainerId} 
+              onTrainerSelect={setSelectedTrainerId}
             />
           </section>
 

@@ -23,7 +23,9 @@ export default function TrainerSelectionModal({
 }) {
   const { getToken } = useAuth();
   const carouselRef = useRef<HTMLDivElement | null>(null);
-  const [localSelectedId, setLocalSelectedId] = useState<number | null>(selectedTrainerId ?? 1);
+  const [localSelectedId, setLocalSelectedId] = useState<number | null>(
+    selectedTrainerId ?? 1,
+  );
   const { play, stop, loadingId, playingId } = useVoicePlayer();
 
   const { data: trainers = [], isLoading } = useQuery({
@@ -44,7 +46,11 @@ export default function TrainerSelectionModal({
       setTimeout(() => {
         const el = document.getElementById(`trainer-card-${selectedId}`);
         if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+          el.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center",
+          });
         }
       }, 100);
     }
@@ -55,7 +61,11 @@ export default function TrainerSelectionModal({
     onTrainerSelect?.(id);
     const el = document.getElementById(`trainer-card-${id}`);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
     }
   };
 
@@ -77,11 +87,15 @@ export default function TrainerSelectionModal({
     <section aria-labelledby="trainer-selection-title" className="mt-8 px-2">
       {/* Header */}
       <div className="mb-8">
-        <h2 id="trainer-selection-title" className="text-3xl font-bold text-[#5c35c4] mb-3">
+        <h2
+          id="trainer-selection-title"
+          className="text-3xl font-bold text-[#5c35c4] mb-3"
+        >
           Välj din tränare
         </h2>
         <p className="text-base text-[#6b59b2] leading-relaxed max-w-2xl">
-          Välj en tränare som matchar din stil och dina mål. Varje tränare har sin egen unika personlighet och specialitet.
+          Välj en tränare som matchar din stil och dina mål. Varje tränare har
+          sin egen unika personlighet och specialitet.
         </p>
       </div>
 
@@ -92,33 +106,35 @@ export default function TrainerSelectionModal({
           <button
             aria-label="föregående tränare"
             onClick={handlePrev}
-            className="absolute left-2 md:left-0 top-1/2 z-20 -translate-y-1/2 md:-translate-x-16 rounded-full bg-[#5c35c4] hover:bg-[#4a2dac] text-white p-2 md:p-3 shadow-lg transition-all duration-200 hover:scale-110"
+            className="absolute left-1 sm:left-2 md:left-0 top-1/2 z-20 -translate-y-1/2 md:-translate-x-16 rounded-full bg-[#5c35c4] hover:bg-[#4a2dac] text-white p-2 sm:p-3 shadow-lg transition-all duration-200 hover:scale-110"
           >
-            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
 
           {/* Right arrow */}
           <button
             aria-label="nästa tränare"
             onClick={handleNext}
-            className="absolute right-2 md:right-0 top-1/2 z-20 -translate-y-1/2 md:translate-x-16 rounded-full bg-[#5c35c4] hover:bg-[#4a2dac] text-white p-2 md:p-3 shadow-lg transition-all duration-200 hover:scale-110"
+            className="absolute right-1 sm:right-2 md:right-0 top-1/2 z-20 -translate-y-1/2 md:translate-x-16 rounded-full bg-[#5c35c4] hover:bg-[#4a2dac] text-white p-2 sm:p-3 shadow-lg transition-all duration-200 hover:scale-110"
           >
-            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
 
           {/* Carousel */}
           <div
             ref={carouselRef}
-            className="no-scrollbar flex snap-x snap-mandatory gap-4 md:gap-6 overflow-x-auto px-6 md:px-12 py-6"
+            className="no-scrollbar flex snap-x snap-mandatory gap-3 sm:gap-4 md:gap-6 overflow-x-auto px-4 sm:px-6 md:px-12 py-6 scroll-smooth"
             role="listbox"
             aria-label="Trainer carousel"
           >
             {isLoading ? (
-              <div className="flex h-96 w-full items-center justify-center gap-3">
+              <div className="flex h-[720px] w-full items-center justify-center gap-3">
                 <div className="animate-spin">
                   <div className="w-6 h-6 border-3 border-[#ddd2ff] border-t-[#5c35c4] rounded-full" />
                 </div>
-                <span className="text-[#6b59b2] font-medium">Hämtar tränare...</span>
+                <span className="text-[#6b59b2] font-medium">
+                  Hämtar tränare...
+                </span>
               </div>
             ) : trainers.length > 0 ? (
               trainers.map((trainer: Trainer) => (
@@ -129,7 +145,7 @@ export default function TrainerSelectionModal({
                   role="option"
                   aria-selected={localSelectedId === trainer.id}
                 >
-                  <div className="h-full w-72 md:w-80">
+                  <div className="h-full w-64 sm:w-72 md:w-80">
                     <TrainerCard
                       trainer={trainer}
                       selected={localSelectedId === trainer.id}
@@ -149,8 +165,10 @@ export default function TrainerSelectionModal({
                 </div>
               ))
             ) : (
-              <div className="flex h-96 w-full items-center justify-center">
-                <p className="text-[#6b59b2]">Inga tränare tillgängliga just nu</p>
+              <div className="flex h-[720px] w-full items-center justify-center">
+                <p className="text-[#6b59b2]">
+                  Inga tränare tillgängliga just nu
+                </p>
               </div>
             )}
           </div>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Volume2, Loader, Square } from 'lucide-react';
+import React from "react";
+import { Volume2, Loader, Square } from "lucide-react";
 
 type Trainer = {
   id: number;
@@ -17,31 +17,42 @@ type Props = {
   playing?: boolean;
 };
 
-function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playing }: Props) {
+function TrainerCardInner({
+  trainer,
+  selected,
+  onSelect,
+  onPlay,
+  loading,
+  playing,
+}: Props) {
   return (
     <div
       onClick={onSelect}
-      className={`relative flex h-full w-80 cursor-pointer flex-col rounded-3xl overflow-hidden transition-all duration-300 ease-out
-        ${selected 
-          ? 'scale-105 bg-white shadow-2xl ring-3 ring-[#5c35c4]' 
-          : 'scale-95 bg-white shadow-lg opacity-85 hover:opacity-95'}`}
+      className={`relative flex h-[720px] w-full max-w-80 cursor-pointer flex-col rounded-3xl overflow-hidden transition-all duration-300 ease-out
+        ${
+          selected
+            ? "scale-105 bg-white shadow-2xl ring-3 ring-[#5c35c4]"
+            : "scale-95 bg-white shadow-lg opacity-85 hover:opacity-95"
+        }`}
       aria-pressed={selected}
       role="button"
     >
       {/* Image container */}
-      <div className="relative h-96 w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff]">
+      <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff] flex-1 min-h-[500px]">
         {trainer.imageSelect ? (
           <img
             src={trainer.imageSelect}
             alt={trainer.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain object-center"
             loading="lazy"
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#ddd2ff] to-[#c8bfeb]">
             <div className="text-center">
               <div className="text-6xl">👤</div>
-              <div className="mt-3 text-sm font-medium text-[#6b59b2]">Ingen bild</div>
+              <div className="mt-3 text-sm font-medium text-[#6b59b2]">
+                Ingen bild
+              </div>
             </div>
           </div>
         )}
@@ -51,8 +62,12 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
       <div className="flex flex-1 flex-col gap-3 p-5">
         {/* Name and role */}
         <div>
-          <h3 className="text-xl font-bold text-[#281d7a] leading-tight">{trainer.name}</h3>
-          <p className="mt-2 text-sm font-medium text-[#6b59b2]">Personlig tränare</p>
+          <h3 className="text-xl font-bold text-[#281d7a] leading-tight">
+            {trainer.name}
+          </h3>
+          <p className="mt-2 text-sm font-medium text-[#6b59b2]">
+            Personlig tränare
+          </p>
         </div>
 
         {/* Voice button */}
@@ -64,10 +79,12 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
             }}
             disabled={loading}
             className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150
-              ${playing 
-                ? 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200' 
-                : 'bg-[#f1ecff] text-[#3f2a7a] border border-[#ddd2ff] hover:bg-[#e9e0ff]'}
-              ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              ${
+                playing
+                  ? "bg-red-100 text-red-700 border border-red-300 hover:bg-red-200"
+                  : "bg-[#f1ecff] text-[#3f2a7a] border border-[#ddd2ff] hover:bg-[#e9e0ff]"
+              }
+              ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
           >
             {loading ? (
               <>
@@ -99,10 +116,11 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
   );
 }
 
-export default React.memo(TrainerCardInner, (prev, next) => 
-  prev.trainer.id === next.trainer.id && 
-  prev.selected === next.selected &&
-  prev.loading === next.loading &&
-  prev.playing === next.playing
+export default React.memo(
+  TrainerCardInner,
+  (prev, next) =>
+    prev.trainer.id === next.trainer.id &&
+    prev.selected === next.selected &&
+    prev.loading === next.loading &&
+    prev.playing === next.playing,
 );
-

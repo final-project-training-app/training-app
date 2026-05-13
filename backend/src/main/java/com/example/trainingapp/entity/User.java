@@ -15,7 +15,8 @@ public class User {
     @Column(unique = true)
     private String clerkId;
     private String role;
-    private Long trainerId = 1;
+    private Long trainerId;
+    final Long DEFAULT_TRAINER_ID = 1L;
 
     public User() {
     }
