@@ -27,6 +27,15 @@ export type CoachSessionDebugEvent = {
 
 export type PendingCoachAction = "start_instructions" | "start_workout" | null;
 
+export type GeminiServerMessage = {
+  serverContent?: {
+    turnComplete?: boolean;
+    modelTurn?: {
+      parts?: Array<{ text?: string }>;
+    };
+  };
+};
+
 //──────────────────────
 // Simple sleep helper
 //──────────────────────
@@ -107,4 +116,63 @@ export function hasReadyAckPhrase(text: string): boolean {
     .toLocaleLowerCase("sv-SE")
     .replace(/\s+/g, " ")
     .includes(READY_ACK_PHRASE);
+}
+
+//──────────────────────
+// Wait until the AI's turnComplete flag is true.
+// Returns true if the AI finished before timeout, false on timeout.
+//──────────────────────
+export type WaitForAIToFinishSpeakingOptions = {
+  intervalMs?: number;
+  timeoutMs?: number;
+};
+
+type TurnLike = {
+  serverContent?: {
+    turnComplete?: boolean;
+  };
+};
+
+function isTurnLike(value: unknown): value is TurnLike {
+  return typeof value === "object" && value !== null;
+}
+
+export function waitForAIToFinishSpeaking(
+  currentTurn: unknown,
+  options?: WaitForAIToFinishSpeakingOptions,
+): Promise<boolean> {
+  const { intervalMs = 100, timeoutMs = 10000 } = options ?? {};
+  const start = performance.now();
+  let timerId: number | undefined;
+
+  return new Promise<boolean>((resolve) => {
+    const cleanup = () => {
+      if (timerId !== undefined) {
+        window.clearTimeout(timerId);
+        timerId = undefined;
+      }
+    };
+
+    const check = () => {
+      const turnComplete =
+        isTurnLike(currentTurn) &&
+        Boolean(currentTurn.serverContent?.turnComplete);
+
+      if (turnComplete) {
+        cleanup();
+        resolve(true);
+        return;
+      }
+
+      if (performance.now() - start > timeoutMs) {
+        cleanup();
+        resolve(false);
+        return;
+      }
+
+      timerId = window.setTimeout(check, intervalMs);
+    };
+
+    check();
+  });
 }

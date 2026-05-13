@@ -1,13 +1,8 @@
-import {
-  type FunctionResponse
-} from "@google/genai";
+import { type FunctionResponse } from "@google/genai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
-import {
-  executeLiveToolCall,
-  liveTools,
-} from "../ai-dev/live/tools";
+import { executeLiveToolCall, liveTools } from "../ai-dev/live/tools";
 import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
 import { getWorkoutEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
 import type { BackendWorkoutResponse } from "../ai-dev/live/tools/workout/workoutTypes";
@@ -19,7 +14,7 @@ import {
 import {
   COACH_PROMPTS,
   liveSystemInstruction,
-  SESSION_CONTROL_TOOLS
+  SESSION_CONTROL_TOOLS,
 } from "./coachPrompts";
 import {
   type CoachSessionDebugEvent,
@@ -31,19 +26,35 @@ import {
   readFeedbackSummary,
   readWorkoutFromResponse,
   sleep,
+  waitForAIToFinishSpeaking,
 } from "./coachSessionHelpers";
-
-
-
+import { useTrainer } from "./query";
 
 //──────────────────────
 // Build system instruction
 //──────────────────────
-function buildSessionInstruction() {
-  return liveSystemInstruction;
+function buildSessionInstruction(trainerPrompt?: string | null) {
+  if (!trainerPrompt?.trim()) {
+    return liveSystemInstruction;
+  }
+
+  return `${liveSystemInstruction}\n\nTrainer prompt:\n${trainerPrompt.trim()}`;
 }
 
-export function useCoachSession(options: UseCoachSessionOptions) {
+export function useCoachSession(
+  options: UseCoachSessionOptions & { trainerId: string },
+) {
+  const {
+    data: trainer,
+    isLoading: isTrainerLoading,
+    error: trainerError,
+  } = useTrainer(options.trainerId ?? 1);
+  const sessionInstruction = buildSessionInstruction(trainer?.prompt);
+
+  useEffect(() => {
+    console.log("Trainer prompt:", trainer?.prompt);
+  }, [trainer?.prompt]);
+
   const { autoStart = true } = options;
   const [step, setStep] = useState<CoachSessionStep>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -128,7 +139,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
   } = useGeminiLive({
     token,
     tools: [...liveTools, ...SESSION_CONTROL_TOOLS],
-    systemInstruction: buildSessionInstruction(),
+    systemInstruction: sessionInstruction,
 
     //──────────────────────
     // Step 1: Handle Gemini tool calls
@@ -235,10 +246,8 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       // Step 2b: Advance after intro turn completes
       //──────────────────────
       if (
-        (
-          // stepRef.current === "choosing_workout" ||
-          stepRef.current === "live_intro"
-        ) &&
+        // stepRef.current === "choosing_workout" ||
+        stepRef.current === "live_intro" &&
         message.serverContent?.turnComplete
       ) {
         if (selectedWorkoutRef.current) {
@@ -471,6 +480,10 @@ export function useCoachSession(options: UseCoachSessionOptions) {
 
     try {
       addDebugEvent("pre-play-sleep", "workout 1000ms");
+      await waitForAIToFinishSpeaking(currentTurn, {
+        intervalMs: 100,
+        timeoutMs: 10000,
+      });
       await sleep(1000);
 
       addDebugEvent("play workout", workoutAudioUrl);
@@ -581,12 +594,13 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       setSessionStep("error");
     }
   }, [
-    addDebugEvent,
-    sendCoachPrompt,
     pauseLive,
-    connectFreshLive,
     setSessionStep,
+    addDebugEvent,
+    currentTurn,
+    connectFreshLive,
     startAudioCapture,
+    sendCoachPrompt,
   ]);
 
   //──────────────────────
@@ -620,11 +634,15 @@ export function useCoachSession(options: UseCoachSessionOptions) {
         const closing = COACH_PROMPTS.FEEDBACK_SAVED;
 
         getSession()?.sendClientContent({
-          turns: [{ role: "user", parts: [{ text: `Säg exakt: '${closing}'` }] }],
+          turns: [
+            { role: "user", parts: [{ text: `Säg exakt: '${closing}'` }] },
+          ],
           turnComplete: true,
         });
-
-        await sleep(1800);
+        await waitForAIToFinishSpeaking(currentTurn, {
+          intervalMs: 100,
+          timeoutMs: 10000,
+        });
       } catch (e) {
         addDebugEvent("create_feedback_failed", String(e));
         try {
@@ -656,6 +674,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     [
       addDebugEvent,
       clearPendingCoachTimer,
+      currentTurn,
       disconnectLive,
       getSession,
       setSessionStep,
@@ -722,5 +741,8 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     startWorkout,
     finishSession,
     endSession,
+    trainer,
+    isTrainerLoading,
+    trainerError,
   };
 }
