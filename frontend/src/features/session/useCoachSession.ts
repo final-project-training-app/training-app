@@ -546,47 +546,6 @@ export function useCoachSession(
               JSON.stringify(activityResult?.response ?? {}),
             );
 
-            const activityRespObj = activityResult as FunctionResponse | null;
-            const output = activityRespObj?.response?.output ?? {};
-
-            let progress: Record<string, unknown> | null = null;
-            if (output && typeof output === "object") {
-              const outObj = output as Record<string, unknown>;
-              if ("progress" in outObj && outObj.progress != null) {
-                progress = outObj.progress as Record<string, unknown>;
-              } else if (
-                "progressEndpoint" in outObj &&
-                typeof outObj.progressEndpoint === "object"
-              ) {
-                const pe = outObj.progressEndpoint as Record<string, unknown>;
-                if (pe.data) progress = pe.data as Record<string, unknown>;
-              }
-            }
-
-            let progressSummary = "";
-            if (progress) {
-              const streak =
-                typeof progress.currentStreak === "number"
-                  ? (progress.currentStreak as number)
-                  : null;
-              const completed = Array.isArray(progress.completedWorkouts)
-                ? (progress.completedWorkouts as Array<Record<string, unknown>>)
-                : [];
-              if (streak)
-                progressSummary += `Din nuvarande streak är ${streak} dag(ar). `;
-              if (completed.length > 0) {
-                const latest = completed[0];
-                const name =
-                  (latest as Record<string, unknown>).workoutName ??
-                  (latest as Record<string, unknown>).workout ??
-                  null;
-                const label =
-                  (latest as Record<string, unknown>).dateLabel ?? null;
-                if (name && label)
-                  progressSummary += `Senaste: ${name} (${label}). `;
-              }
-            }
-
             if (!getSession()) {
               addDebugEvent("session timed out — reconnecting");
               const connected = await connectFreshLive();
@@ -603,13 +562,6 @@ export function useCoachSession(
               setSessionStep("error");
               return;
             }
-
-            sendCoachPrompt(
-              COACH_PROMPTS.WORKOUT_DONE(
-                selectedWorkoutRef.current?.name ?? "workout",
-                progressSummary,
-              ),
-            );
           } catch (e) {
             addDebugEvent("activity save failed", String(e));
             const connected = await connectFreshLive();
@@ -619,12 +571,6 @@ export function useCoachSession(
             setAudioCapturing(started);
             addDebugEvent("mic after workout (fallback)", started);
 
-            sendCoachPrompt(
-              COACH_PROMPTS.WORKOUT_DONE(
-                selectedWorkoutRef.current?.name ?? "workout",
-                "Kunde inte spara passet just nu, men vi försöker igen senare.",
-              ),
-            );
           }
         },
       });
@@ -642,7 +588,6 @@ export function useCoachSession(
     connectFreshLive,
     getSession,
     startAudioCapture,
-    sendCoachPrompt,
   ]);
 
   //──────────────────────
