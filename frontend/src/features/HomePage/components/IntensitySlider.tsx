@@ -1,4 +1,5 @@
 import { Settings } from "lucide-react";
+
 type IntensitySliderProps = {
   value: number;
   onChange: (value: number) => void;
@@ -16,23 +17,23 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
 
   return (
     <section>
-      <div className="mb-3 flex items-center gap-3 text-[#4f3bb8]">
-        <Settings className="text-[var(--brand-primary)]" size={28} />
-        <h2 className="text-[clamp(1.75rem,4.4vw,3rem)] font-bold leading-none tracking-tight">
+      <div className="mb-2 flex items-center gap-2 text-[#4f3bb8]">
+        <Settings className="text-[var(--brand-primary)]" size={20} />
+        <h2 className="text-[22px] font-extrabold leading-none tracking-tight">
           Intensitet
         </h2>
       </div>
 
-      <p className="max-w-3xl text-[clamp(1.15rem,3vw,1.85rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
-        Valj hur intensiv din traning eller stretching ska vara. Du kan alltid
-        andra senare.
+      <p className="text-[15px] font-medium leading-relaxed text-[#312b70]">
+        Välj hur intensiv din träning eller stretching ska vara.
       </p>
 
-      <div className="mt-10 px-1 sm:px-2">
+      <div className="mt-6 px-1">
         <div className="relative">
-          <div className="pointer-events-none absolute left-2 right-2 top-5 h-1.5 rounded-full bg-[#c7bfe8]" />
+          <div className="pointer-events-none absolute left-2 right-2 top-4 h-1 rounded-full bg-[#c7bfe8]" />
+
           <div
-            className="pointer-events-none absolute left-2 top-5 h-1.5 rounded-full bg-[#5b44c9] transition-all duration-150"
+            className="pointer-events-none absolute left-2 top-4 h-1 rounded-full bg-[#5b44c9] transition-all duration-150"
             style={{ width: `calc(${progress}% - 4px)` }}
           />
 
@@ -42,8 +43,8 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
             max={steps.length - 1}
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value, 10))}
-            className="absolute inset-x-0 top-0 z-20 h-10 w-full cursor-pointer opacity-0"
-            aria-label="Valj intensitet"
+            className="absolute inset-x-0 top-0 z-20 h-8 w-full cursor-pointer opacity-0"
+            aria-label="Välj intensitet"
           />
 
           <div className="relative z-30 flex items-center justify-between">
@@ -52,28 +53,26 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
                 key={label}
                 type="button"
                 onClick={() => onChange(index)}
-                className="-mx-2 px-2"
-                aria-label={`Valj ${label}`}
+                className="-mx-1 px-1"
+                aria-label={`Välj ${label}`}
               >
                 <span
-                  className={`block rounded-full transition-all duration-150 flex items-center justify-center ${
+                  className={`block rounded-full transition-all duration-150 ${
                     index === value
-                      ? "h-14 w-14 border-[5px] bg-[#5b44c9] border-[#5b44c9] shadow-lg"
-                      : "h-11 w-11 border-[4px] bg-[#f5f2fb] border-[#b6abd9]"
+                      ? "h-9 w-9 border-[4px] border-[#5b44c9] bg-[#5b44c9]"
+                      : "h-7 w-7 border-[3px] border-[#b6abd9] bg-[#f5f2fb]"
                   }`}
                 />
               </button>
             ))}
           </div>
 
-          <div className="mt-7 grid grid-cols-5 gap-1.5 text-center sm:gap-2">
+          <div className="mt-4 grid grid-cols-5 gap-1 text-center">
             {steps.map((label, index) => (
               <span
                 key={label}
-                className={`leading-[1.16] transition-all duration-150 ${
-                  index === value
-                    ? "text-[clamp(1.25rem,3.3vw,2rem)] font-bold text-[#2b2277]"
-                    : "text-[clamp(1.05rem,2.7vw,1.6rem)] font-medium text-[#342f77]"
+                className={`text-[11px] font-bold leading-tight transition ${
+                  index === value ? "text-[#2b2277]" : "text-[#6f6a93]"
                 }`}
               >
                 {label}

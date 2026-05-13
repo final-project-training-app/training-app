@@ -52,19 +52,21 @@ function SettingsModalBody({
   intensityLevel: number;
   context: string;
 }) {
-  const DEFAULT_HEIGHT = 96;
-  const MIN_HEIGHT = 68;
-  const MAX_HEIGHT = 98;
-  const DISMISS_HEIGHT = 54;
+  const DEFAULT_HEIGHT = 78;
+  const MIN_HEIGHT = 62;
+  const MAX_HEIGHT = 88;
+  const DISMISS_HEIGHT = 52;
 
   const [sheetHeight, setSheetHeight] = useState(DEFAULT_HEIGHT);
   const startY = useRef(0);
   const startHeight = useRef(DEFAULT_HEIGHT);
   const isDragging = useRef(false);
+
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+
   const updateProfile = useUpdateProfile();
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -75,20 +77,17 @@ function SettingsModalBody({
   };
 
   const onHandlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) {
-      return;
-    }
+    if (!isDragging.current) return;
 
     const deltaY = e.clientY - startY.current;
     const deltaVh = (deltaY / window.innerHeight) * 100;
     const nextHeight = startHeight.current - deltaVh;
+
     setSheetHeight(Math.min(MAX_HEIGHT, Math.max(44, nextHeight)));
   };
 
   const onHandlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) {
-      return;
-    }
+    if (!isDragging.current) return;
 
     isDragging.current = false;
     e.currentTarget.releasePointerCapture(e.pointerId);
@@ -99,85 +98,81 @@ function SettingsModalBody({
       return;
     }
 
-    const clamped = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, sheetHeight));
-    setSheetHeight(clamped);
+    setSheetHeight(Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, sheetHeight)));
   };
 
   return (
     <>
-      {/* overlay (click outside to close) */}
       <div
         onClick={() => setOpen(false)}
-        className={`fixed inset-0 z-40 bg-black/35 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-[#221447]/18 backdrop-blur-[3px] transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
 
-      {/* bottom sheet */}
       <div
         style={{
           transform: open ? "translateY(0)" : "translateY(100%)",
           height: `${sheetHeight}dvh`,
         }}
-        className="fixed bottom-0 left-0 right-0 z-50 overflow-y-auto rounded-t-[2.25rem] bg-[#f7f5fc] px-6 pb-7 pt-4 shadow-2xl transition-transform duration-300"
+        className="fixed bottom-0 left-1/2 z-50 w-full max-w-[430px] -translate-x-1/2 overflow-y-auto rounded-t-[2rem] bg-[#fbf8ff] px-5 pb-6 pt-3 shadow-[0_-18px_60px_rgba(55,38,110,0.20)] transition-transform duration-300"
       >
         <div
           onPointerDown={onHandlePointerDown}
           onPointerMove={onHandlePointerMove}
           onPointerUp={onHandlePointerUp}
           onPointerCancel={onHandlePointerUp}
-          className="mx-auto mb-6 h-2.5 w-20 cursor-grab rounded-full bg-[#c8bfeb] active:cursor-grabbing"
+          className="mx-auto mb-5 h-1.5 w-14 cursor-grab rounded-full bg-[#c8bfeb] active:cursor-grabbing"
         />
 
-        <div className="mx-auto w-full max-w-4xl">
-          <h1 className="text-center text-[clamp(2.15rem,6vw,4.35rem)] font-bold leading-none tracking-tight text-[#281d7a]">
-            Installningar
+        <div className="mx-auto w-full">
+          <h1 className="text-[34px] font-extrabold leading-none tracking-tight text-[#281d7a]">
+            Inställningar
           </h1>
 
-          <section className="mt-9">
-            <div>
-              <label
-                htmlFor="fullName"
-                className="text-[clamp(1.75rem,4.4vw,3rem)] text-[#4f3bb8] font-bold leading-none tracking-tight"
-              >
-                Full Name
-              </label>
+          <section className="mt-6">
+            <label
+              htmlFor="fullName"
+              className="text-[18px] font-extrabold leading-none text-[#4f3bb8]"
+            >
+              Namn
+            </label>
 
-              <input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="mt-3 w-full rounded-xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-[clamp(1.15rem,3vw,1.85rem)] text-[#3f2a7a] outline-none focus:ring-2 focus:ring-[#c8bfeb]"
-              />
-              <p className="mt-2 text-sm font-medium text-[#6b59b2]">
-                {isLoading
-                  ? "Hämtar namn från din profil..."
-                  : isSuccess
-                    ? fullName === DEFAULT_DISPLAY_NAME
-                      ? "Ingen Clerk-namnuppgift hittades. Standardsnamn används."
-                      : "Namnet är hämtat från din profil."
-                    : isError
-                      ? (errorMessage ?? "Kunde inte hämta profilen.")
-                      : ""}
-              </p>
-            </div>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-[16px] font-semibold text-[#3f2a7a] outline-none focus:ring-2 focus:ring-[#c8bfeb]"
+            />
+
+            <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
+              {isLoading
+                ? "Hämtar namn från din profil..."
+                : isSuccess
+                  ? fullName === DEFAULT_DISPLAY_NAME
+                    ? "Ingen namnuppgift hittades."
+                    : "Namnet är hämtat från din profil."
+                  : isError
+                    ? (errorMessage ?? "Kunde inte hämta profilen.")
+                    : ""}
+            </p>
           </section>
 
-          <section className="mt-8">
+          <section className="mt-6">
             <IntensitySlider
               value={intensityLevel}
               onChange={setIntensityLevel}
             />
           </section>
 
-          <section className="mt-7">
+          <section className="mt-6">
             <ContextModel value={context} onChange={setContext} />
           </section>
 
-          <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
+          <section className="mt-6 space-y-2.5">
             <button
-              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
+              className="w-full rounded-2xl bg-[#5b3fd6] px-4 py-3.5 text-[16px] font-extrabold text-white transition active:scale-[0.985]"
               disabled={updateProfile.isPending}
               onClick={() => {
                 setSaveFeedback(null);
@@ -188,12 +183,9 @@ function SettingsModalBody({
                     context,
                   },
                   {
-                    onSuccess: () => {
-                      setSaveFeedback("Inställningar sparade ✓");
-                    },
-                    onError: () => {
-                      setSaveFeedback("Kunde inte spara ändringarna");
-                    },
+                    onSuccess: () => setSaveFeedback("Inställningar sparade ✓"),
+                    onError: () =>
+                      setSaveFeedback("Kunde inte spara ändringarna"),
                   },
                 );
               }}
@@ -202,15 +194,13 @@ function SettingsModalBody({
             </button>
 
             {saveFeedback ? (
-              <div className="rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-center text-[1.05rem] font-semibold text-[#3f2a7a] shadow-sm">
+              <div className="rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-center text-[14px] font-bold text-[#3f2a7a]">
                 {saveFeedback}
               </div>
             ) : null}
 
             <button
-              className="w-full rounded-xl px-4 py-3 text-[clamp(1.24rem,3.5vw,1.95rem)] font-semibold text-[#4d2a7a] transition-all duration-150
-  hover:text-[#3f2066]
-  active:bg-[#efe9fb] active:text-[#3f2066] active:scale-[0.985]"
+              className="w-full rounded-xl px-4 py-3 text-[15px] font-extrabold text-[#4d2a7a] transition active:scale-[0.985] active:bg-[#efe9fb]"
               onClick={() => setOpen(false)}
             >
               Avbryt
