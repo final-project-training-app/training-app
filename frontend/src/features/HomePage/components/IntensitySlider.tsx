@@ -24,8 +24,8 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
       </div>
 
       <p className="max-w-3xl text-[clamp(1.15rem,3vw,1.85rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
-        Valj hur intensiv din traning eller stretching ska vara. Du kan alltid
-        andra senare.
+        Välj hur intensiv din träning eller stretching ska vara. Du kan alltid
+        ändra senare.
       </p>
 
       <div className="mt-10 px-1 sm:px-2">
@@ -43,7 +43,7 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value, 10))}
             className="absolute inset-x-0 top-0 z-20 h-10 w-full cursor-pointer opacity-0"
-            aria-label="Valj intensitet"
+            aria-label="Välj intensitet"
           />
 
           <div className="relative z-30 flex items-center justify-between">
@@ -53,7 +53,7 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
                 type="button"
                 onClick={() => onChange(index)}
                 className="-mx-2 px-2"
-                aria-label={`Valj ${label}`}
+                aria-label={`Välj ${label}`}
               >
                 <span
                   className={`block rounded-full transition-all duration-150 flex items-center justify-center ${

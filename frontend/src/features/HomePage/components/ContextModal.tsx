@@ -17,8 +17,8 @@ const ContextModel = ({ value, onChange }: ContextModelProps) => {
       </div>
 
       <p className="max-w-3xl text-[clamp(1.15rem,3vw,1.85rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
-        Beratta om behov, mal eller eventuella begransningar sa att passet kan
-        anpassas battre.
+        Berätta om behov, mål eller eventuella begränsningar så att passet kan
+        anpassas bättre.
       </p>
       <div className="mt-5 rounded-[24px] border-[3px] border-[#8f7dd6] bg-[#f5f2fb] p-4 sm:p-5">
         <textarea

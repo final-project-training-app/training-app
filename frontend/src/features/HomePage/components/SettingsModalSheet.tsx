@@ -164,7 +164,7 @@ function SettingsModalBody({
 
         <div className="mx-auto w-full max-w-4xl">
           <h1 className="text-center text-[clamp(2.15rem,6vw,4.35rem)] font-bold leading-none tracking-tight bg-gradient-to-r from-[#1a0f52] via-[#5c35c4] to-[#281d7a] bg-clip-text text-transparent drop-shadow-sm">
-            Installningar
+            Inställningar
           </h1>
 
           <section className="mt-9">
@@ -210,9 +210,9 @@ function SettingsModalBody({
 
           <section className="mt-6">
             <p className="mb-3 text-center text-sm font-medium text-[#6b59b2] md:text-base">
-              Byt tränare nedan och tryck sedan{" "}
+              Välj en tränare nedan och tryck sedan på{" "}
               <span className="font-bold text-[#4f3bb8]">Spara ändringar</span>{" "}
-              så valet sparas i din profil.
+              för att spara i din profil.
             </p>
             <TrainerSelectionModal
               selectedTrainerId={selectedTrainerId}

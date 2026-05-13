@@ -1,9 +1,6 @@
-const API_URL = (
-  import.meta.env.VITE_API_URL ??
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:8080"
-    : "https://backend-training.up.railway.app")
-).replace(/\/$/, "");
+import { getApiBaseUrl } from "../lib/apiBaseUrl";
+
+const API_URL = getApiBaseUrl();
 
 export default async function fetchMyProfile(token: string) {
   const res = await fetch(`${API_URL}/api/users/me/profile`, {

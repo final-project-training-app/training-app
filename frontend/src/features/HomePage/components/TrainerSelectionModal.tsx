@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, UserRound } from "lucide-react";
 import { fetchTrainersWithToken } from "../../../api/trainers";
 import TrainerCard from "./TrainerCard";
 import { useVoicePlayer } from "../../../hooks/useVoicePlayer";
@@ -84,50 +84,54 @@ export default function TrainerSelectionModal({
   };
 
   return (
-    <section aria-labelledby="trainer-selection-title" className="mt-8 px-2">
-      <div className="mb-8">
+    <section aria-labelledby="trainer-selection-title" className="mt-2 px-0">
+      <div className="mb-3 flex items-center gap-3 text-[#4f3bb8]">
+        <UserRound className="shrink-0 text-[var(--brand-primary)]" size={28} />
         <h2
           id="trainer-selection-title"
-          className="text-3xl font-bold text-[#5c35c4] mb-3"
+          className="text-[clamp(1.75rem,4.4vw,3rem)] font-bold leading-none tracking-tight"
         >
-          Välj din tränare
+          Välj tränare
         </h2>
-        <p className="text-base text-[#6b59b2] leading-relaxed max-w-2xl">
-          Välj en tränare som matchar din stil och dina mål. Varje tränare har
-          sin egen unika personlighet och specialitet.
-        </p>
       </div>
 
-      <div className="mt-8 w-full">
+      <p className="mb-8 max-w-3xl text-[clamp(1.15rem,3vw,1.85rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
+        Välj den tränare som passar din stil och dina mål. Alla tränare har en
+        egen personlighet och inriktning.
+      </p>
+
+      <div className="w-full">
         <div className="relative mx-auto w-full max-w-5xl">
           <button
-            aria-label="föregående tränare"
+            type="button"
+            aria-label="Föregående tränare"
             onClick={handlePrev}
-            className="absolute left-1 sm:left-2 md:left-0 top-1/2 z-20 -translate-y-1/2 md:-translate-x-16 rounded-full bg-[#5c35c4] hover:bg-[#4a2dac] text-white p-2 sm:p-3 shadow-lg transition-all duration-200 hover:scale-110"
+            className="absolute left-1 sm:left-2 md:left-0 top-1/2 z-20 -translate-y-1/2 md:-translate-x-16 rounded-full bg-[#5c35c4] p-2 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:bg-[#4a2dac] sm:p-3"
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
 
           <button
-            aria-label="nästa tränare"
+            type="button"
+            aria-label="Nästa tränare"
             onClick={handleNext}
-            className="absolute right-1 sm:right-2 md:right-0 top-1/2 z-20 -translate-y-1/2 md:translate-x-16 rounded-full bg-[#5c35c4] hover:bg-[#4a2dac] text-white p-2 sm:p-3 shadow-lg transition-all duration-200 hover:scale-110"
+            className="absolute right-1 top-1/2 z-20 -translate-y-1/2 rounded-full bg-[#5c35c4] p-2 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:bg-[#4a2dac] sm:right-2 md:right-0 sm:p-3 md:translate-x-16"
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
 
           <div
-            className="no-scrollbar flex snap-x snap-mandatory gap-3 sm:gap-4 md:gap-6 overflow-x-auto px-4 sm:px-6 md:px-12 py-6 scroll-smooth"
+            className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 py-6 sm:gap-4 sm:px-6 md:gap-6 md:px-12"
             role="listbox"
-            aria-label="Trainer carousel"
+            aria-label="Tränarval"
           >
             {isLoading ? (
               <div className="flex h-[600px] w-full items-center justify-center gap-3">
                 <div className="animate-spin">
-                  <div className="w-6 h-6 border-3 border-[#ddd2ff] border-t-[#5c35c4] rounded-full" />
+                  <div className="h-6 w-6 rounded-full border-3 border-[#ddd2ff] border-t-[#5c35c4]" />
                 </div>
-                <span className="text-[#6b59b2] font-medium">
-                  Hämtar tränare...
+                <span className="font-medium text-[#6b59b2]">
+                  Hämtar tränare …
                 </span>
               </div>
             ) : trainers.length > 0 ? (
@@ -135,7 +139,7 @@ export default function TrainerSelectionModal({
                 <div
                   id={`trainer-card-${trainer.id}`}
                   key={trainer.id}
-                  className="snap-center flex-shrink-0"
+                  className="snap-center shrink-0"
                   role="option"
                   aria-selected={resolvedId === trainer.id}
                 >
@@ -161,7 +165,7 @@ export default function TrainerSelectionModal({
             ) : (
               <div className="flex h-[600px] w-full items-center justify-center">
                 <p className="text-[#6b59b2]">
-                  Inga tränare tillgängliga just nu
+                  Inga tränare tillgängliga just nu.
                 </p>
               </div>
             )}

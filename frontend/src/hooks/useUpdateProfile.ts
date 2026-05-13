@@ -1,9 +1,8 @@
 import { useAuth } from "@clerk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { getApiBaseUrl } from "../lib/apiBaseUrl";
 
-const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:8080"
-).replace(/\/$/, "");
+const API_URL = getApiBaseUrl();
 
 type ProfileData = {
   name: string;
