@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SessionCall } from "./components/SessionCall";
 import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
@@ -18,7 +18,7 @@ export function SessionPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-dvh items-center justify-center">
+      <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-lg font-bold text-[#5b3fd6]">
         Laddar session...
       </div>
     );
@@ -26,7 +26,7 @@ export function SessionPage() {
 
   if (isError) {
     return (
-      <div className="flex h-dvh items-center justify-center p-8 text-center">
+      <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-base font-semibold text-[#221447]">
         {error instanceof Error ? error.message : "Något gick fel."}
       </div>
     );
@@ -43,8 +43,6 @@ function getCoachStatusLabel(step: CoachSessionStep) {
   switch (step) {
     case "idle":
       return "Ansluter till tränaren...";
-    //case "choosing_workout":
-     // return "Tränaren väljer ett pass åt dig...";
     case "live_intro":
       return "Coach-samtalet är igång.";
     case "waiting_instruction_approval":
@@ -64,21 +62,34 @@ function getCoachStatusLabel(step: CoachSessionStep) {
   }
 }
 
+function getWorkoutName(session: CoachCallSession) {
+  return session.name ?? session.workoutName ?? "Träningspass";
+}
+
 function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const {
-    step,
-    error,
-    selectedWorkout,
-    debugEvents,
-    endSession,
-  } = useCoachSession({
-    session,
-    autoStart: true,
-  });
+  const { step, error, selectedWorkout, debugEvents, endSession } =
+    useCoachSession({
+      session,
+      autoStart: true,
+    });
+
+  useEffect(() => {
+    if (step === "idle" || step === "completed" || step === "error") {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setElapsedSeconds((current) => current + 1);
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [step]);
 
   function handleEnd() {
     endSession();
@@ -91,23 +102,23 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     setActivePanel((current) => (current === panel ? "none" : panel));
   }
 
+  const workoutName = selectedWorkout?.name ?? getWorkoutName(session);
+
   return (
-    <>
-      <SessionCall
-        session={session}
-        workoutName={selectedWorkout?.name ?? session.workoutName}
-        coachStep={step}
-        coachStatusLabel={error ?? getCoachStatusLabel(step)}
-        elapsedSeconds={elapsedSeconds}
-        durationSeconds={0}
-        activePanel={activePanel}
-        debugEvents={debugEvents}
-        onSpeaker={() => togglePanel("exercise")}
-        onTrainingSuite={() => togglePanel("suite")}
-        onInfo={() => togglePanel("info")}
-        onClosePanel={() => setActivePanel("none")}
-        onEnd={handleEnd}
-      />
-    </>
+    <SessionCall
+      session={session}
+      workoutName={workoutName}
+      coachStep={step}
+      coachStatusLabel={error ?? getCoachStatusLabel(step)}
+      elapsedSeconds={elapsedSeconds}
+      durationSeconds={session.durationSeconds}
+      activePanel={activePanel}
+      debugEvents={debugEvents}
+      onSpeaker={() => togglePanel("exercise")}
+      onTrainingSuite={() => togglePanel("suite")}
+      onInfo={() => togglePanel("info")}
+      onClosePanel={() => setActivePanel("none")}
+      onEnd={handleEnd}
+    />
   );
 }
