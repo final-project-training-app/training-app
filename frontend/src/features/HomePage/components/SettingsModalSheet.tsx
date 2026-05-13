@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { useAuth } from "@clerk/react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
@@ -14,7 +15,11 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
+  const { isSignedIn } = useAuth();
   const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
+
+  // Default to trainer 1 if not logged in, otherwise use trainer from database
+  const defaultTrainerId = isSignedIn ? user?.trainerId ?? 1 : 1;
 
   return (
     <SettingsModalBody
@@ -28,7 +33,7 @@ export default function SettingsModalSheet({
       userName={user?.name?.trim() ? user.name : DEFAULT_DISPLAY_NAME}
       intensityLevel={user?.intensityLevel ?? 2}
       context={user?.context ?? ""}
-      trainerId={user?.trainerId ?? 1}
+      trainerId={defaultTrainerId}
     />
   );
 }
