@@ -75,6 +75,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     selectedWorkout,
     debugEvents,
     endSession,
+    getCurrentRms,
   } = useCoachSession({
     session,
     autoStart: true,
@@ -108,6 +109,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
         durationSeconds={0}
         activePanel={activePanel}
         debugEvents={debugEvents}
+        getCurrentRms={getCurrentRms}
         onSpeaker={() => togglePanel("exercise")}
         onTrainingSuite={() => togglePanel("suite")}
         onInfo={() => togglePanel("info")}

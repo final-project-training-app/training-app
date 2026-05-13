@@ -149,6 +149,7 @@ export function useCoachSession(
     currentTurn,
     getSession,
     getAiPlaybackRemainingMs,
+    getCurrentRms,
   } = useGeminiLive({
     token,
     tools: [...coachLiveTools, ...SESSION_CONTROL_TOOLS],
@@ -786,6 +787,7 @@ export function useCoachSession(
     startWorkout,
     finishSession,
     endSession,
+    getCurrentRms,
     trainer,
     isTrainerLoading,
     trainerError,

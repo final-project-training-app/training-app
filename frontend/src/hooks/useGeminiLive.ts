@@ -13,8 +13,7 @@ import {
 const SAMPLE_RATE = 16000;
 const CHUNK_SAMPLES = 2560; // 160 ms @ 16 kHz
 const AI_SAMPLE_RATE = 24000;
-const INTERRUPT_THRESHOLD = 0.25; // RMS required to interrupt Gemini mid-response
-const PLAYBACK_TAIL_MS = 200; // extra gate time after playback ends (speaker reverb)
+const PLAYBACK_TAIL_MS = 0;
 const LIVE_MODEL = "gemini-3.1-flash-live-preview";
 const MAX_RECONNECT_ATTEMPTS = 3;
 const RECONNECT_BASE_DELAY_MS = 500;
@@ -77,6 +76,7 @@ export const useGeminiLive = ({
   const connectingRef = useRef(false);
   const autoReconnectDisabledRef = useRef(false);
   const suppressAiAudioRef = useRef(false);
+  const currentRmsRef = useRef(0);
 
   useEffect(() => {
     tokenRef.current = token;
@@ -361,6 +361,10 @@ export const useGeminiLive = ({
     connectingRef.current = false;
   }
 
+  function getCurrentRms() {
+    return currentRmsRef.current;
+  }
+
   function suppressAiOutput() {
     suppressAiAudioRef.current = true;
     aiAudioCtxRef.current?.close();
@@ -510,12 +514,9 @@ export const useGeminiLive = ({
         event: MessageEvent<{ pcm16: ArrayBuffer; rms: number }>,
       ) => {
         const { pcm16, rms } = event.data;
+        currentRmsRef.current = rms;
 
-        if (
-          Date.now() < playingUntilWallMsRef.current &&
-          rms < INTERRUPT_THRESHOLD
-        )
-          return;
+        if (Date.now() < playingUntilWallMsRef.current) return;
 
         const base64 = pcm16ToBase64(pcm16);
 
@@ -646,5 +647,6 @@ export const useGeminiLive = ({
     currentTurn,
     getSession,
     getAiPlaybackRemainingMs,
+    getCurrentRms,
   };
 };
