@@ -369,12 +369,13 @@ export function useCoachSession(
   //──────────────────────
   const askIfReadyForWorkout = useCallback(async () => {
     allowAiOutput();
-    addDebugEvent("reconnect after instructions");
+    addDebugEvent("resume after instructions");
     setSessionStep("asking_ready");
 
-    const connected = await connectFreshLive();
-    if (!connected) {
-      return;
+    if (!getSession()) {
+      addDebugEvent("session timed out — reconnecting");
+      const connected = await connectFreshLive();
+      if (!connected) return;
     }
 
     await sleep(250);
@@ -388,14 +389,11 @@ export function useCoachSession(
       setSessionStep("error");
       return;
     }
-
-    addDebugEvent("ready-sent", "workout");
-    sendCoachPrompt(COACH_PROMPTS.INSTRUCTIONS_DONE);
   }, [
     addDebugEvent,
     allowAiOutput,
     connectFreshLive,
-    sendCoachPrompt,
+    getSession,
     setSessionStep,
     startAudioCapture,
   ]);
@@ -587,9 +585,10 @@ export function useCoachSession(
               }
             }
 
-            const connected = await connectFreshLive();
-            if (!connected) {
-              return;
+            if (!getSession()) {
+              addDebugEvent("session timed out — reconnecting");
+              const connected = await connectFreshLive();
+              if (!connected) return;
             }
 
             await sleep(250);
@@ -639,6 +638,7 @@ export function useCoachSession(
     setSessionStep,
     addDebugEvent,
     connectFreshLive,
+    getSession,
     startAudioCapture,
     sendCoachPrompt,
   ]);
