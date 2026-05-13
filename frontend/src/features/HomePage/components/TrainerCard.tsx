@@ -1,4 +1,5 @@
 import React from 'react';
+import { Volume2, Loader, Square } from 'lucide-react';
 import type { Trainer } from '../../../api/trainerService';
 
 type Props = {
@@ -14,12 +15,15 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
   return (
     <div
       onClick={onSelect}
-      className={`flex h-full w-64 cursor-pointer flex-col items-center gap-3 rounded-2xl p-3 transition-transform duration-300 ease-out
-        ${selected ? 'scale-105 bg-white shadow-lg' : 'scale-95 bg-transparent opacity-80'}`}
+      className={`relative flex h-full w-72 cursor-pointer flex-col rounded-3xl transition-all duration-300 ease-out overflow-hidden
+        ${selected 
+          ? 'scale-105 bg-white shadow-2xl ring-2 ring-[#5c35c4]' 
+          : 'scale-95 bg-white shadow-lg opacity-85 hover:opacity-95'}`}
       aria-pressed={selected}
       role="button"
     >
-      <div className="h-44 w-full overflow-hidden rounded-xl bg-gray-100">
+      {/* Image container */}
+      <div className="relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff]">
         {trainer.image_url ? (
           <img
             src={trainer.image_url}
@@ -28,32 +32,65 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-gray-500">Ingen bild</div>
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#ddd2ff] to-[#c8bfeb]">
+            <div className="text-center">
+              <div className="text-5xl">👤</div>
+              <div className="mt-2 text-sm font-medium text-[#6b59b2]">Ingen bild</div>
+            </div>
+          </div>
         )}
       </div>
 
-      <div className="w-full text-left">
-        <div className="truncate text-lg font-semibold text-[#281d7a]">{trainer.name}</div>
-        <div className="mt-1 text-sm text-[#6b59b2]">{trainer.role}</div>
+      {/* Content container */}
+      <div className="flex flex-1 flex-col gap-4 p-5">
+        {/* Name and role */}
+        <div>
+          <h3 className="text-xl font-bold text-[#281d7a] leading-tight">{trainer.name}</h3>
+          {trainer.role && (
+            <p className="mt-1 text-sm font-medium text-[#6b59b2]">{trainer.role}</p>
+          )}
+        </div>
+
+        {/* Voice button */}
+        <div className="mt-auto">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlay?.();
+            }}
+            disabled={loading}
+            className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150
+              ${playing 
+                ? 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200' 
+                : 'bg-[#f1ecff] text-[#3f2a7a] border border-[#ddd2ff] hover:bg-[#e9e0ff]'}
+              ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            {loading ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                <span>Laddar...</span>
+              </>
+            ) : playing ? (
+              <>
+                <Square className="w-4 h-4 fill-current" />
+                <span>Stoppa</span>
+              </>
+            ) : (
+              <>
+                <Volume2 className="w-4 h-4" />
+                <span>Lyssna på röst</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="mt-auto w-full">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (loading) return;
-            if (playing) {
-              onPlay?.();
-              return;
-            }
-            onPlay?.();
-          }}
-          disabled={loading}
-          className="w-full rounded-lg border border-[#ddd2ff] bg-[#f1ecff] px-3 py-2 text-sm font-semibold text-[#3f2a7a] transition-colors duration-150 hover:bg-[#e9e0ff] disabled:opacity-70"
-        >
-          {loading ? 'Laddar…' : playing ? 'Stoppa' : 'lyssna på röst'}
-        </button>
-      </div>
+      {/* Selected indicator */}
+      {selected && (
+        <div className="absolute top-3 right-3 bg-[#5c35c4] text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg">
+          ✓
+        </div>
+      )}
     </div>
   );
 }
