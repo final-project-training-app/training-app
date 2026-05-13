@@ -4,6 +4,7 @@ import { Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 import fetchMyProfile from "../api/users";
 import { useCreateCurrentUserProfile } from "../features/auth/useCreateCurrentUserProfile";
+import AppStageFrame from "./AppStageFrame";
 
 export default function RootLayout() {
   const queryClient = useQueryClient();
@@ -30,5 +31,26 @@ export default function RootLayout() {
     })();
   }, [getToken, isLoaded, isSignedIn, queryClient]);
 
-  return <Outlet />;
+  return (
+    <main
+      className="relative flex h-[100svh] max-h-[100svh] items-center justify-center overflow-hidden text-[#221447]"
+      style={{
+        backgroundColor: "#eee7fb",
+        backgroundImage: `
+          linear-gradient(
+            rgba(238, 231, 251, 0.9),
+            rgba(238, 231, 251, 0.9)
+          ),
+          url("/start-page/background.webp")
+        `,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      <AppStageFrame>
+        <Outlet />
+      </AppStageFrame>
+    </main>
+  );
 }
