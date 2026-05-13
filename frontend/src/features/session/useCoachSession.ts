@@ -165,7 +165,7 @@ export function useCoachSession(
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("waiting for AI to finish before starting instructions");
-        sleep(500);
+        await sleep(1000);
         const finished = await waitForAIToFinishSpeaking(
           () => aiTurnStateRef.current,
           () => getAiPlaybackRemainingMs(),
@@ -198,7 +198,7 @@ export function useCoachSession(
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-workout", String(queuedAction));
         addDebugEvent("waiting for AI to finish before starting instructions");
-        await sleep(500);
+        await sleep(1000);
         const finished = await waitForAIToFinishSpeaking(
           () => aiTurnStateRef.current,
           () => getAiPlaybackRemainingMs(),
@@ -226,6 +226,15 @@ export function useCoachSession(
       // Step 1c: Finish session feedback
       //──────────────────────
       if (name === "finish_session_feedback") {
+        await sleep(1000);
+        const finished = await waitForAIToFinishSpeaking(
+          () => aiTurnStateRef.current,
+          () => getAiPlaybackRemainingMs(),
+          { timeoutMs: 5000 },
+        );
+        if (!finished) {
+          addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");
+        }
         finishSessionRef.current(readFeedbackSummary(functionCall));
         return {
           id: functionCall.id,
@@ -412,7 +421,6 @@ export function useCoachSession(
       addDebugEvent("skip instructions", `step=${stepRef.current}`);
       return;
     }
-
 
     pauseLive();
     setSessionStep("playing_instructions");
