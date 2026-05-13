@@ -39,7 +39,7 @@ export default function RootLayout() {
         backgroundImage: `
           linear-gradient(
             rgba(238, 231, 251, 0.9),
-            rgba(238, 231, 251, 0.9)
+            rgba(238, 231, 251, 0.6)
           ),
           url("/start-page/background.webp")
         `,
