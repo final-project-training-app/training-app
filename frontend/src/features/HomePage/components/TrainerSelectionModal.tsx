@@ -47,14 +47,14 @@ export default function TrainerSelectionModal({
 
   const handlePrev = () => {
     if (!trainers.length) return;
-    const idx = trainers.findIndex((t) => t.id === localSelectedId);
+    const idx = trainers.findIndex((t: Trainer) => t.id === localSelectedId);
     const prev = trainers[Math.max(0, idx - 1)];
     if (prev) handleSelectTrainer(prev.id);
   };
 
   const handleNext = () => {
     if (!trainers.length) return;
-    const idx = trainers.findIndex((t) => t.id === localSelectedId);
+    const idx = trainers.findIndex((t: Trainer) => t.id === localSelectedId);
     const next = trainers[Math.min(trainers.length - 1, idx + 1)];
     if (next) handleSelectTrainer(next.id);
   };
@@ -115,7 +115,7 @@ export default function TrainerSelectionModal({
                   role="option"
                   aria-selected={localSelectedId === trainer.id}
                 >
-                  <div className="h-full w-72">
+                  <div className="h-full w-80">
                     <TrainerCard
                       trainer={trainer}
                       selected={localSelectedId === trainer.id}
