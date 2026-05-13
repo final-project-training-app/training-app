@@ -72,9 +72,6 @@ export function useUpdateProfile() {
         data,
       );
       queryClient.setQueryData(["myProfile"], data);
-      queryClient.invalidateQueries({
-        queryKey: ["myProfile"],
-      });
     },
     onError: (error) => {
       console.error("[useUpdateProfile] onError called:", error);

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { useAuth } from "@clerk/react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
@@ -79,11 +79,6 @@ function SettingsModalBody({
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateProfile = useUpdateProfile();
-
-  // Sync selectedTrainerId when user data changes (reopening settings)
-  useEffect(() => {
-    setSelectedTrainerId(initialTrainerId ?? 1);
-  }, [initialTrainerId]);
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
@@ -215,7 +210,7 @@ function SettingsModalBody({
                   name: fullName.trim() || DEFAULT_DISPLAY_NAME,
                   intensityLevel,
                   context,
-                  trainerId: selectedTrainerId || null,
+                  trainerId: selectedTrainerId ?? null,
                 };
                 console.log(
                   "[SettingsModalSheet] Save button clicked with trainerId:",

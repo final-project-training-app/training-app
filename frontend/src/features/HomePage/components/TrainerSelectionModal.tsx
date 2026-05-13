@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchTrainersWithToken } from "../../../api/trainers";
 import TrainerCard from "./TrainerCard";
@@ -23,10 +23,7 @@ export default function TrainerSelectionModal({
   selectedTrainerId?: number | null;
 }) {
   const { getToken, isSignedIn } = useAuth();
-  const carouselRef = useRef<HTMLDivElement | null>(null);
-  const [localSelectedId, setLocalSelectedId] = useState<number | null>(
-    selectedTrainerId ?? 1,
-  );
+  const resolvedId = selectedTrainerId ?? 1;
   const { play, stop, loadingId, playingId } = useVoicePlayer();
 
   const { data: trainers = [], isLoading } = useQuery({
@@ -37,29 +34,30 @@ export default function TrainerSelectionModal({
       return fetchTrainersWithToken(token);
     },
     enabled: isSignedIn === true,
+    refetchOnWindowFocus: false,
   });
 
-  // Center selected trainer on mount or when trainers load, default to trainer 1
+  const trainersKey = useMemo(
+    () => trainers.map((t: Trainer) => t.id).join(","),
+    [trainers],
+  );
+
   useEffect(() => {
-    if (trainers.length > 0) {
-      const selectedId = localSelectedId || 1;
-      setLocalSelectedId(selectedId);
-      setTimeout(() => {
-        const el = document.getElementById(`trainer-card-${selectedId}`);
-        if (el) {
-          el.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-            inline: "center",
-          });
-        }
-      }, 100);
-    }
-  }, [trainers]);
+    if (!trainersKey) return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`trainer-card-${resolvedId}`);
+      if (el) {
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
+      }
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, [trainersKey, resolvedId]);
 
   const handleSelectTrainer = (id: number) => {
-    console.log("[TrainerSelectionModal] Selecting trainer:", id);
-    setLocalSelectedId(id);
     onTrainerSelect?.(id);
     const el = document.getElementById(`trainer-card-${id}`);
     if (el) {
@@ -73,21 +71,20 @@ export default function TrainerSelectionModal({
 
   const handlePrev = () => {
     if (!trainers.length) return;
-    const idx = trainers.findIndex((t: Trainer) => t.id === localSelectedId);
+    const idx = trainers.findIndex((t: Trainer) => t.id === resolvedId);
     const prev = trainers[Math.max(0, idx - 1)];
     if (prev) handleSelectTrainer(prev.id);
   };
 
   const handleNext = () => {
     if (!trainers.length) return;
-    const idx = trainers.findIndex((t: Trainer) => t.id === localSelectedId);
+    const idx = trainers.findIndex((t: Trainer) => t.id === resolvedId);
     const next = trainers[Math.min(trainers.length - 1, idx + 1)];
     if (next) handleSelectTrainer(next.id);
   };
 
   return (
     <section aria-labelledby="trainer-selection-title" className="mt-8 px-2">
-      {/* Header */}
       <div className="mb-8">
         <h2
           id="trainer-selection-title"
@@ -101,10 +98,8 @@ export default function TrainerSelectionModal({
         </p>
       </div>
 
-      {/* Carousel */}
       <div className="mt-8 w-full">
         <div className="relative mx-auto w-full max-w-5xl">
-          {/* Left arrow */}
           <button
             aria-label="föregående tränare"
             onClick={handlePrev}
@@ -113,7 +108,6 @@ export default function TrainerSelectionModal({
             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
 
-          {/* Right arrow */}
           <button
             aria-label="nästa tränare"
             onClick={handleNext}
@@ -122,9 +116,7 @@ export default function TrainerSelectionModal({
             <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
 
-          {/* Carousel */}
           <div
-            ref={carouselRef}
             className="no-scrollbar flex snap-x snap-mandatory gap-3 sm:gap-4 md:gap-6 overflow-x-auto px-4 sm:px-6 md:px-12 py-6 scroll-smooth"
             role="listbox"
             aria-label="Trainer carousel"
@@ -145,12 +137,12 @@ export default function TrainerSelectionModal({
                   key={trainer.id}
                   className="snap-center flex-shrink-0"
                   role="option"
-                  aria-selected={localSelectedId === trainer.id}
+                  aria-selected={resolvedId === trainer.id}
                 >
                   <div className="h-full w-80 sm:w-96">
                     <TrainerCard
                       trainer={trainer}
-                      selected={localSelectedId === trainer.id}
+                      selected={resolvedId === trainer.id}
                       onSelect={() => handleSelectTrainer(trainer.id)}
                       onPlay={() => {
                         const trainerId = String(trainer.id);

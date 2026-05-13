@@ -22,5 +22,6 @@ export function useMyProfile() {
     },
     enabled: isLoaded && isSignedIn,
     staleTime: 1000 * 60 * 1, // 1 min cache
+    refetchOnWindowFocus: false,
   });
 }
