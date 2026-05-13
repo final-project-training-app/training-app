@@ -36,6 +36,8 @@ function formatTime(totalSeconds: number) {
   return `${minutes}:${seconds}`;
 }
 
+const SHOW_DEV_DEBUG = false;
+
 function ControlButton({
   label,
   children,
@@ -77,9 +79,11 @@ export function SessionCall({
   onClosePanel,
   onEnd,
 }: SessionCallProps) {
+
   return (
-    <main className="relative h-dvh overflow-hidden [background:var(--brand-call-background)]">
-      {import.meta.env.DEV && debugEvents.length > 0 ? (
+    <main className="relative h-full overflow-hidden [background:var(--brand-call-background)]">
+
+      {SHOW_DEV_DEBUG && import.meta.env.DEV && debugEvents.length > 0 ? (
         <div className="absolute left-3 top-3 z-20 max-h-52 w-[calc(100%-1.5rem)] max-w-sm overflow-hidden rounded-lg bg-black/75 p-3 font-mono text-[11px] leading-4 text-white shadow-lg">
           <div className="mb-1 font-sans text-xs font-bold">Dev debug</div>
           {debugEvents.slice(0, 8).map((event) => (
