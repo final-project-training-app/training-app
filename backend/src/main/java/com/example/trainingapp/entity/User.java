@@ -15,6 +15,7 @@ public class User {
     @Column(unique = true)
     private String clerkId;
     private String role;
+    private Long trainerId = 1L;
 
     public User() {
     }
@@ -25,6 +26,7 @@ public class User {
         this.context = context;
         this.clerkId = clerkId;
         this.role = "USER";
+        this.trainerId = 1L;
     }
 
     public Long getId() {
@@ -69,5 +71,13 @@ public class User {
 
     public String getRole() {
         return role;
+    }
+
+    public Long getTrainerId() {
+        return trainerId;
+    }
+
+    public void setTrainerId(Long trainerId) {
+        this.trainerId = trainerId;
     }
 }
