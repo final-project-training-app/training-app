@@ -1,5 +1,5 @@
 import { type FunctionResponse } from "@google/genai";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
 import { coachLiveTools, executeLiveToolCall } from "../ai-dev/live/tools";
@@ -54,7 +54,10 @@ export function useCoachSession(
     isLoading: isTrainerLoading,
     error: trainerError,
   } = useTrainer(options.trainerId ?? "1");
-  const sessionInstruction = buildSessionInstruction(options.session, trainer?.prompt);
+  const sessionInstruction = useMemo(
+    () => buildSessionInstruction(options.session, trainer?.prompt),
+    [options.session, trainer?.prompt],
+  );
 
   useEffect(() => {
     console.log("Trainer prompt:", trainer?.prompt);
@@ -421,8 +424,6 @@ export function useCoachSession(
       return;
     }
     try {
-      addDebugEvent("pre-play-sleep", "instructions 1000ms");
-
       addDebugEvent("play instructions", instructionsAudioUrl);
       await startSessionAudio(instructionsAudioUrl, {
         onEnded: () => {
@@ -521,8 +522,6 @@ export function useCoachSession(
     }
 
     try {
-      addDebugEvent("pre-play-sleep", "workout 1000ms");
-
       addDebugEvent("play workout", workoutAudioUrl);
       await startSessionAudio(workoutAudioUrl, {
         onEnded: async () => {
@@ -614,6 +613,7 @@ export function useCoachSession(
           JSON.stringify(feedbackResp?.response ?? {}),
         );
 
+        aiTurnStateRef.current = { started: false, complete: false };
         getSession()?.sendClientContent({
           turns: [
             {
@@ -627,6 +627,12 @@ export function useCoachSession(
           ],
           turnComplete: true,
         });
+
+        await waitForAIToFinishSpeaking(
+          () => aiTurnStateRef.current,
+          () => getAiPlaybackRemainingMs(),
+          { timeoutMs: 8000 },
+        );
       } catch (e) {
         addDebugEvent("create_feedback_failed", String(e));
         try {
@@ -659,6 +665,7 @@ export function useCoachSession(
       addDebugEvent,
       clearPendingCoachTimer,
       disconnectLive,
+      getAiPlaybackRemainingMs,
       getSession,
       setSessionStep,
     ],
