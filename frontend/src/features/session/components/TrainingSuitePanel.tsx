@@ -2,34 +2,14 @@ import { CalendarCheck, Flame, Trophy } from "lucide-react";
 import type { CompletedWorkout } from "../types";
 
 type TrainingSuitePanelProps = {
-  streakDays: number;
-  items: CompletedWorkout[];
+  streakDays?: number;
+  items?: CompletedWorkout[];
 };
-
-function EmptyState() {
-  return (
-    <div className="rounded-3xl bg-[#f4efff] px-4 py-5 text-center">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#5b3fd6]">
-        <Trophy size={24} strokeWidth={2.4} />
-      </div>
-
-      <p className="text-sm font-extrabold text-[#100b2f]">
-        Inga pass klara ännu
-      </p>
-
-      <p className="mt-1 text-sm font-semibold leading-snug text-[#6f6a93]">
-        När du gör klart pass kommer de synas här.
-      </p>
-    </div>
-  );
-}
 
 export function TrainingSuitePanel({
   streakDays,
   items,
 }: TrainingSuitePanelProps) {
-  const safeItems = items ?? [];
-
   return (
     <div className="space-y-4">
       <div className="rounded-3xl bg-[#f4efff] px-4 py-4">
@@ -44,15 +24,15 @@ export function TrainingSuitePanel({
             </p>
 
             <p className="mt-1 text-3xl font-extrabold leading-none text-[#100b2f]">
-              {streakDays ?? 0} dagar
+              {streakDays} dagar
             </p>
           </div>
         </div>
       </div>
 
       <div className="space-y-3">
-        {safeItems.length > 0 ? (
-          safeItems.map((item, index) => (
+        {items && items.length > 0 ? (
+          items.map((item, index) => (
             <div
               key={`${item.dateLabel}-${item.workoutName}-${index}`}
               className="flex items-start gap-3 rounded-3xl bg-[#f4efff] px-4 py-3"
@@ -73,7 +53,15 @@ export function TrainingSuitePanel({
             </div>
           ))
         ) : (
-          <EmptyState />
+          <div className="rounded-3xl bg-[#f4efff] px-4 py-5 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#5b3fd6]">
+              <Trophy size={24} strokeWidth={2.4} />
+            </div>
+
+            <p className="text-sm font-extrabold text-[#100b2f]">
+              completedWorkouts saknas eller är tom
+            </p>
+          </div>
         )}
       </div>
     </div>

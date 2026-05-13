@@ -67,35 +67,31 @@ export async function getCoachCallSession(
   return {
     id: workout.id,
 
-    // Backend field
     name: workout.name,
-
-    // Backwards-compatible frontend field
     workoutName: workout.name,
 
-    description: workout.description ?? null,
-    instructions: workout.instructions ?? "",
+    description: workout.description,
+    instructions: workout.description,
 
-    level: workout.level ?? null,
-    type: workout.type ?? null,
+    level: workout.level,
+    type: workout.type,
 
-    instructionsAudio: workout.instructionsAudio ?? null,
-    workoutAudio: workout.workoutAudio ?? null,
-    instructionsAudioUrl: workout.instructionsAudio ?? null,
-    workoutAudioUrl: workout.workoutAudio ?? null,
+    instructionsAudio: workout.instructionsAudio,
+    workoutAudio: workout.workoutAudio,
+    instructionsAudioUrl: workout.instructionsAudio,
+    workoutAudioUrl: workout.workoutAudio,
 
-    instructionsImage: workout.instructionsImage ?? null,
-    workoutImage: workout.workoutImage ?? null,
+    instructionsImage: workout.instructionsImage,
+    workoutImage: workout.workoutImage,
 
-    kneeFriendly: workout.kneeFriendly ?? false,
-    lowImpact: workout.lowImpact ?? false,
-    seated: workout.seated ?? false,
-    beginnerFriendly: workout.beginnerFriendly ?? false,
+    kneeFriendly: workout.kneeFriendly,
+    lowImpact: workout.lowImpact,
+    seated: workout.seated,
+    beginnerFriendly: workout.beginnerFriendly,
 
     durationSeconds: toDurationSeconds(workout),
 
-    
-    trainer: workout.trainer ?? null,
+    trainer: workout.trainer,
 
     userName: user.name,
     intensityLevel: user.intensityLevel,
