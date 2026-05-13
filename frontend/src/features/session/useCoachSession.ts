@@ -17,9 +17,6 @@ import {
   SESSION_CONTROL_TOOLS,
 } from "./coachPrompts";
 import {
-  type CoachSessionDebugEvent,
-  type CoachSessionStep,
-  type UseCoachSessionOptions,
   getModelText,
   getQueuedActionForStep,
   hasReadyAckPhrase,
@@ -27,6 +24,10 @@ import {
   readWorkoutFromResponse,
   sleep,
   waitForAIToFinishSpeaking,
+  type AITurnState,
+  type CoachSessionDebugEvent,
+  type CoachSessionStep,
+  type UseCoachSessionOptions,
 } from "./coachSessionHelpers";
 import { useTrainer } from "./query";
 
@@ -42,13 +43,17 @@ function buildSessionInstruction(trainerPrompt?: string | null) {
 }
 
 export function useCoachSession(
-  options: UseCoachSessionOptions & { trainerId: string },
+  options: UseCoachSessionOptions & {
+    trainerId?: string;
+    session: unknown;
+    autoplay?: boolean;
+  },
 ) {
   const {
     data: trainer,
     isLoading: isTrainerLoading,
     error: trainerError,
-  } = useTrainer(options.trainerId ?? 1);
+  } = useTrainer(options.trainerId ?? "1");
   const sessionInstruction = buildSessionInstruction(trainer?.prompt);
 
   useEffect(() => {
@@ -68,6 +73,11 @@ export function useCoachSession(
   const stepRef = useRef<CoachSessionStep>("idle");
   const selectedWorkoutRef = useRef<BackendWorkoutResponse | null>(null);
   const hasStartedRef = useRef(false);
+
+  const aiTurnStateRef = useRef<AITurnState>({
+    started: false,
+    complete: false,
+  });
 
   //──────────────────────
   // Stable callback refs
@@ -136,6 +146,7 @@ export function useCoachSession(
     connectionError,
     currentTurn,
     getSession,
+    getAiPlaybackRemainingMs,
   } = useGeminiLive({
     token,
     tools: [...liveTools, ...SESSION_CONTROL_TOOLS],
@@ -153,8 +164,19 @@ export function useCoachSession(
       //──────────────────────
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
+        addDebugEvent("waiting for AI to finish before starting instructions");
+        sleep(500);
+        const finished = await waitForAIToFinishSpeaking(
+          () => aiTurnStateRef.current,
+          () => getAiPlaybackRemainingMs(),
+          { timeoutMs: 5000 },
+        );
+
+        if (!finished) {
+          addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");
+        }
         addDebugEvent("tool-start-instructions", String(queuedAction));
-        await sleep(500);
+
         void startInstructionsRef.current();
         return {
           id: functionCall.id,
@@ -175,7 +197,17 @@ export function useCoachSession(
       if (name === "start_workout") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-workout", String(queuedAction));
+        addDebugEvent("waiting for AI to finish before starting instructions");
         await sleep(500);
+        const finished = await waitForAIToFinishSpeaking(
+          () => aiTurnStateRef.current,
+          () => getAiPlaybackRemainingMs(),
+          { timeoutMs: 5000 },
+        );
+
+        if (!finished) {
+          addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");
+        }
         void startWorkoutRef.current();
         return {
           id: functionCall.id,
@@ -226,6 +258,21 @@ export function useCoachSession(
     onMessage: (message) => {
       const modelText = getModelText(message);
 
+      if (modelText.trim().length > 0) {
+        aiTurnStateRef.current.started = true;
+      }
+
+      const generationFinished =
+        Boolean(message.serverContent?.turnComplete) ||
+        Boolean(message.serverContent?.generationComplete) ||
+        (messageHasEventType(message) &&
+          (message.event_type === "content.stop" ||
+            message.event_type === "interaction.complete"));
+
+      if (generationFinished) {
+        aiTurnStateRef.current.complete = true;
+      }
+
       //──────────────────────
       // Step 2a: Detect ready acknowledgement phrase
       //──────────────────────
@@ -270,6 +317,7 @@ export function useCoachSession(
   // Pause live audio capture
   //──────────────────────
   const pauseLive = useCallback(() => {
+    console.log("Pausing during ", currentTurn + "'s turn");
     addDebugEvent("pauseAI-called", stepRef.current);
     try {
       stopAudioCapture?.();
@@ -312,6 +360,8 @@ export function useCoachSession(
   //──────────────────────
   const sendCoachPrompt = useCallback(
     (text: string) => {
+      aiTurnStateRef.current = { started: false, complete: false };
+
       getSession()?.sendClientContent({
         turns: [{ role: "user", parts: [{ text }] }],
         turnComplete: true,
@@ -363,6 +413,7 @@ export function useCoachSession(
       return;
     }
 
+
     pauseLive();
     setSessionStep("playing_instructions");
 
@@ -374,10 +425,8 @@ export function useCoachSession(
       setSessionStep("error");
       return;
     }
-
     try {
       addDebugEvent("pre-play-sleep", "instructions 1000ms");
-      await sleep(1000);
 
       addDebugEvent("play instructions", instructionsAudioUrl);
       await startSessionAudio(instructionsAudioUrl, {
@@ -480,11 +529,6 @@ export function useCoachSession(
 
     try {
       addDebugEvent("pre-play-sleep", "workout 1000ms");
-      await waitForAIToFinishSpeaking(currentTurn, {
-        intervalMs: 100,
-        timeoutMs: 10000,
-      });
-      await sleep(1000);
 
       addDebugEvent("play workout", workoutAudioUrl);
       await startSessionAudio(workoutAudioUrl, {
@@ -597,7 +641,6 @@ export function useCoachSession(
     pauseLive,
     setSessionStep,
     addDebugEvent,
-    currentTurn,
     connectFreshLive,
     startAudioCapture,
     sendCoachPrompt,
@@ -639,10 +682,6 @@ export function useCoachSession(
           ],
           turnComplete: true,
         });
-        await waitForAIToFinishSpeaking(currentTurn, {
-          intervalMs: 100,
-          timeoutMs: 10000,
-        });
       } catch (e) {
         addDebugEvent("create_feedback_failed", String(e));
         try {
@@ -674,7 +713,6 @@ export function useCoachSession(
     [
       addDebugEvent,
       clearPendingCoachTimer,
-      currentTurn,
       disconnectLive,
       getSession,
       setSessionStep,
@@ -713,6 +751,10 @@ export function useCoachSession(
     };
   }, [clearPendingCoachTimer]);
 
+  useEffect(() => {
+    console.log("Current turn:", currentTurn, "coach step:", stepRef.current);
+  }, [currentTurn]);
+
   //──────────────────────
   // Auto-start on mount
   //──────────────────────
@@ -745,4 +787,11 @@ export function useCoachSession(
     isTrainerLoading,
     trainerError,
   };
+}
+
+/**
+ * Type guard for messages that may include an `event_type` property.
+ */
+function messageHasEventType(msg: unknown): msg is { event_type?: string } {
+  return typeof msg === "object" && msg !== null && "event_type" in msg;
 }
