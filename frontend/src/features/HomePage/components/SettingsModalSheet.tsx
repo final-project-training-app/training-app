@@ -65,6 +65,7 @@ function SettingsModalBody({
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
+  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const updateProfile = useUpdateProfile();
 
@@ -177,7 +178,7 @@ function SettingsModalBody({
           </section>
 
           <section className="mt-6">
-            <TrainerSelectionModal />
+            <TrainerSelectionModal onTrainerSelect={setSelectedTrainerId} />
           </section>
 
           <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
@@ -191,6 +192,7 @@ function SettingsModalBody({
                     name: fullName.trim() || DEFAULT_DISPLAY_NAME,
                     intensityLevel,
                     context,
+                    trainerId: selectedTrainerId || null,
                   },
                   {
                     onSuccess: () => {

@@ -1,40 +1,62 @@
+import { useAuth } from "@clerk/react";
+import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { fetchTrainersWithToken } from "../../../api/trainers";
 import TrainerCard from "./TrainerCard";
-import { useTrainers } from "../../../hooks/useTrainers";
 import { useVoicePlayer } from "../../../hooks/useVoicePlayer";
 
-export default function TrainerSelectionModal() {
-  const { data: trainers = [], isLoading } = useTrainers();
+type Trainer = {
+  id: number;
+  name: string;
+  imageSelect?: string | null;
+  voice?: string;
+  intro?: string;
+};
+
+export default function TrainerSelectionModal({
+  onTrainerSelect,
+  selectedTrainerId,
+}: {
+  onTrainerSelect?: (trainerId: number) => void;
+  selectedTrainerId?: number | null;
+}) {
+  const { getToken } = useAuth();
   const carouselRef = useRef<HTMLDivElement | null>(null);
-  const [selectedId, setSelectedId] = useState<string | number | null>(() => {
-    return trainers && trainers.length > 0 ? trainers[0]?.id ?? null : null;
-  });
+  const [localSelectedId, setLocalSelectedId] = useState<number | null>(selectedTrainerId ?? null);
   const { play, stop, loadingId, playingId } = useVoicePlayer();
 
-  const scrollToId = (id: string | number | null | undefined) => {
-    if (!id) return;
-    const el = document.getElementById(`trainer-card-${id}`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  };
+  const { data: trainers = [], isLoading } = useQuery({
+    queryKey: ["trainers"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("Not authenticated");
+      return fetchTrainersWithToken(token);
+    },
+    enabled: !!getToken(),
+  });
 
-  const handleSelectTrainer = (id: string | number) => {
-    setSelectedId(id);
-    scrollToId(id);
+  const handleSelectTrainer = (id: number) => {
+    setLocalSelectedId(id);
+    onTrainerSelect?.(id);
+    const el = document.getElementById(`trainer-card-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
   };
 
   const handlePrev = () => {
-    if (!trainers || trainers.length === 0) return;
-    const idx = trainers.findIndex((t) => t.id === selectedId);
+    if (!trainers.length) return;
+    const idx = trainers.findIndex((t) => t.id === localSelectedId);
     const prev = trainers[Math.max(0, idx - 1)];
-    if (prev) scrollToId(prev.id);
+    if (prev) handleSelectTrainer(prev.id);
   };
 
   const handleNext = () => {
-    if (!trainers || trainers.length === 0) return;
-    const idx = trainers.findIndex((t) => t.id === selectedId);
+    if (!trainers.length) return;
+    const idx = trainers.findIndex((t) => t.id === localSelectedId);
     const next = trainers[Math.min(trainers.length - 1, idx + 1)];
-    if (next) scrollToId(next.id);
+    if (next) handleSelectTrainer(next.id);
   };
 
   return (
@@ -84,25 +106,26 @@ export default function TrainerSelectionModal() {
                 </div>
                 <span className="text-[#6b59b2] font-medium">Hämtar tränare...</span>
               </div>
-            ) : trainers && trainers.length > 0 ? (
-              trainers.map((trainer) => (
+            ) : trainers.length > 0 ? (
+              trainers.map((trainer: Trainer) => (
                 <div
                   id={`trainer-card-${trainer.id}`}
                   key={trainer.id}
                   className="snap-center"
                   role="option"
-                  aria-selected={selectedId === trainer.id}
+                  aria-selected={localSelectedId === trainer.id}
                 >
                   <div className="h-full w-72">
                     <TrainerCard
                       trainer={trainer}
-                      selected={selectedId === trainer.id}
+                      selected={localSelectedId === trainer.id}
                       onSelect={() => handleSelectTrainer(trainer.id)}
                       onPlay={() => {
-                        if (playingId === String(trainer.id)) {
+                        const trainerId = String(trainer.id);
+                        if (playingId === trainerId) {
                           stop();
                         } else {
-                          play(String(trainer.id), trainer.voice_preview_url);
+                          play(trainerId, trainer.voice);
                         }
                       }}
                       loading={loadingId === String(trainer.id)}

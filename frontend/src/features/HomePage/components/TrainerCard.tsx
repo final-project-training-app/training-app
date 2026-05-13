@@ -1,6 +1,12 @@
 import React from 'react';
 import { Volume2, Loader, Square } from 'lucide-react';
-import type { Trainer } from '../../../hooks/useTrainers';
+
+type Trainer = {
+  id: number;
+  name: string;
+  imageSelect?: string | null;
+  voice?: string;
+};
 
 type Props = {
   trainer: Trainer;
@@ -15,18 +21,18 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
   return (
     <div
       onClick={onSelect}
-      className={`relative flex h-full w-72 cursor-pointer flex-col rounded-3xl transition-all duration-300 ease-out overflow-hidden
+      className={`relative flex h-full w-80 cursor-pointer flex-col rounded-3xl overflow-hidden transition-all duration-300 ease-out
         ${selected 
-          ? 'scale-105 bg-white shadow-2xl ring-2 ring-[#5c35c4]' 
+          ? 'scale-105 bg-white shadow-2xl ring-3 ring-[#5c35c4]' 
           : 'scale-95 bg-white shadow-lg opacity-85 hover:opacity-95'}`}
       aria-pressed={selected}
       role="button"
     >
       {/* Image container */}
-      <div className="relative h-60 w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff]">
-        {trainer.image_url ? (
+      <div className="relative h-72 w-full overflow-hidden bg-gradient-to-br from-[#f1ecff] to-[#e9e0ff]">
+        {trainer.imageSelect ? (
           <img
-            src={trainer.image_url}
+            src={trainer.imageSelect}
             alt={trainer.name}
             className="h-full w-full object-cover"
             loading="lazy"
@@ -34,21 +40,19 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#ddd2ff] to-[#c8bfeb]">
             <div className="text-center">
-              <div className="text-5xl">👤</div>
-              <div className="mt-2 text-sm font-medium text-[#6b59b2]">Ingen bild</div>
+              <div className="text-6xl">👤</div>
+              <div className="mt-3 text-sm font-medium text-[#6b59b2]">Ingen bild</div>
             </div>
           </div>
         )}
       </div>
 
       {/* Content container */}
-      <div className="flex flex-1 flex-col gap-4 p-5">
+      <div className="flex flex-1 flex-col gap-3 p-5">
         {/* Name and role */}
         <div>
           <h3 className="text-xl font-bold text-[#281d7a] leading-tight">{trainer.name}</h3>
-          {trainer.role && (
-            <p className="mt-1 text-sm font-semibold text-[#5c35c4]">{trainer.role}</p>
-          )}
+          <p className="mt-2 text-sm font-medium text-[#6b59b2]">Personlig tränare</p>
         </div>
 
         {/* Voice button */}
@@ -61,8 +65,8 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
             disabled={loading}
             className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150
               ${playing 
-                ? 'bg-[#e9deff] text-[#5c35c4] border border-[#5c35c4] hover:bg-[#ddd2ff]' 
-                : 'bg-[#f1ecff] text-[#5c35c4] border border-[#ddd2ff] hover:bg-[#e9e0ff]'}
+                ? 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200' 
+                : 'bg-[#f1ecff] text-[#3f2a7a] border border-[#ddd2ff] hover:bg-[#e9e0ff]'}
               ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {loading ? (

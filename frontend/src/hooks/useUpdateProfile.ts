@@ -9,6 +9,7 @@ type ProfileData = {
   name: string;
   intensityLevel: number;
   context: string;
+  trainerId?: number | null;
 };
 
 type ProfileResponse = ProfileData;
