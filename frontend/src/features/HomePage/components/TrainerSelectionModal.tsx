@@ -21,7 +21,7 @@ export default function TrainerSelectionModal({
   onTrainerSelect?: (trainerId: number) => void;
   selectedTrainerId?: number | null;
 }) {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [localSelectedId, setLocalSelectedId] = useState<number | null>(
     selectedTrainerId ?? 1,
@@ -35,7 +35,7 @@ export default function TrainerSelectionModal({
       if (!token) throw new Error("Not authenticated");
       return fetchTrainersWithToken(token);
     },
-    enabled: !!getToken(),
+    enabled: isSignedIn === true,
   });
 
   // Center selected trainer on mount or when trainers load, default to trainer 1
