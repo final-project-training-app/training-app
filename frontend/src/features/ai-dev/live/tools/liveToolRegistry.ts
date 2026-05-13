@@ -37,6 +37,14 @@ export const liveTools: ToolListUnion = [
   },
 ];
 
+export const coachLiveTools: ToolListUnion = [
+  {
+    functionDeclarations: liveToolDefinitions
+      .filter((tool) => tool.name !== "get_training_context")
+      .map((tool) => tool.declaration),
+  },
+];
+
 export async function executeLiveToolCall(
   functionCall: FunctionCall,
 ): Promise<FunctionResponse> {

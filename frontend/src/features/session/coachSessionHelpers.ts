@@ -12,8 +12,10 @@ export type CoachSessionStep =
   | "completed"
   | "error";
 
+import type { CoachCallSession } from "./types";
+
 export type UseCoachSessionOptions = {
-  session: unknown;
+  session: CoachCallSession;
   autoStart?: boolean;
 };
 

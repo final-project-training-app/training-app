@@ -2,7 +2,7 @@ import { type FunctionResponse } from "@google/genai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
-import { executeLiveToolCall, liveTools } from "../ai-dev/live/tools";
+import { coachLiveTools, executeLiveToolCall } from "../ai-dev/live/tools";
 import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
 import { getWorkoutEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
 import type { BackendWorkoutResponse } from "../ai-dev/live/tools/workout/workoutTypes";
@@ -13,9 +13,11 @@ import {
 } from "./audio";
 import {
   COACH_PROMPTS,
+  buildUserContext,
   liveSystemInstruction,
   SESSION_CONTROL_TOOLS,
 } from "./coachPrompts";
+import type { CoachCallSession } from "./types";
 import {
   getModelText,
   getQueuedActionForStep,
@@ -33,18 +35,17 @@ import { useTrainer } from "./query";
 //──────────────────────
 // Build system instruction
 //──────────────────────
-function buildSessionInstruction(trainerPrompt?: string | null) {
-  if (!trainerPrompt?.trim()) {
-    return liveSystemInstruction;
-  }
-
-  return `${liveSystemInstruction}\n\nTrainer prompt:\n${trainerPrompt.trim()}`;
+function buildSessionInstruction(session: CoachCallSession, trainerPrompt?: string | null) {
+  const userContext = buildUserContext(session);
+  const base = `${userContext} ${liveSystemInstruction}`;
+  if (!trainerPrompt?.trim()) return base;
+  return `${base}\n\nTrainer prompt:\n${trainerPrompt.trim()}`;
 }
 
 export function useCoachSession(
   options: UseCoachSessionOptions & {
     trainerId?: string;
-    session: unknown;
+    session: CoachCallSession;
     autoplay?: boolean;
   },
 ) {
@@ -53,7 +54,7 @@ export function useCoachSession(
     isLoading: isTrainerLoading,
     error: trainerError,
   } = useTrainer(options.trainerId ?? "1");
-  const sessionInstruction = buildSessionInstruction(trainer?.prompt);
+  const sessionInstruction = buildSessionInstruction(options.session, trainer?.prompt);
 
   useEffect(() => {
     console.log("Trainer prompt:", trainer?.prompt);
@@ -150,7 +151,7 @@ export function useCoachSession(
     getAiPlaybackRemainingMs,
   } = useGeminiLive({
     token,
-    tools: [...liveTools, ...SESSION_CONTROL_TOOLS],
+    tools: [...coachLiveTools, ...SESSION_CONTROL_TOOLS],
     systemInstruction: sessionInstruction,
 
     //──────────────────────

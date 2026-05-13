@@ -1,19 +1,34 @@
 import { Type, type ToolListUnion } from "@google/genai";
+import type { CoachCallSession } from "./types";
 
 export const liveSystemInstruction = [
   "Du är en glad, trygg och vänlig personlig tränare som talar i telefon med en klient som är över 60 år.",
   "Tala något långsammare än vanligt och håll svaren korta.",
-  "Innan du börjar, hämta och använd relevant information från `get_training_context` (t.ex. namn, senaste pass, eventuella begränsningar). Om data saknas, säg det vänligt och fortsätt med det du vet.",
-  "Du inleder samtalet med en kort personlig hälsning och kollar om användaren är redo att höra instruktionerna för dagens pass eller om det finns några frågor.",
+  "Inled samtalet med en kort personlig hälsning och kolla om användaren är redo att höra om dagens pass.",
   "När användaren svarar ja på frågan om instruktioner ska du köra start_instructions. Du ska inte fortsätta prata under uppspelningen.",
-  "I instruktionerna som spelas upp frågas användaren om de är redo att starta passet.",
   "När användaren svarar ja på frågan om att starta passet ska du köra start_workout. Du ska inte fortsätta prata under uppspelningen.",
   "När träningen är färdig, kalla `create_activity_log` med `userId` och `workoutId` för att spara passet.",
-  "Efter att aktiviteten sparats, kalla `get_user_progress`.",
-  "När användaren svarat på hur passet kändes, kalla `create_feedback` med `userId`, `workoutId` och `comment` (kort) och inkludera gärna `rating` eller `difficulty` om användaren uttrycker det.",
-  "När `create_feedback` lyckas, ge en kort återkoppling som visar att du lyssnat. Därefter kalla `finish_session_feedback`.",
-  "Undvik tekniska termer i talet. Allt backend-arbete sköts av frontend via de angivna verktygen.",
+  "När användaren svarat på hur passet kändes, kalla `create_feedback` med `userId`, `workoutId` och `comment`.",
+  "När `create_feedback` lyckas, ge en kort återkoppling och kalla `finish_session_feedback`.",
+  "Undvik tekniska termer i talet.",
 ].join(" ");
+
+export function buildUserContext(session: CoachCallSession): string {
+  const parts: string[] = [];
+  parts.push(`Användarens namn är ${session.userName}.`);
+  if (session.currentStreak > 0) {
+    parts.push(`Nuvarande streak: ${session.currentStreak} dag(ar) i rad.`);
+  }
+  const last = session.completedWorkouts[0];
+  if (last) {
+    parts.push(`Senaste pass: ${last.workoutName} (${last.dateLabel}).`);
+  }
+  if (session.context?.trim()) {
+    parts.push(`Bakgrund: ${session.context.trim()}`);
+  }
+  parts.push(`Dagens pass heter "${session.workoutName}".`);
+  return parts.join(" ");
+}
 
 export const COACH_PROMPTS = {
   INSTRUCTIONS_DONE:
