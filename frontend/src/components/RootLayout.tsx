@@ -4,7 +4,7 @@ import { Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 import fetchMyProfile from "../api/users";
 import { useCreateCurrentUserProfile } from "../features/auth/useCreateCurrentUserProfile";
-import { fetchTrainers, trainerKeys } from "../api/trainerService";
+import { fetchTrainers } from "../api/trainers";
 
 export default function RootLayout() {
   const queryClient = useQueryClient();
@@ -30,7 +30,7 @@ export default function RootLayout() {
       });
 
       await queryClient.prefetchQuery({
-        queryKey: trainerKeys.list(),
+        queryKey: ["trainers"],
         queryFn: () => fetchTrainers(),
       });
     })();

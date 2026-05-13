@@ -1,6 +1,6 @@
 import React from 'react';
 import { Volume2, Loader, Square } from 'lucide-react';
-import type { Trainer } from '../../../api/trainerService';
+import type { Trainer } from '../../../hooks/useTrainers';
 
 type Props = {
   trainer: Trainer;
@@ -47,7 +47,7 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
         <div>
           <h3 className="text-xl font-bold text-[#281d7a] leading-tight">{trainer.name}</h3>
           {trainer.role && (
-            <p className="mt-1 text-sm font-medium text-[#6b59b2]">{trainer.role}</p>
+            <p className="mt-1 text-sm font-semibold text-[#5c35c4]">{trainer.role}</p>
           )}
         </div>
 
@@ -61,8 +61,8 @@ function TrainerCardInner({ trainer, selected, onSelect, onPlay, loading, playin
             disabled={loading}
             className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150
               ${playing 
-                ? 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200' 
-                : 'bg-[#f1ecff] text-[#3f2a7a] border border-[#ddd2ff] hover:bg-[#e9e0ff]'}
+                ? 'bg-[#e9deff] text-[#5c35c4] border border-[#5c35c4] hover:bg-[#ddd2ff]' 
+                : 'bg-[#f1ecff] text-[#5c35c4] border border-[#ddd2ff] hover:bg-[#e9e0ff]'}
               ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {loading ? (
