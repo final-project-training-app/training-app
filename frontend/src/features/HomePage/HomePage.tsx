@@ -93,8 +93,22 @@ export default function HomePage() {
   }
 
   return (
-    <main className="relative flex h-[100svh] max-h-[100svh] items-center justify-center overflow-hidden bg-[#eee7fb] text-[#221447]">
-      {/* Auth / admin layer - stays relative to desktop viewport */}
+    <main
+      className="relative flex h-[100svh] max-h-[100svh] items-center justify-center overflow-hidden text-[#221447]"
+      style={{
+        backgroundColor: "#eee7fb",
+        backgroundImage: `
+      linear-gradient(
+        rgba(238, 231, 251, 0.88),
+        rgba(238, 231, 251, 0.88)
+      ),
+      url(${assets.background})
+    `,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <div className="fixed right-4 top-4 z-50">
         {!isLoaded ? null : isSignedIn ? (
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -128,7 +142,7 @@ export default function HomePage() {
 
       {/* This wrapper reserves the scaled size in the page */}
       <div
-        className="relative"
+        className="relative z-10"
         style={{
           width: DESIGN_WIDTH * stageScale,
           height: DESIGN_HEIGHT * stageScale,
@@ -149,7 +163,7 @@ export default function HomePage() {
             className="absolute inset-0 z-0 h-full w-full object-cover opacity-95"
           />
 
-          <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#eadfff]/60 via-[#d9ccf4]/35 to-[#f6f3fb]/88" />
+          <div className="absolute inset-0 z-[1]" />
 
           {/* Logo - locked position */}
           <div className="pointer-events-none absolute left-1/2 top-[22px] z-[2] w-[370px] -translate-x-1/2">
@@ -172,10 +186,9 @@ export default function HomePage() {
           </div>
 
           {/* Buttons - locked bottom */}
-          {/* White background behind buttons: full-width anchored to bottom, above trainer but under buttons */}
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[15]">
             <div
-              className={`absolute bottom-0 left-0 right-0 rounded-t-3xl bg-white  ${
+              className={`absolute bottom-0 left-0 right-0 rounded-t-3xl bg-white ${
                 isLoaded && isSignedIn ? "h-[140px]" : "h-[100px]"
               }`}
             />
