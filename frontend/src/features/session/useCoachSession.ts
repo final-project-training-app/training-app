@@ -168,7 +168,7 @@ export function useCoachSession(
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("waiting for AI to finish before starting instructions");
-        await sleep(1000);
+        await sleep(100);
         const finished = await waitForAIToFinishSpeaking(
           () => aiTurnStateRef.current,
           () => getAiPlaybackRemainingMs(),
@@ -202,7 +202,7 @@ export function useCoachSession(
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-workout", String(queuedAction));
         addDebugEvent("waiting for AI to finish before starting instructions");
-        await sleep(1000);
+        await sleep(100);
         const finished = await waitForAIToFinishSpeaking(
           () => aiTurnStateRef.current,
           () => getAiPlaybackRemainingMs(),
@@ -231,7 +231,7 @@ export function useCoachSession(
       // Step 1c: Finish session feedback
       //──────────────────────
       if (name === "finish_session_feedback") {
-        await sleep(1000);
+        await sleep(100);
         const finished = await waitForAIToFinishSpeaking(
           () => aiTurnStateRef.current,
           () => getAiPlaybackRemainingMs(),
@@ -488,8 +488,6 @@ export function useCoachSession(
       return;
     }
 
-    await sleep(250);
-
     setSessionStep("waiting_instruction_approval");
     sendCoachPrompt("Starta samtalet.");
   }, [
@@ -552,7 +550,6 @@ export function useCoachSession(
               if (!connected) return;
             }
 
-            await sleep(250);
             const started = await startAudioCapture();
             setAudioCapturing(started);
             addDebugEvent("mic after workout", started);
@@ -566,7 +563,6 @@ export function useCoachSession(
             addDebugEvent("activity save failed", String(e));
             const connected = await connectFreshLive();
             if (!connected) return;
-            await sleep(250);
             const started = await startAudioCapture();
             setAudioCapturing(started);
             addDebugEvent("mic after workout (fallback)", started);
@@ -650,7 +646,7 @@ export function useCoachSession(
             turnComplete: true,
           });
 
-          await sleep(1400);
+          await sleep(500);
         } catch {
           // ignore
         }
