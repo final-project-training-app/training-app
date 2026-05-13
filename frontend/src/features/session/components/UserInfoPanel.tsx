@@ -1,72 +1,59 @@
-import { Activity, MessageSquareText, UserRound } from "lucide-react";
+import { Gauge, MessageSquareText, UserRound } from "lucide-react";
 import type { CoachCallSession } from "../types";
+import {
+  AppSheetCard,
+  AppSheetLabel,
+  AppSheetValue,
+} from "../../../components/AppSheet";
 
 type UserInfoPanelProps = {
   session: CoachCallSession;
 };
 
-function InfoCard({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-3xl bg-[#f4efff] px-4 py-4">
-      <div className="mb-2 flex items-center gap-2 text-[#5b3fd6]">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white">
-          {icon}
-        </div>
-
-        <p className="text-sm font-extrabold uppercase tracking-wide">
-          {label}
-        </p>
-      </div>
-
-      {children}
-    </div>
-  );
-}
-
 export function UserInfoPanel({ session }: UserInfoPanelProps) {
-  const name = session.userName?.trim() || "Användare";
-
-  const intensity =
-    typeof session.intensityLevel === "number"
-      ? `Nivå ${session.intensityLevel}`
-      : "Ej valt";
-
-  const context =
-    session.context?.trim() || "Ingen träningskontext sparad ännu.";
-
   return (
-    <div className="space-y-4">
-      <InfoCard label="Namn" icon={<UserRound size={20} strokeWidth={2.4} />}>
-        <p className="text-lg font-extrabold leading-snug text-[#100b2f]">
-          {name}
-        </p>
-      </InfoCard>
+    <div className="space-y-3">
+      <AppSheetCard>
+        <div className="flex gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#5b3fd6]">
+            <UserRound size={22} strokeWidth={2.4} />
+          </div>
 
-      <InfoCard
-        label="Intensitet"
-        icon={<Activity size={20} strokeWidth={2.4} />}
-      >
-        <p className="text-lg font-extrabold leading-snug text-[#100b2f]">
-          {intensity}
-        </p>
-      </InfoCard>
+          <div className="min-w-0">
+            <AppSheetLabel>Namn</AppSheetLabel>
+            <AppSheetValue>{session.userName}</AppSheetValue>
+          </div>
+        </div>
+      </AppSheetCard>
 
-      <InfoCard
-        label="Träningskontext"
-        icon={<MessageSquareText size={20} strokeWidth={2.4} />}
-      >
-        <p className="whitespace-pre-line text-[15px] font-semibold leading-relaxed text-[#33295e]">
-          {context}
-        </p>
-      </InfoCard>
+      <AppSheetCard>
+        <div className="flex gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#5b3fd6]">
+            <Gauge size={22} strokeWidth={2.4} />
+          </div>
+
+          <div className="min-w-0">
+            <AppSheetLabel>Intensitet</AppSheetLabel>
+            <AppSheetValue>Nivå {session.intensityLevel}</AppSheetValue>
+          </div>
+        </div>
+      </AppSheetCard>
+
+      <AppSheetCard>
+        <div className="flex gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#5b3fd6]">
+            <MessageSquareText size={22} strokeWidth={2.4} />
+          </div>
+
+          <div className="min-w-0">
+            <AppSheetLabel>Kontext</AppSheetLabel>
+
+            <p className="mt-2 whitespace-pre-line text-[15px] font-semibold leading-relaxed text-[#33295e]">
+              {session.context}
+            </p>
+          </div>
+        </div>
+      </AppSheetCard>
     </div>
   );
 }

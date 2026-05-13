@@ -10,6 +10,7 @@ import {
 import { useState, type ReactNode } from "react";
 import type { CoachCallSession, SessionPanel } from "../types";
 import { SessionInfoPanel } from "./SessionInfoPanel";
+import SettingsModalSheet from "../../HomePage/components/SettingsModalSheet";
 import type { CoachSessionDebugEvent } from "../coachSessionHelpers";
 
 type SessionCallProps = {
@@ -111,6 +112,7 @@ export function SessionCall({
 }: SessionCallProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const trainerName = getTrainerName(session);
   const trainerImage = getTrainerImage(session);
@@ -137,7 +139,6 @@ export function SessionCall({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#f7f1ff_0%,#fffaff_58%,#fbf8ff_100%)]" />
 
       <div className="relative z-10 flex h-full w-full flex-col px-6 pb-7 pt-12">
-        {/* Trainer identity */}
         <section className="flex flex-col items-center text-center">
           <div className="mb-5 flex h-[210px] w-[210px] items-center justify-center rounded-full bg-[#f0e9ff]">
             {trainerImage ? (
@@ -170,7 +171,6 @@ export function SessionCall({
           </p>
         </section>
 
-        {/* Call controls */}
         <section className="mt-9 grid grid-cols-3 justify-items-center gap-x-3 gap-y-8">
           <ControlButton
             label={isMuted ? "Ljud av" : "Ljud på"}
@@ -180,7 +180,10 @@ export function SessionCall({
             <MicOff size={36} strokeWidth={1.5} />
           </ControlButton>
 
-          <ControlButton label="Inställningar">
+          <ControlButton
+            label="Inställningar"
+            onClick={() => setSettingsOpen(true)}
+          >
             <Settings size={36} strokeWidth={1.5} />
           </ControlButton>
 
@@ -207,7 +210,6 @@ export function SessionCall({
 
         <div className="flex-1" />
 
-        {/* End call */}
         <button
           type="button"
           onClick={onEnd}
@@ -228,6 +230,8 @@ export function SessionCall({
           onClose={onClosePanel}
         />
       ) : null}
+
+      <SettingsModalSheet open={settingsOpen} setOpen={setSettingsOpen} />
     </main>
   );
 }
