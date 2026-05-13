@@ -254,19 +254,19 @@ export const useGeminiLive = ({
 
           // AI IS CURRENTLY SENDING AUDIO (Data Layer speaking)
           if (content.modelTurn?.parts?.some((p) => p.inlineData)) {
+            console.debug("[GeminiLive] turn→gemini: audio data received");
             setCurrentTurn("gemini");
           }
 
           // AI HAS FINISHED SENDING DATA
           if (content.turnComplete) {
-            // Note: The AI might have finished sending bytes,
-            // but your AudioContext is still playing the buffer.
+            console.debug("[GeminiLive] turn→user: turnComplete");
             setCurrentTurn("user");
           }
 
           // AI WAS INTERRUPTED
           if (content.interrupted) {
-            // Stop local playback immediately if Gemini was cut off
+            console.debug("[GeminiLive] turn→user: interrupted");
             aiPlayheadRef.current = 0;
             playingUntilWallMsRef.current = 0;
             setCurrentTurn("user");
@@ -523,6 +523,10 @@ export const useGeminiLive = ({
         sessionRef.current?.sendRealtimeInput({
           audio: { data: base64, mimeType: `audio/pcm;rate=${SAMPLE_RATE}` },
         });
+
+        if (rms > 0.01) {
+          console.debug("[GeminiLive] mic→gemini rms:", rms.toFixed(4));
+        }
 
         statsRef.current.chunksThisSecond++;
         statsRef.current.bytesThisSecond += pcm16.byteLength;
