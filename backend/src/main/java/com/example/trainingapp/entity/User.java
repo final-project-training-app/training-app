@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 @Table(name = "users")
 public class User {
 
+    private static final Long DEFAULT_TRAINER_ID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -16,7 +18,6 @@ public class User {
     private String clerkId;
     private String role;
     private Long trainerId;
-    final Long DEFAULT_TRAINER_ID = 1L;
 
     public User() {
     }
@@ -27,7 +28,7 @@ public class User {
         this.context = context;
         this.clerkId = clerkId;
         this.role = "USER";
-        this.trainerId = 1L;
+        this.trainerId = DEFAULT_TRAINER_ID;
     }
 
     public Long getId() {
