@@ -20,14 +20,6 @@ export const liveSystemInstruction = [
 export const READY_ACK_PHRASE = "vad bra! nu kör vi igång";
 
 export const COACH_PROMPTS = {
-  ASK_PLAY_INSTRUCTIONS: (name: string) =>
-    joinPrompt(
-      `Vi har ett kort träningspass: "${name}".`,
-      "Vill du att jag spelar instruktionerna?",
-      "Fråga: 'Okej — är du nu redo att köra igång med träningen?'",
-      "När användaren svarar ja, säg exakt 'Vad bra! Nu kör vi igång.' och kalla start_instructions.",
-    ),
-
   INSTRUCTIONS_DONE: joinPrompt(
     "Instruktionerna är klara.",
     "Fråga: 'Okej — är du nu redo att köra igång med träningen?'",

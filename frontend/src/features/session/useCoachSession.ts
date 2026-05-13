@@ -1,13 +1,8 @@
-import {
-  type FunctionResponse
-} from "@google/genai";
+import { type FunctionResponse } from "@google/genai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
-import {
-  executeLiveToolCall,
-  liveTools,
-} from "../ai-dev/live/tools";
+import { executeLiveToolCall, liveTools } from "../ai-dev/live/tools";
 import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
 import { getWorkoutEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
 import type { BackendWorkoutResponse } from "../ai-dev/live/tools/workout/workoutTypes";
@@ -19,7 +14,7 @@ import {
 import {
   COACH_PROMPTS,
   liveSystemInstruction,
-  SESSION_CONTROL_TOOLS
+  SESSION_CONTROL_TOOLS,
 } from "./coachPrompts";
 import {
   type CoachSessionDebugEvent,
@@ -32,9 +27,6 @@ import {
   readWorkoutFromResponse,
   sleep,
 } from "./coachSessionHelpers";
-
-
-
 
 //──────────────────────
 // Build system instruction
@@ -235,17 +227,11 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       // Step 2b: Advance after intro turn completes
       //──────────────────────
       if (
-        (
-          // stepRef.current === "choosing_workout" ||
-          stepRef.current === "live_intro"
-        ) &&
+        // stepRef.current === "choosing_workout" ||
+        stepRef.current === "live_intro" &&
         message.serverContent?.turnComplete
       ) {
-        if (selectedWorkoutRef.current) {
-          setSessionStep("waiting_instruction_approval");
-        } else {
-          sendCoachPrompt(COACH_PROMPTS.ASK_PLAY_INSTRUCTIONS("workout"));
-        }
+        setSessionStep("waiting_instruction_approval");
       }
     },
   });
@@ -407,7 +393,7 @@ export function useCoachSession(options: UseCoachSessionOptions) {
       return;
     }
 
-    const workoutResp = await getWorkoutEndpoint(1).catch(() => null);
+    const workoutResp = await getWorkoutEndpoint(17).catch(() => null);
     if (!workoutResp || !workoutResp.ok) {
       setError(COACH_PROMPTS.NO_WORKOUT_ERROR);
       setSessionStep("error");
@@ -438,12 +424,10 @@ export function useCoachSession(options: UseCoachSessionOptions) {
     await sleep(250);
 
     setSessionStep("waiting_instruction_approval");
-    sendCoachPrompt(COACH_PROMPTS.ASK_PLAY_INSTRUCTIONS(workout.name));
   }, [
     addDebugEvent,
     geminiConnect,
     loadToken,
-    sendCoachPrompt,
     setSessionStep,
     startAudioCapture,
   ]);
@@ -617,14 +601,21 @@ export function useCoachSession(options: UseCoachSessionOptions) {
           JSON.stringify(feedbackResp?.response ?? {}),
         );
 
-        const closing = COACH_PROMPTS.FEEDBACK_SAVED;
-
         getSession()?.sendClientContent({
-          turns: [{ role: "user", parts: [{ text: `Säg exakt: '${closing}'` }] }],
+          turns: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: "Nu är passet och feedbacken sparad. Avsluta samtalet på ett varmt och naturligt sätt. Byt ett par sista ord med användaren och säg hej då.",
+                },
+              ],
+            },
+          ],
           turnComplete: true,
         });
 
-        await sleep(1800);
+        await sleep(8000);
       } catch (e) {
         addDebugEvent("create_feedback_failed", String(e));
         try {

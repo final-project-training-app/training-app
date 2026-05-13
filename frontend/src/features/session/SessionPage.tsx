@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SessionCall } from "./components/SessionCall";
 import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
@@ -78,6 +78,12 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     session,
     autoStart: true,
   });
+
+  useEffect(() => {
+    if (step !== "completed") return;
+    const timer = setTimeout(() => void navigate({ to: "/" }), 3000);
+    return () => clearTimeout(timer);
+  }, [step, navigate]);
 
   function handleEnd() {
     endSession();
