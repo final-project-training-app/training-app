@@ -253,8 +253,6 @@ export const useGeminiLive = ({
       });
 
       async function handleLiveMessage(message: LiveServerMessage) {
-        // console.debug("[GeminiLive] message:", message);
-
         if (message.serverContent) {
           const content = message.serverContent;
 
@@ -296,13 +294,6 @@ export const useGeminiLive = ({
           if (!b64) continue;
 
           const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-          /*  console.debug(
-            "[GeminiLive] audio part:",
-            part.inlineData?.mimeType ?? "(unknown mime)",
-            "bytes:",
-            bytes.byteLength,
-          );
-          */
           onAudioRef.current?.(bytes.buffer);
           if (!suppressAiAudioRef.current) {
             void playAiPcm16(bytes.buffer);
@@ -549,19 +540,6 @@ export const useGeminiLive = ({
       setCurrentTurn("user");
 
       statsIntervalRef.current = setInterval(() => {
-        /*  const s = statsRef.current;
-      console.table({
-          "input sample rate (Hz)": { value: s.inputSampleRate },
-          "output sample rate (Hz)": { value: s.outputSampleRate },
-          channels: { value: s.channels },
-          "chunk size (samples)": { value: s.chunkSizeSamples },
-          "chunk size (ms)": { value: s.chunkSizeMs.toFixed(1) },
-          "chunks / sec": { value: s.chunksThisSecond },
-          "bytes / sec": { value: s.bytesThisSecond },
-          "dropped silent chunks": { value: s.droppedSilentChunks },
-          "total bytes sent": { value: s.totalBytesSent },
-        });
-        */
         statsRef.current.chunksThisSecond = 0;
         statsRef.current.bytesThisSecond = 0;
       }, 1000);

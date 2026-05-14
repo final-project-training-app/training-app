@@ -1,5 +1,5 @@
 import { Type, type ToolListUnion } from "@google/genai";
-import type { CoachCallSession } from "./types";
+import type { CoachCallSession } from "../session/types";
 
 export const liveSystemInstruction = [
   "Du är en glad, trygg och vänlig personlig tränare som talar i telefon med en klient som är över 60 år.",
@@ -25,7 +25,7 @@ export function buildUserContext(session: CoachCallSession): string {
   if (session.context?.trim()) {
     parts.push(`Bakgrund: ${session.context.trim()}`);
   }
-  parts.push(`Dagens pass heter "${session.workoutName}".`);
+  parts.push(`Dagens pass heter "${session.workoutName ?? session.name}".`);
   return parts.join(" ");
 }
 
