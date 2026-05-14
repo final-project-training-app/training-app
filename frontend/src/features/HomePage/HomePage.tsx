@@ -23,6 +23,8 @@ const assets = {
   background: "/start-page/background.webp",
   logo: "/start-page/logo.png",
 };
+import useCurrentUser from "../../hooks/useCurrentUser";
+import useCurrentWorkout from "../../hooks/useCurrentWorkout";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -30,11 +32,18 @@ export default function HomePage() {
   const [open, setOpen] = useState(false);
   const { isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
+  const { userId } = useCurrentUser();
+  const {currentWorkout} = useCurrentWorkout();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
-    void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
-  }, [isLoaded, isSignedIn, queryClient]);
+    if (!isLoaded || !isSignedIn) {
+      return;
+    }
+    if (userId) {
+      console.log("Prefetching coach call session for userId =", userId);
+      void queryClient.prefetchQuery(coachCallSessionQueryOptions(currentWorkout ?? "1", userId));
+    }
+  }, [isLoaded, isSignedIn, queryClient, userId, currentWorkout]);
 
   async function primeMicrophonePermission() {
     if (!navigator.mediaDevices?.getUserMedia) return;
@@ -48,11 +57,17 @@ export default function HomePage() {
   }
 
   async function handleStartCall() {
+    if (!userId) {
+      console.log("User is undefined");
+      return;
+    }
+    console.log("Starting call for userId =", userId);
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
 
-    const queryOptions = coachCallSessionQueryOptions("1");
+    const queryOptions = coachCallSessionQueryOptions(currentWorkout ?? "1", userId);
+
     const cachedSession = queryClient.getQueryData<CoachCallSession>(
       queryOptions.queryKey,
     );
@@ -63,7 +78,7 @@ export default function HomePage() {
 
     if (!session) return;
 
-    navigate({ to: "/session/$workoutId", params: { workoutId: "1" } });
+    navigate({ to: "/session/$workoutId", params: { workoutId: currentWorkout ?? "1" } });
   }
 
   return (

@@ -29,15 +29,19 @@ import {
   type UseCoachSessionOptions,
 } from "./helpers";
 import { useTrainer } from "../session/query";
+import useCurrentUser from "../../hooks/useCurrentUser";
 
 //──────────────────────
 // Build system instruction
 //──────────────────────
-function buildSessionInstruction(session: CoachCallSession, trainerPrompt?: string | null) {
+function buildSessionInstruction(
+  session: CoachCallSession,
+  trainerPrompt?: string | null,
+) {
   const userContext = buildUserContext(session);
   const base = `${userContext} ${liveSystemInstruction}`;
   if (!trainerPrompt?.trim()) return base;
-  return `${base}\n\nTrainer prompt:\n${trainerPrompt.trim()}`;
+  return `Trainer prompt:\n${trainerPrompt.trim()}\n\n${base}`;
 }
 
 export function useCoachSession(
@@ -48,6 +52,7 @@ export function useCoachSession(
 ) {
   const { session, autoStart = true } = options;
 
+  const { userId, voice, coachPrompt } = useCurrentUser();
   const {
     data: trainer,
     isLoading: isTrainerLoading,
@@ -55,13 +60,13 @@ export function useCoachSession(
   } = useTrainer(options.trainerId ?? "1");
 
   const sessionInstruction = useMemo(
-    () => buildSessionInstruction(session, trainer?.prompt),
-    [session, trainer?.prompt],
+    () => buildSessionInstruction(session, coachPrompt),
+    [session, coachPrompt],
   );
 
   useEffect(() => {
-    console.log("Trainer prompt:", trainer?.prompt);
-  }, [trainer?.prompt]);
+    console.log("Coach prompt:", coachPrompt);
+  }, [coachPrompt]);
 
   const [step, setStep] = useState<CoachSessionStep>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -148,6 +153,7 @@ export function useCoachSession(
     token,
     tools: [...coachLiveTools, ...SESSION_CONTROL_TOOLS],
     systemInstruction: sessionInstruction,
+    voice: voice,
 
     //──────────────────────
     // Handle Gemini tool calls
@@ -290,7 +296,7 @@ export function useCoachSession(
       console.warn("pauseLive failed", e);
     }
     setAudioCapturing(false);
-  }, [addDebugEvent, stopAudioCapture]);
+  }, [addDebugEvent, currentTurn, stopAudioCapture]);
 
   //──────────────────────
   // Disconnect live session
@@ -382,7 +388,8 @@ export function useCoachSession(
     pauseLive();
     setSessionStep("playing_instructions");
 
-    const instructionsAudioUrl = session.instructionsAudio ?? session.instructionsAudioUrl;
+    const instructionsAudioUrl =
+      session.instructionsAudio ?? session.instructionsAudioUrl;
 
     if (!instructionsAudioUrl) {
       setError(COACH_PROMPTS.NO_INSTRUCTIONS_AUDIO);
@@ -403,7 +410,14 @@ export function useCoachSession(
       setError("Kunde inte spela upp instruktionerna.");
       setSessionStep("error");
     }
-  }, [addDebugEvent, askIfReadyForWorkout, pauseLive, session.instructionsAudio, session.instructionsAudioUrl, setSessionStep]);
+  }, [
+    addDebugEvent,
+    askIfReadyForWorkout,
+    pauseLive,
+    session.instructionsAudio,
+    session.instructionsAudioUrl,
+    setSessionStep,
+  ]);
 
   //──────────────────────
   // Start session
@@ -427,7 +441,9 @@ export function useCoachSession(
       return;
     }
 
-    preloadSessionAudio(session.instructionsAudio ?? session.instructionsAudioUrl);
+    preloadSessionAudio(
+      session.instructionsAudio ?? session.instructionsAudioUrl,
+    );
     preloadSessionAudio(session.workoutAudio ?? session.workoutAudioUrl);
 
     await geminiConnect(freshToken);
@@ -490,11 +506,12 @@ export function useCoachSession(
           setSessionStep("collecting_feedback");
 
           try {
-            const workoutId = typeof session.id === "number" ? session.id : null;
+            const workoutId =
+              typeof session.id === "number" ? session.id : null;
 
             const activityResult = await executeLiveToolCall({
               name: "create_activity_log",
-              args: { userId: fixedLiveUserId, workoutId },
+              args: { userId: userId, workoutId },
             });
 
             addDebugEvent(
@@ -534,16 +551,17 @@ export function useCoachSession(
       setSessionStep("error");
     }
   }, [
-    allowAiOutput,
     pauseLive,
     setSessionStep,
-    addDebugEvent,
-    connectFreshLive,
-    getSession,
     session.workoutAudio,
     session.workoutAudioUrl,
     session.id,
+    addDebugEvent,
+    allowAiOutput,
+    userId,
+    getSession,
     startAudioCapture,
+    connectFreshLive,
   ]);
 
   //──────────────────────
@@ -671,6 +689,9 @@ export function useCoachSession(
     console.log("Current turn:", currentTurn, "coach step:", stepRef.current);
   }, [currentTurn]);
 
+  // must be declared before usage in the auto-start effect
+  const canStartLive = Boolean(voice && trainer?.prompt && !isTrainerLoading);
+
   //──────────────────────
   // Auto-start on mount
   //──────────────────────
@@ -678,13 +699,16 @@ export function useCoachSession(
     if (!autoStart) {
       return;
     }
+    if (!canStartLive) {
+      return; // wait until voice + trainer data is ready
+    }
 
     const timeout = window.setTimeout(() => {
       void startSession();
     }, 0);
 
     return () => window.clearTimeout(timeout);
-  }, [autoStart, startSession]);
+  }, [autoStart, canStartLive, startSession]);
 
   return {
     step,

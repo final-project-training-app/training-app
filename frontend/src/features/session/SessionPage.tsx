@@ -5,16 +5,18 @@ import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
 import { useCoachSession } from "../ai-conversation";
 import type { CoachSessionStep } from "../ai-conversation";
+import useCurrentUser from "../../hooks/useCurrentUser";
 
 export function SessionPage() {
   const { workoutId } = useParams({ from: "/session/$workoutId" });
+  const { userId } = useCurrentUser();
 
   const {
     data: session,
     isLoading,
     isError,
     error,
-  } = useCoachCallSession(workoutId);
+  } = useCoachCallSession(workoutId, userId);
 
   if (isLoading) {
     return (
@@ -62,7 +64,6 @@ function getCoachStatusLabel(step: CoachSessionStep) {
   }
 }
 
-
 function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
@@ -95,7 +96,6 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   function togglePanel(panel: Exclude<SessionPanel, "none">) {
     setActivePanel((current) => (current === panel ? "none" : panel));
   }
-
 
   return (
     <>

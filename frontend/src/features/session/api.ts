@@ -1,30 +1,8 @@
 import { getJson } from "../../lib/api/fetcher";
-import type { CoachCallSession, Trainer } from "./types";
+import type { BackendWorkoutResponse } from "../ai-conversation/tools/workout/workoutTypes";
+import type { CoachCallSession, } from "./types";
 
-type BackendWorkoutResponse = {
-  id: number;
-  name: string;
-  description?: string | null;
-  instructions?: string | null;
 
-  level?: number | string | null;
-  type?: string | null;
-
-  instructionsAudio?: string | null;
-  workoutAudio?: string | null;
-  instructionsImage?: string | null;
-  workoutImage?: string | null;
-
-  durationMinutes?: number | null;
-  durationSeconds?: number | null;
-
-  kneeFriendly?: boolean;
-  lowImpact?: boolean;
-  seated?: boolean;
-  beginnerFriendly?: boolean;
-
-  trainer?: Trainer | null;
-};
 export type BackendTrainerResponse = {
   id: number;
   name: string;
@@ -52,7 +30,6 @@ type BackendUserResponse = {
   context: string;
 };
 
-const currentUserId = "6";
 
 function toDurationSeconds(workout: BackendWorkoutResponse) {
   if (typeof workout.durationSeconds === "number") {
@@ -76,13 +53,19 @@ export async function getTrainer(
   return await getJson<BackendTrainerResponse>(`/api/trainers/${trainerId}`);
 }
 
+export async function getWorkouts(): Promise<BackendWorkoutResponse[]> {
+  return await getJson<BackendWorkoutResponse[]>(`/api/workouts`);
+}
+
 export async function getCoachCallSession(
   workoutId: string,
+  userId: string,
 ): Promise<CoachCallSession> {
+  console.log("Fetching coach call session for workoutId=", workoutId, "and userId=", userId);
   const [workout, progress, user] = await Promise.all([
     getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`),
-    getJson<BackendProgressResponse>(`/api/users/${currentUserId}/progress`),
-    getJson<BackendUserResponse>(`/api/users/${currentUserId}`),
+    getJson<BackendProgressResponse>(`/api/users/${userId}/progress`),
+    getJson<BackendUserResponse>(`/api/users/${userId}`),
   ]);
 
   return {
