@@ -62,9 +62,6 @@ function getCoachStatusLabel(step: CoachSessionStep) {
   }
 }
 
-function getWorkoutName(session: CoachCallSession) {
-  return session.name ?? session.workoutName ?? "Träningspass";
-}
 
 function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
@@ -100,7 +97,6 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     setActivePanel((current) => (current === panel ? "none" : panel));
   }
 
-  const workoutName = selectedWorkout?.name ?? getWorkoutName(session);
 
   return (
     <>
