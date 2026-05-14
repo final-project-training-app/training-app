@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGeminiLive } from "../../hooks/useGeminiLive";
 import { useLiveToken } from "../../hooks/useLiveToken";
 import { coachLiveTools, executeLiveToolCall } from "../ai-dev/live/tools";
+import { stopRingback } from "./ringback";
 import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
 import { getWorkoutEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
 import type { BackendWorkoutResponse } from "../ai-dev/live/tools/workout/workoutTypes";
@@ -279,6 +280,7 @@ export function useCoachSession(
         aiTurnStateRef.current.started = true;
       }
 
+
       const generationFinished =
         Boolean(message.serverContent?.turnComplete) ||
         Boolean(message.serverContent?.generationComplete) ||
@@ -489,6 +491,7 @@ export function useCoachSession(
       return;
     }
 
+    stopRingback();
     setSessionStep("waiting_instruction_approval");
     sendCoachPrompt("Starta samtalet.");
   }, [
@@ -684,6 +687,7 @@ export function useCoachSession(
   // Manual end session
   //──────────────────────
   const endSession = useCallback(() => {
+    stopRingback();
     clearPendingCoachTimer();
     addDebugEvent("manual end");
     stopSessionAudio();

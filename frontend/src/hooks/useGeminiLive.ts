@@ -25,6 +25,7 @@ interface UseGeminiLiveProps {
   onAudioData?: (data: ArrayBuffer) => void;
   onMessage?: (message: LiveServerMessage) => void;
   onToolCall?: (functionCall: FunctionCall) => Promise<FunctionResponse>;
+  onFirstAiAudio?: () => void;
 }
 
 interface DebugStats {
@@ -57,6 +58,7 @@ export const useGeminiLive = ({
   onAudioData,
   onMessage,
   onToolCall,
+  onFirstAiAudio,
 }: UseGeminiLiveProps) => {
   const [isActive, setIsActive] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -77,6 +79,8 @@ export const useGeminiLive = ({
   const autoReconnectDisabledRef = useRef(false);
   const suppressAiAudioRef = useRef(false);
   const currentRmsRef = useRef(0);
+  const onFirstAiAudioRef = useRef(onFirstAiAudio);
+  const firstAiAudioFiredRef = useRef(false);
 
   useEffect(() => {
     tokenRef.current = token;
@@ -85,6 +89,7 @@ export const useGeminiLive = ({
     onAudioRef.current = onAudioData;
     onMessageRef.current = onMessage;
     onToolCallRef.current = onToolCall;
+    onFirstAiAudioRef.current = onFirstAiAudio;
   }, [token, tools, systemInstruction, onAudioData, onMessage, onToolCall]);
 
   async function handleToolCalls(functionCalls: FunctionCall[]) {
@@ -132,6 +137,7 @@ export const useGeminiLive = ({
 
     // If a manual connect is requested, allow auto-reconnect again.
     autoReconnectDisabledRef.current = false;
+    firstAiAudioFiredRef.current = false;
 
     // Prevent parallel connects
     if (connectingRef.current) {
@@ -256,6 +262,10 @@ export const useGeminiLive = ({
           if (content.modelTurn?.parts?.some((p) => p.inlineData)) {
             console.debug("[GeminiLive] turn→gemini: audio data received");
             setCurrentTurn("gemini");
+            if (!firstAiAudioFiredRef.current) {
+              firstAiAudioFiredRef.current = true;
+              onFirstAiAudioRef.current?.();
+            }
           }
 
           // AI HAS FINISHED SENDING DATA

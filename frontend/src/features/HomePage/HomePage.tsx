@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Phone, Settings } from "lucide-react";
 import coachHeroImage from "../../assets/image.png";
 import { primeSessionAudio } from "../session/audio";
+import { startRingback } from "../session/ringback";
 import { coachCallSessionQueryOptions } from "../session/query";
 import type { CoachCallSession } from "../session/types";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
@@ -39,6 +40,7 @@ export default function HomePage() {
   }
 
   async function handleStartCall() {
+    startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
 

@@ -38,7 +38,7 @@ type BackendUserResponse = {
   context: string;
 };
 
-const currentUserId = "1";
+const currentUserId = "6";
 
 function toDurationSeconds(durationMinutes?: number | null) {
   return durationMinutes ? durationMinutes * 60 : 0;
@@ -48,7 +48,9 @@ export async function getTrainers(): Promise<BackendTrainerResponse[]> {
   return await getJson<BackendTrainerResponse[]>(`/api/trainers`);
 }
 
-export async function getTrainer(trainerId: string): Promise<BackendTrainerResponse> {
+export async function getTrainer(
+  trainerId: string,
+): Promise<BackendTrainerResponse> {
   return await getJson<BackendTrainerResponse>(`/api/trainers/${trainerId}`);
 }
 
