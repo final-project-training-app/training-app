@@ -35,15 +35,10 @@ type TrainerForm = {
 };
 
 type TrainerField = keyof TrainerForm;
-
 type FieldErrors = Partial<Record<TrainerField, string>>;
 
-type View = "all" | "create" | "edit";
-
-type PendingDelete = {
-  id: number;
-  name: string;
-  timerId: number;
+type Props = {
+  searchTerm?: string;
 };
 
 const emptyForm: TrainerForm = {
@@ -71,42 +66,111 @@ function isHttpUrl(value: string) {
   }
 }
 
-export default function TrainerAdminPage() {
+function toForm(trainer: Trainer): TrainerForm {
+  return {
+    name: trainer.name ?? "",
+    prompt: trainer.prompt ?? "",
+    voice: trainer.voice ?? "",
+    intro: trainer.intro ?? "",
+    language: trainer.language ?? "",
+    imageSelect: trainer.imageSelect ?? "",
+    imageCall: trainer.imageCall ?? "",
+    imageStart: trainer.imageStart ?? "",
+  };
+}
+
+export default function TrainerAdminPage({ searchTerm = "" }: Props) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const { toast, showToast } = useToast();
 
-  const [view, setView] = useState<View>("all");
-  const [editingTrainerId, setEditingTrainerId] = useState<number | null>(null);
+  const [mode, setMode] = useState<"view" | "create" | "edit">("view");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [form, setForm] = useState<TrainerForm>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
-    null,
-  );
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const {
     data: trainers = [],
     isLoading,
     isError,
     error,
-  } = useQuery({
+  } = useQuery<Trainer[]>({
     queryKey: ["admin-trainers"],
     queryFn: async () => {
       const token = await getToken();
-      if (!token) {
-        throw new Error("Missing Clerk token");
-      }
+      if (!token) throw new Error("Missing Clerk token");
       return fetchTrainersWithToken(token);
     },
   });
 
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const filteredTrainers = useMemo(() => {
+    const sorted = [...trainers].sort((a, b) =>
+      (a.name ?? "").localeCompare(b.name ?? ""),
+    );
+    if (!normalizedSearch) return sorted;
+    return sorted.filter(
+      (t) =>
+        t.name?.toLowerCase().includes(normalizedSearch) ||
+        t.language?.toLowerCase().includes(normalizedSearch) ||
+        t.voice?.toLowerCase().includes(normalizedSearch),
+    );
+  }, [trainers, normalizedSearch]);
+
+  const selectedTrainer = useMemo(
+    () => trainers.find((t) => t.id === selectedId) ?? null,
+    [trainers, selectedId],
+  );
+
+  useEffect(() => {
+    if (filteredTrainers.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+    if (selectedId == null || !filteredTrainers.some((t) => t.id === selectedId)) {
+      setSelectedId(filteredTrainers[0].id);
+    }
+  }, [filteredTrainers, selectedId]);
+
+  // Load trainer data when switching to edit
+  useEffect(() => {
+    if (mode !== "edit" || selectedId == null) return;
+    let active = true;
+
+    async function load() {
+      try {
+        const token = await getToken();
+        if (!token) throw new Error("Missing Clerk token");
+        const data = (await fetchTrainerByIdWithToken(
+          selectedId!,
+          token,
+        )) as Trainer;
+        if (!active) return;
+        setForm(toForm(data));
+      } catch (err) {
+        if (!active) return;
+        showToast((err as Error).message || "Failed to load trainer.", {
+          type: "error",
+        });
+        setMode("view");
+      }
+    }
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, [mode, selectedId, getToken, showToast]);
+
+  // (no pending delete timer needed — deletion is immediate after confirm modal)
+
   const createMutation = useMutation({
     mutationFn: async (payload: TrainerForm) => {
       const token = await getToken();
-      if (!token) {
-        throw new Error("Missing Clerk token");
-      }
+      if (!token) throw new Error("Missing Clerk token");
       return createTrainerWithToken(
         {
           ...payload,
@@ -117,18 +181,18 @@ export default function TrainerAdminPage() {
         token,
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
+    onSuccess: async (saved) => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
       setSubmitError(null);
-      showToast("Trainer saved.", { type: "success" });
-      setForm(emptyForm);
-      setView("all");
+      const createdId = (saved as Trainer)?.id;
+      if (typeof createdId === "number") setSelectedId(createdId);
+      setMode("view");
+      showToast("Trainer created.", { type: "success" });
     },
-    onError: (mutationError) => {
-      const message =
-        (mutationError as Error).message || "Failed to save trainer.";
-      setSubmitError(message);
-      showToast(message, { type: "error" });
+    onError: (err) => {
+      const msg = (err as Error).message || "Failed to save trainer.";
+      setSubmitError(msg);
+      showToast(msg, { type: "error" });
     },
   });
 
@@ -141,9 +205,7 @@ export default function TrainerAdminPage() {
       payload: TrainerForm;
     }) => {
       const token = await getToken();
-      if (!token) {
-        throw new Error("Missing Clerk token");
-      }
+      if (!token) throw new Error("Missing Clerk token");
       return updateTrainerWithToken(
         id,
         {
@@ -155,128 +217,50 @@ export default function TrainerAdminPage() {
         token,
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
       setSubmitError(null);
+      setMode("view");
       showToast("Trainer updated.", { type: "success" });
-      setView("all");
-      setEditingTrainerId(null);
     },
-    onError: (mutationError) => {
-      const message =
-        (mutationError as Error).message || "Failed to update trainer.";
-      setSubmitError(message);
-      showToast(message, { type: "error" });
+    onError: (err) => {
+      const msg = (err as Error).message || "Failed to update trainer.";
+      setSubmitError(msg);
+      showToast(msg, { type: "error" });
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (trainerId: number) => {
+    mutationFn: async (id: number) => {
       const token = await getToken();
-      if (!token) {
-        throw new Error("Missing Clerk token");
-      }
-      return deleteTrainerWithToken(trainerId, token);
+      if (!token) throw new Error("Missing Clerk token");
+      return deleteTrainerWithToken(id, token);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
+      setMode("view");
       showToast("Trainer deleted.", { type: "success" });
     },
-    onError: (mutationError) => {
-      showToast(
-        (mutationError as Error).message || "Failed to delete trainer.",
-        { type: "error" },
-      );
+    onError: (err) => {
+      showToast((err as Error).message || "Failed to delete.", { type: "error" });
     },
   });
 
-  useEffect(() => {
-    return () => {
-      if (pendingDelete != null) {
-        window.clearTimeout(pendingDelete.timerId);
-      }
-    };
-  }, [pendingDelete]);
-
-  useEffect(() => {
-    if (view !== "edit" || editingTrainerId == null) {
-      return;
-    }
-
-    const trainerId = editingTrainerId;
-
-    let active = true;
-
-    async function loadTrainer() {
-      try {
-        const token = await getToken();
-        if (!token) {
-          throw new Error("Missing Clerk token");
-        }
-
-        const trainer = (await fetchTrainerByIdWithToken(
-          trainerId,
-          token,
-        )) as Trainer;
-
-        if (!active) return;
-
-        setForm({
-          name: trainer.name ?? "",
-          prompt: trainer.prompt ?? "",
-          voice: trainer.voice ?? "",
-          intro: trainer.intro ?? "",
-          language: trainer.language ?? "",
-          imageSelect: trainer.imageSelect ?? "",
-          imageCall: trainer.imageCall ?? "",
-          imageStart: trainer.imageStart ?? "",
-        });
-      } catch (loadError) {
-        if (!active) return;
-        showToast((loadError as Error).message || "Failed to load trainer.", {
-          type: "error",
-        });
-        setView("all");
-        setEditingTrainerId(null);
-      }
-    }
-
-    loadTrainer();
-
-    return () => {
-      active = false;
-    };
-  }, [editingTrainerId, getToken, showToast, view]);
-
-  const sortedTrainers = useMemo(() => {
-    return [...(trainers as Trainer[])].sort((a, b) =>
-      (a.name ?? "").localeCompare(b.name ?? ""),
-    );
-  }, [trainers]);
-
   const validate = () => {
-    const nextErrors: FieldErrors = {};
-
-    if (!form.name.trim()) nextErrors.name = "Name is required";
-    if (!form.prompt.trim()) nextErrors.prompt = "Prompt is required";
-    if (!form.voice.trim()) nextErrors.voice = "Voice is required";
-    if (!form.intro.trim()) nextErrors.intro = "Intro is required";
-    if (!form.language.trim()) nextErrors.language = "Language is required";
-
-    if (form.imageSelect.trim() && !isHttpUrl(form.imageSelect.trim())) {
-      nextErrors.imageSelect = "Image select must be a valid http/https URL";
-    }
-
-    if (form.imageCall.trim() && !isHttpUrl(form.imageCall.trim())) {
-      nextErrors.imageCall = "Image call must be a valid http/https URL";
-    }
-
-    if (form.imageStart.trim() && !isHttpUrl(form.imageStart.trim())) {
-      nextErrors.imageStart = "Image start must be a valid http/https URL";
-    }
-
-    setFieldErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    const next: FieldErrors = {};
+    if (!form.name.trim()) next.name = "Name is required";
+    if (!form.prompt.trim()) next.prompt = "Prompt is required";
+    if (!form.voice.trim()) next.voice = "Voice is required";
+    if (!form.intro.trim()) next.intro = "Intro is required";
+    if (!form.language.trim()) next.language = "Language is required";
+    if (form.imageSelect.trim() && !isHttpUrl(form.imageSelect.trim()))
+      next.imageSelect = "Must be a valid https:// URL";
+    if (form.imageCall.trim() && !isHttpUrl(form.imageCall.trim()))
+      next.imageCall = "Must be a valid https:// URL";
+    if (form.imageStart.trim() && !isHttpUrl(form.imageStart.trim()))
+      next.imageStart = "Must be a valid https:// URL";
+    setFieldErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const onFormChange = (
@@ -287,397 +271,440 @@ export default function TrainerAdminPage() {
     setFieldErrors((prev) => ({ ...prev, [name as TrainerField]: undefined }));
   };
 
-  const scheduleDelete = (trainer: Trainer) => {
-    if (pendingDelete != null) {
-      showToast("Undo current delete first.", { type: "info" });
-      return;
-    }
-
-    // open modal to request typed confirmation
-    setConfirmModal({ open: true, trainer });
-  };
-
-  const undoDelete = () => {
-    if (pendingDelete == null) {
-      return;
-    }
-    window.clearTimeout(pendingDelete.timerId);
-    setPendingDelete(null);
-    showToast("Delete cancelled.", { type: "info" });
-  };
-
-  // confirm modal state
-  const [confirmModal, setConfirmModal] = useState<
-    { open: true; trainer: Trainer } | { open: false }
-  >({ open: false });
-
-  const onConfirmDelete = async () => {
-    if (confirmModal.open !== true) return;
-    const trainer = confirmModal.trainer;
-
-    const timerId = window.setTimeout(async () => {
-      try {
-        await deleteMutation.mutateAsync(trainer.id);
-      } finally {
-        setPendingDelete(null);
-      }
-    }, 5000);
-
-    setPendingDelete({ id: trainer.id, name: trainer.name, timerId });
-    setConfirmModal({ open: false });
-    showToast("Delete scheduled. Undo within 5 seconds.", { type: "info" });
-  };
-
-  const onCancelDelete = () => setConfirmModal({ open: false });
-
   const openCreate = () => {
-    setFieldErrors({});
-    setSubmitError(null);
+    setMode("create");
     setForm(emptyForm);
-    setEditingTrainerId(null);
-    setView("create");
-  };
-
-  const openEdit = (trainerId: number) => {
     setFieldErrors({});
     setSubmitError(null);
-    setEditingTrainerId(trainerId);
-    setView("edit");
-    showToast("Opening trainer edit page...", { type: "info" });
   };
 
-  const submitCreate = async (event: React.FormEvent) => {
+  const openEdit = () => {
+    if (selectedTrainer == null) return;
+    setMode("edit");
+    setForm(toForm(selectedTrainer));
+    setFieldErrors({});
+    setSubmitError(null);
+  };
+
+  const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitError(null);
     if (!validate()) return;
-    showToast("Saving trainer...", { type: "info" });
-    await createMutation.mutateAsync(form);
-  };
-
-  const submitEdit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setSubmitError(null);
-    if (!validate() || editingTrainerId == null) return;
-    showToast("Saving changes...", { type: "info" });
-    await updateMutation.mutateAsync({ id: editingTrainerId, payload: form });
+    showToast("Saving…", { type: "info" });
+    if (mode === "edit" && selectedId != null) {
+      await updateMutation.mutateAsync({ id: selectedId, payload: form });
+    } else {
+      await createMutation.mutateAsync(form);
+    }
   };
 
   if (isLoading) {
-    return <p className="text-sm text-(--brand-muted)">Loading trainers...</p>;
+    return <p className="text-sm text-[#6f6a93]">Loading trainers…</p>;
   }
 
   if (isError) {
     return <p className="text-sm text-red-500">{(error as Error).message}</p>;
   }
 
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
   return (
     <section className="space-y-4">
+      {/* Toast */}
       {toast && (
         <div
-          className={`pointer-events-none fixed right-6 top-6 z-20 rounded-lg px-4 py-2 text-sm font-medium ${
+          className={`pointer-events-none fixed right-6 top-6 z-20 rounded-lg px-4 py-2 text-sm font-medium shadow-lg ${
             toast.type === "error"
               ? "bg-red-600 text-white"
               : toast.type === "success"
                 ? "bg-green-600 text-white"
-                : "bg-(--brand-ink) text-(--brand-on-primary)"
+                : "bg-[#100b2f] text-white"
           }`}
         >
           {toast.message}
         </div>
       )}
 
-      {pendingDelete != null && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3">
-          <p className="text-sm text-amber-800">
-            Delete pending for {pendingDelete.name}. You can undo now.
-          </p>
-          <button
-            type="button"
-            onClick={undoDelete}
-            className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white"
-          >
-            Undo
-          </button>
-        </div>
-      )}
-
-      {confirmModal.open && (
+      {/* Confirm delete modal */}
+      {confirmDelete && selectedTrainer != null && (
         <ConfirmModal
           open={true}
           title="Delete trainer"
-          body={`Delete trainer "${confirmModal.trainer.name}"? You can undo within 5 seconds.`}
-          requireTyping={"DELETE"}
+          body={`Delete trainer "${selectedTrainer.name}"? This cannot be undone.`}
+          requireTyping="DELETE"
           confirmLabel="Delete"
           cancelLabel="Cancel"
-          onConfirm={onConfirmDelete}
-          onCancel={onCancelDelete}
+          onConfirm={() => {
+            setConfirmDelete(false);
+            deleteMutation.mutate(selectedTrainer.id);
+          }}
+          onCancel={() => setConfirmDelete(false)}
         />
       )}
 
-      {view === "all" && (
-        <>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">All Trainers</h2>
-            <button
-              type="button"
-              onClick={openCreate}
-              className="rounded-full bg-(--brand-primary) px-4 py-2 text-sm font-semibold text-(--brand-on-primary)"
-            >
-              + Add Trainer
-            </button>
-          </div>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-[#100b2f]">Trainers</h2>
+          <p className="text-sm text-[#6f6a93]">
+            Manage AI trainer profiles and configurations.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={openCreate}
+          className="rounded-xl bg-[#5836d6] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4527b8] active:scale-95"
+        >
+          + Add Trainer
+        </button>
+      </div>
 
-          <div className="space-y-3">
-            {sortedTrainers.map((trainer) => (
+      {/* Main grid */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+        {/* List */}
+        <div className="space-y-3">
+          <div className="overflow-hidden rounded-2xl border border-[#ece5ff] bg-white shadow-sm">
+            {filteredTrainers.map((trainer) => (
               <article
                 key={trainer.id}
-                onClick={() => openEdit(trainer.id)}
-                className="cursor-pointer rounded-xl border border-(--brand-border) bg-(--brand-surface-glass) p-4 transition hover:border-(--brand-primary)"
+                onClick={() => {
+                  setSelectedId(trainer.id);
+                  if (mode === "create") setMode("view");
+                }}
+                className={`cursor-pointer border-b border-[#f3eeff] p-4 transition last:border-b-0 ${
+                  selectedId === trainer.id
+                    ? "bg-[#f3eeff]"
+                    : "bg-white hover:bg-[#faf8ff]"
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">
-                      {trainer.name || "Unnamed trainer"}
-                    </p>
-                    <p className="text-xs text-(--brand-muted)">
-                      Language: {trainer.language || "-"} | Voice:{" "}
-                      {trainer.voice || "-"}
-                    </p>
+                <div className="flex items-center gap-3">
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[#ece5ff]">
+                    {trainer.imageSelect ? (
+                      <img
+                        src={trainer.imageSelect}
+                        alt={trainer.name}
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xl">
+                        🧑‍🏫
+                      </div>
+                    )
+                    }
+                    {selectedId === trainer.id && (
+                      <div className="absolute inset-0 rounded-lg ring-2 ring-[#5836d6]" />
+                    )}
                   </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        openEdit(trainer.id);
-                      }}
-                      className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        scheduleDelete(trainer);
-                      }}
-                      className="rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white"
-                    >
-                      Delete
-                    </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[#100b2f]">
+                      {trainer.name || "Unnamed trainer"}
+                    </p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[#9b96b8]">
+                      {trainer.language && (
+                        <span className="rounded-full bg-[#ede9ff] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#5836d6]">
+                          {trainer.language}
+                        </span>
+                      )}
+                      <span>Voice: {trainer.voice || "-"}</span>
+                    </div>
                   </div>
+
+                  {selectedId === trainer.id && (
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-[#5836d6]" />
+                  )}
                 </div>
               </article>
             ))}
 
-            {sortedTrainers.length === 0 && (
-              <p className="text-sm text-(--brand-muted)">No trainers found.</p>
+            {filteredTrainers.length === 0 && (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                <span className="text-3xl">🔍</span>
+                <p className="text-sm font-semibold text-[#100b2f]">
+                  No trainers found
+                </p>
+                <p className="text-xs text-[#9b96b8]">
+                  Try a different search term
+                </p>
+              </div>
             )}
           </div>
-        </>
-      )}
 
-      {(view === "create" || view === "edit") && (
-        <main className="min-h-dvh bg-(--brand-page) text-(--brand-ink) p-6 flex items-center justify-center">
-          <div className="w-full max-w-4xl rounded-2xl bg-white p-8 shadow-lg">
-            <div className="mb-8 flex items-center justify-between gap-3">
-              <div>
+          <p className="px-1 text-xs text-[#9b96b8]">
+            {filteredTrainers.length} trainer
+            {filteredTrainers.length !== 1 ? "s" : ""}
+            {normalizedSearch ? ` matching "${searchTerm.trim()}"` : ""}
+          </p>
+        </div>
+
+        {/* Side panel */}
+        <aside className="h-fit rounded-2xl border border-[#ece5ff] bg-white shadow-sm lg:sticky lg:top-5">
+          {/* Detail view */}
+          {mode === "view" && selectedTrainer != null && (
+            <div className="space-y-0">
+              <div className="relative flex h-36 w-full items-center justify-center overflow-hidden rounded-t-2xl bg-[#ece5ff]">
+                {selectedTrainer.imageSelect ? (
+                  <img
+                    src={selectedTrainer.imageSelect}
+                    alt={selectedTrainer.name}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <span className="text-5xl">🧑‍🏫</span>
+                )}
+                <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
+                <button
+                  type="button"
+                  onClick={openEdit}
+                  className="absolute right-3 top-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#5836d6] shadow-sm backdrop-blur-sm transition hover:bg-white"
+                >
+                  ✏️ Edit
+                </button>
+                {selectedTrainer.language && (
+                  <span className="absolute bottom-3 left-3 rounded-full bg-[#5836d6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                    {selectedTrainer.language}
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-4 p-5">
+                <div>
+                  <h3 className="text-xl font-bold text-[#100b2f]">{selectedTrainer.name}</h3>
+                  <p className="mt-0.5 text-xs text-[#9b96b8]">Trainer #{selectedTrainer.id}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-[#ece5ff] bg-[#faf8ff] p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Language</p>
+                    <p className="mt-1 truncate text-sm font-bold text-[#100b2f]">{selectedTrainer.language || "—"}</p>
+                  </div>
+                  <div className="rounded-xl border border-[#ece5ff] bg-[#faf8ff] p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Voice</p>
+                    <p className="mt-1 truncate text-sm font-bold text-[#100b2f]">{selectedTrainer.voice || "—"}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 rounded-xl border border-[#ece5ff] bg-[#faf8ff] px-4 py-3">
+                  <span className="text-xl shrink-0">{selectedTrainer.intro ? "🎵" : "🔇"}</span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Intro Audio</p>
+                    <p className="mt-0.5 text-xs font-semibold text-[#100b2f]">
+                      {selectedTrainer.intro ? "Configured ✓" : "Not set"}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedTrainer.prompt && (
+                  <div>
+                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">System Prompt</p>
+                    <p className="line-clamp-3 text-xs leading-relaxed text-[#6f6a93]">{selectedTrainer.prompt}</p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={openEdit}
+                  className="w-full rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4527b8] active:scale-[0.98]"
+                >
+                  Edit Trainer
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Form */}
+          {(mode === "create" || mode === "edit") && (
+            <form onSubmit={onSubmit} className="space-y-4 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-[#100b2f]">
+                  {mode === "create" ? "New Trainer" : "Edit Trainer"}
+                </h3>
                 <button
                   type="button"
                   onClick={() => {
-                    showToast("Back to trainers.", { type: "info" });
-                    setView("all");
-                    setEditingTrainerId(null);
+                    setMode("view");
+                    setFieldErrors({});
+                    setSubmitError(null);
                   }}
-                  className="mr-4 rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
+                  className="rounded-full border border-[#ece5ff] px-3 py-1 text-xs font-semibold text-[#6f6a93] transition hover:border-[#5836d6] hover:text-[#5836d6]"
                 >
-                  Back
+                  ✕ Close
                 </button>
               </div>
-              <h1 className="text-3xl font-bold">
-                {view === "create" ? "Add Trainer" : "Edit Trainer"}
-              </h1>
-              <div />
-            </div>
 
-            {submitError && (
-              <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {submitError}
-              </div>
-            )}
+              {submitError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+                  ⚠ {submitError}
+                </div>
+              )}
 
-            <form
-              onSubmit={view === "create" ? submitCreate : submitEdit}
-              className="flex flex-col gap-6"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Name *</span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-[#6f6a93]">
+                    Name *
+                  </label>
                   <input
                     name="name"
                     value={form.name}
                     onChange={onFormChange}
-                    className={`rounded-lg border p-3 ${
-                      fieldErrors.name ? "border-red-500" : ""
+                    placeholder="e.g. Eva"
+                    className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20 ${
+                      fieldErrors.name ? "border-red-400" : "border-[#ece5ff]"
                     }`}
                   />
                   {fieldErrors.name && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.name}
-                    </span>
+                    <p className="text-[10px] text-red-500">{fieldErrors.name}</p>
                   )}
-                </label>
+                </div>
 
-                <label className="flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Language *</span>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-[#6f6a93]">
+                    Language *
+                  </label>
                   <input
                     name="language"
                     value={form.language}
                     onChange={onFormChange}
-                    className={`rounded-lg border p-3 ${
-                      fieldErrors.language ? "border-red-500" : ""
+                    placeholder="e.g. Swedish"
+                    className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] ${
+                      fieldErrors.language
+                        ? "border-red-400"
+                        : "border-[#ece5ff]"
                     }`}
                   />
                   {fieldErrors.language && (
-                    <span className="text-xs text-red-500">
+                    <p className="text-[10px] text-red-500">
                       {fieldErrors.language}
-                    </span>
+                    </p>
                   )}
-                </label>
+                </div>
 
-                <label className="flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Voice *</span>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-[#6f6a93]">
+                    Voice *
+                  </label>
                   <input
                     name="voice"
                     value={form.voice}
                     onChange={onFormChange}
-                    className={`rounded-lg border p-3 ${
-                      fieldErrors.voice ? "border-red-500" : ""
+                    placeholder="e.g. Aoede"
+                    className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] ${
+                      fieldErrors.voice ? "border-red-400" : "border-[#ece5ff]"
                     }`}
                   />
                   {fieldErrors.voice && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.voice}
-                    </span>
+                    <p className="text-[10px] text-red-500">{fieldErrors.voice}</p>
                   )}
-                </label>
+                </div>
 
-                <label className="flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Intro *</span>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-[#6f6a93]">
+                    Intro *
+                  </label>
                   <input
                     name="intro"
                     value={form.intro}
                     onChange={onFormChange}
-                    className={`rounded-lg border p-3 ${
-                      fieldErrors.intro ? "border-red-500" : ""
+                    placeholder="Short intro text"
+                    className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] ${
+                      fieldErrors.intro ? "border-red-400" : "border-[#ece5ff]"
                     }`}
                   />
                   {fieldErrors.intro && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.intro}
-                    </span>
+                    <p className="text-[10px] text-red-500">{fieldErrors.intro}</p>
                   )}
-                </label>
-
-                <label className="md:col-span-2 flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Prompt *</span>
-                  <textarea
-                    name="prompt"
-                    value={form.prompt}
-                    onChange={onFormChange}
-                    className={`min-h-[140px] rounded-lg border p-3 ${
-                      fieldErrors.prompt ? "border-red-500" : ""
-                    }`}
-                  />
-                  {fieldErrors.prompt && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.prompt}
-                    </span>
-                  )}
-                </label>
-
-                <label className="flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Image Select URL</span>
-                  <input
-                    name="imageSelect"
-                    value={form.imageSelect}
-                    onChange={onFormChange}
-                    className={`rounded-lg border p-3 ${
-                      fieldErrors.imageSelect ? "border-red-500" : ""
-                    }`}
-                  />
-                  {fieldErrors.imageSelect && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.imageSelect}
-                    </span>
-                  )}
-                </label>
-
-                <label className="flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Image Call URL</span>
-                  <input
-                    name="imageCall"
-                    value={form.imageCall}
-                    onChange={onFormChange}
-                    className={`rounded-lg border p-3 ${
-                      fieldErrors.imageCall ? "border-red-500" : ""
-                    }`}
-                  />
-                  {fieldErrors.imageCall && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.imageCall}
-                    </span>
-                  )}
-                </label>
-
-                <label className="md:col-span-2 flex flex-col gap-1">
-                  <span className="text-sm opacity-80">Image Start URL</span>
-                  <input
-                    name="imageStart"
-                    value={form.imageStart}
-                    onChange={onFormChange}
-                    className={`rounded-lg border p-3 ${
-                      fieldErrors.imageStart ? "border-red-500" : ""
-                    }`}
-                  />
-                  {fieldErrors.imageStart && (
-                    <span className="text-xs text-red-500">
-                      {fieldErrors.imageStart}
-                    </span>
-                  )}
-                </label>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    showToast("Cancelling...");
-                    setView("all");
-                    setEditingTrainerId(null);
-                  }}
-                  className="rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-3 text-sm font-medium"
-                >
-                  Cancel
-                </button>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-[#6f6a93]">
+                  Prompt *
+                </label>
+                <textarea
+                  name="prompt"
+                  value={form.prompt}
+                  onChange={onFormChange}
+                  placeholder="System prompt for this trainer..."
+                  className={`min-h-24 w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20 ${
+                    fieldErrors.prompt ? "border-red-400" : "border-[#ece5ff]"
+                  }`}
+                />
+                {fieldErrors.prompt && (
+                  <p className="text-[10px] text-red-500">{fieldErrors.prompt}</p>
+                )}
+              </div>
 
+              <details className="rounded-xl border border-[#ece5ff]">
+                <summary className="cursor-pointer px-3 py-2.5 text-xs font-semibold text-[#5836d6]">
+                  Image URLs ▾
+                </summary>
+                <div className="space-y-3 px-3 pb-3">
+                  {(
+                    [
+                      ["imageSelect", "Image Select URL"],
+                      ["imageCall", "Image Call URL"],
+                      ["imageStart", "Image Start URL"],
+                    ] as [TrainerField, string][]
+                  ).map(([field, label]) => (
+                    <div key={field} className="space-y-1">
+                      <label className="text-xs font-semibold text-[#6f6a93]">
+                        {label}
+                      </label>
+                      <input
+                        name={field}
+                        value={form[field] as string}
+                        onChange={onFormChange}
+                        placeholder="https://..."
+                        className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] ${
+                          fieldErrors[field]
+                            ? "border-red-400"
+                            : "border-[#ece5ff]"
+                        }`}
+                      />
+                      {fieldErrors[field] && (
+                        <p className="text-[10px] text-red-500">
+                          {fieldErrors[field]}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </details>
+
+              <div className="flex items-center gap-2 pt-1">
+                {mode === "edit" && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(true)}
+                    className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-500 transition hover:bg-red-100"
+                  >
+                    Delete
+                  </button>
+                )}
                 <button
                   type="submit"
-                  disabled={
-                    createMutation.isPending || updateMutation.isPending
-                  }
-                  className="rounded-lg bg-(--brand-primary) px-4 py-3 text-sm font-medium text-(--brand-on-primary) disabled:opacity-50"
+                  disabled={isSaving}
+                  className="flex-1 rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] disabled:opacity-50 active:scale-95"
                 >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Saving..."
-                    : "Save"}
+                  {isSaving ? "Saving…" : "Save"}
                 </button>
               </div>
             </form>
-          </div>
-        </main>
-      )}
+          )}
+
+          {mode === "view" && selectedTrainer == null && (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <span className="text-4xl">👆</span>
+              <p className="text-sm font-semibold text-[#100b2f]">
+                Select a trainer
+              </p>
+              <p className="text-xs text-[#9b96b8]">
+                Click any row to see details here
+              </p>
+            </div>
+          )}
+        </aside>
+      </div>
     </section>
   );
 }
