@@ -124,6 +124,14 @@ public class UserController {
         return ResponseEntity.ok(toResponse(created, jwt.getSubject()));
     }
 
+    @GetMapping("/me/profile")
+    public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
+        String clerkId = getClerkId(authentication);
+        User currentUser = userService.getByClerkIdOrThrow(clerkId);
+
+        return ResponseEntity.ok(toResponse(currentUser, clerkId));
+    }
+
     @PutMapping("/me/profile")
     public ResponseEntity<UserResponseDTO> updateCurrentUserProfile(
             @RequestBody UserRequestDTO userRequest,
@@ -171,14 +179,6 @@ public class UserController {
                 .orElseThrow();
 
         return ResponseEntity.ok(activityLogService.getUserProgress(currentUser.getId()));
-    }
-
-    @GetMapping("/me/profile")
-    public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
-        String clerkId = getClerkId(authentication);
-        User currentUser = userService.getByClerkIdOrThrow(clerkId);
-
-        return ResponseEntity.ok(toResponse(currentUser, clerkId));
     }
 
     @GetMapping("/{userId}/progress")
