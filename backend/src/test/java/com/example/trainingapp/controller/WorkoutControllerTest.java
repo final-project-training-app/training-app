@@ -1,5 +1,6 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.dto.WorkoutResponseDTO;
 import com.example.trainingapp.entity.Workout;
 import com.example.trainingapp.service.UserService;
 import com.example.trainingapp.service.WorkoutService;
@@ -33,17 +34,18 @@ class WorkoutControllerTest {
     void getAllWorkoutsReturnsData() {
         WorkoutController controller = new WorkoutController(workoutService, userService);
 
-        Workout workout = new Workout();
-        workout.setId(1L);
-        workout.setName("Push Ups");
+        WorkoutResponseDTO workoutDTO = new WorkoutResponseDTO(
+                1L, "Push Ups", null, null, null, null, null, null, null, null,
+                null, null, null, null, null
+        );
 
-        when(workoutService.getAllWorkouts()).thenReturn(List.of(workout));
+        when(workoutService.getAllWorkouts()).thenReturn(List.of(workoutDTO));
 
-        ResponseEntity<List<Workout>> response = controller.getAllWorkouts();
+        ResponseEntity<List<WorkoutResponseDTO>> response = controller.getAllWorkouts();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
-        assertEquals("Push Ups", response.getBody().get(0).getName());
+        assertEquals("Push Ups", response.getBody().get(0).name());
     }
 
     @Test
@@ -52,7 +54,7 @@ class WorkoutControllerTest {
 
         when(userService.isAdmin("user_1")).thenReturn(false);
 
-        ResponseEntity<Workout> response =
+        ResponseEntity<WorkoutResponseDTO> response =
                 controller.createWorkout(new Workout(), auth("user_1"));
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
@@ -68,13 +70,18 @@ class WorkoutControllerTest {
         Workout workout = new Workout();
         workout.setName("Test Workout");
 
-        when(workoutService.createWorkout(any())).thenReturn(workout);
+        WorkoutResponseDTO responseDTO = new WorkoutResponseDTO(
+                null, "Test Workout", null, null, null, null, null, null, null, null,
+                null, null, null, null, null
+        );
 
-        ResponseEntity<Workout> response =
+        when(workoutService.createWorkout(any())).thenReturn(responseDTO);
+
+        ResponseEntity<WorkoutResponseDTO> response =
                 controller.createWorkout(workout, auth("admin_1"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Test Workout", response.getBody().getName());
+        assertEquals("Test Workout", response.getBody().name());
     }
 
     @Test
