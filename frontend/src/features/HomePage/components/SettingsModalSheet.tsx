@@ -77,14 +77,26 @@ function SettingsModalBody({
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateProfile = useUpdateProfile();
   const queryClient = useQueryClient();
+  const prevOpenRef = useRef(open);
 
+  // Sync all initial values when modal opens
   useEffect(() => {
-    // Always sync initial values when they change from the profile data
-    setSelectedTrainerId(initialTrainerId);
-    setFullName(userName);
-    setIntensityLevel(initialIntensityLevel);
-    setContext(initialContext);
-  }, [initialTrainerId, userName, initialIntensityLevel, initialContext]);
+    if (open && !prevOpenRef.current) {
+      setSelectedTrainerId(initialTrainerId);
+      setFullName(userName);
+      setIntensityLevel(initialIntensityLevel);
+      setContext(initialContext);
+    }
+    prevOpenRef.current = open;
+  }, [open]);
+
+  // If trainerId loads while modal is open and we haven't selected one yet,
+  // sync it from the database
+  useEffect(() => {
+    if (open && selectedTrainerId === null && initialTrainerId !== null) {
+      setSelectedTrainerId(initialTrainerId);
+    }
+  }, [open, initialTrainerId]);
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
