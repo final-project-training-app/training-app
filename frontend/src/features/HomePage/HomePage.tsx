@@ -38,6 +38,7 @@ export default function HomePage() {
       return;
     }
     if (userId) {
+      console.log("Prefetching coach call session for userId =", userId);
       void queryClient.prefetchQuery(coachCallSessionQueryOptions("1", userId));
     }
   }, [isLoaded, isSignedIn, queryClient, userId]);
@@ -54,13 +55,15 @@ export default function HomePage() {
   }
 
   async function handleStartCall() {
+    if (!userId) {
+      console.log("User is undefined");
+      return;
+    }
+    console.log("Starting call for userId =", userId);
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
 
-    if (!userId) {
-      return;
-    }
     const queryOptions = coachCallSessionQueryOptions("1", userId);
 
     const cachedSession = queryClient.getQueryData<CoachCallSession>(
