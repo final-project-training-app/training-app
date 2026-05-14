@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGeminiLive } from "./core/useGeminiLive";
 import { useLiveToken } from "./core/useLiveToken";
 import { coachLiveTools, executeLiveToolCall } from "./tools";
-import { stopRingback } from "./audio/ringback";
+import { stopRingback, startGymAmbience, stopGymAmbience } from "./audio/ringback";
 import { fixedLiveUserId } from "./tools/shared/liveIntroDefaults";
 import {
   preloadSessionAudio,
@@ -297,6 +297,7 @@ export function useCoachSession(
   //──────────────────────
   const disconnectLive = useCallback(() => {
     addDebugEvent("stopAI-called", stepRef.current);
+    stopGymAmbience();
     geminiDisconnect();
     setAudioCapturing(false);
   }, [addDebugEvent, geminiDisconnect]);
@@ -444,6 +445,7 @@ export function useCoachSession(
     }
 
     stopRingback();
+    startGymAmbience();
     setSessionStep("waiting_instruction_approval");
     sendCoachPrompt("Starta samtalet.");
   }, [
