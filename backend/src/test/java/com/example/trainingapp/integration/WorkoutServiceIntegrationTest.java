@@ -1,5 +1,6 @@
 package com.example.trainingapp.integration;
 
+import com.example.trainingapp.dto.WorkoutResponseDTO;
 import com.example.trainingapp.entity.Workout;
 import com.example.trainingapp.repository.ActivityLogRepository;
 import com.example.trainingapp.repository.WorkoutRepository;
@@ -32,10 +33,10 @@ class WorkoutServiceIntegrationTest {
         workout.setName("Integration Workout");
         workout.setDurationSeconds(180);
 
-        Workout created = workoutService.createWorkout(workout);
+        WorkoutResponseDTO created = workoutService.createWorkout(workout);
 
-        assertNotNull(created.getId());
-        assertTrue(workoutRepository.findById(created.getId()).isPresent());
+        assertNotNull(created.id());
+        assertTrue(workoutRepository.findById(created.id()).isPresent());
     }
 
     @Test
@@ -46,10 +47,10 @@ class WorkoutServiceIntegrationTest {
 
         Workout saved = workoutRepository.save(workout);
 
-        Workout started = workoutService.startWorkout(saved.getId(), null);
+        WorkoutResponseDTO started = workoutService.startWorkout(saved.getId(), null);
 
         assertNotNull(started);
-        assertEquals(saved.getId(), started.getId());
+        assertEquals(saved.getId(), started.id());
         assertEquals(0, activityLogRepository.findAll().size());
     }
 }
