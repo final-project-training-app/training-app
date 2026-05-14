@@ -2,11 +2,19 @@ import { useAuth } from "@clerk/react";
 import { useEffect, useState } from "react";
 import { getJson } from "../lib/api/fetcher";
 
+// Debug flags from env (Vite requires VITE_ prefix)
+export const DEBUG = import.meta.env.VITE_DEBUG === "true";
+export const DEBUG_USER_ID = import.meta.env.VITE_DEBUG_USER_ID ?? "1";
+export const DEBUG_TRAINER_ID = Number(
+  import.meta.env.VITE_DEBUG_TRAINER_ID ?? "1",
+);
+export const DEBUG_WORKOUT_ID = import.meta.env.VITE_DEBUG_WORKOUT_ID ?? "1";
+
 const useCurrentUser = () => {
   const { userId: clerkId, isSignedIn, getToken } = useAuth();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [trainerId, setTrainerId] = useState<number | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(DEBUG ? String(DEBUG_USER_ID) : null);
+  const [trainerId, setTrainerId] = useState<number | null>(DEBUG ? DEBUG_TRAINER_ID : null);
+  const [token, setToken] = useState<string | null>(DEBUG ? "debug-token" : null);
 
   // Fetch token only when sign-in status changes
   useEffect(() => {
@@ -27,11 +35,12 @@ const useCurrentUser = () => {
         console.log("User is not signed in, token set to null");
       }
     };
-    fetchToken();
+    if (!DEBUG) fetchToken();
   }, [isSignedIn, getToken]);
 
   // Fetch user data only when token and clerkId are available
   useEffect(() => {
+    if (DEBUG) return;
     if (!token || !clerkId) return;
 
     const fetchUserId = async () => {
