@@ -1,5 +1,5 @@
-import { type FunctionCall, type FunctionResponse } from "@google/genai";
-import type { BackendWorkoutResponse } from "../ai-dev/live/tools/workout/workoutTypes";
+import { type FunctionCall } from "@google/genai";
+import type { CoachCallSession } from "../session/types";
 
 export type CoachSessionStep =
   | "idle"
@@ -11,8 +11,6 @@ export type CoachSessionStep =
   | "collecting_feedback"
   | "completed"
   | "error";
-
-import type { CoachCallSession } from "./types";
 
 export type UseCoachSessionOptions = {
   session: CoachCallSession;
@@ -39,6 +37,7 @@ export type GeminiServerMessage = {
     };
   };
 };
+
 //──────────────────────
 // Simple sleep helper
 //──────────────────────
@@ -52,29 +51,6 @@ export function readFeedbackSummary(functionCall: FunctionCall): string {
   const args = functionCall.args ?? {};
   const summary = args.summary;
   return typeof summary === "string" ? summary : "";
-}
-
-//──────────────────────
-// Read workout from tool response
-//──────────────────────
-export function readWorkoutFromResponse(
-  response: FunctionResponse,
-): BackendWorkoutResponse | null {
-  if (response.name !== "get_workout_details") {
-    return null;
-  }
-
-  const body = response.response;
-  if (!body || typeof body !== "object" || !("output" in body)) {
-    return null;
-  }
-
-  const output = (body as { output?: { workout?: unknown } }).output;
-  const workout = output?.workout;
-
-  return workout && typeof workout === "object"
-    ? (workout as BackendWorkoutResponse)
-    : null;
 }
 
 //──────────────────────
@@ -110,7 +86,6 @@ export function getModelText(message: unknown): string {
     .filter(Boolean)
     .join(" ");
 }
-
 
 //──────────────────────
 // Wait until the AI's turnComplete flag is true.

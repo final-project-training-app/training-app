@@ -1,37 +1,34 @@
 import { type FunctionResponse } from "@google/genai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useGeminiLive } from "../../hooks/useGeminiLive";
-import { useLiveToken } from "../../hooks/useLiveToken";
-import { coachLiveTools, executeLiveToolCall } from "../ai-dev/live/tools";
-import { stopRingback } from "./ringback";
-import { fixedLiveUserId } from "../ai-dev/live/tools/shared/liveIntroDefaults";
-import { getWorkoutEndpoint } from "../ai-dev/live/tools/workout/workoutEndpoint";
-import type { BackendWorkoutResponse } from "../ai-dev/live/tools/workout/workoutTypes";
+import { useGeminiLive } from "./core/useGeminiLive";
+import { useLiveToken } from "./core/useLiveToken";
+import { coachLiveTools, executeLiveToolCall } from "./tools";
+import { stopRingback } from "./audio/ringback";
+import { fixedLiveUserId } from "./tools/shared/liveIntroDefaults";
 import {
   preloadSessionAudio,
   startSessionAudio,
   stopSessionAudio,
-} from "./audio";
+} from "./audio/sessionAudio";
 import {
   COACH_PROMPTS,
   buildUserContext,
   liveSystemInstruction,
   SESSION_CONTROL_TOOLS,
-} from "./coachPrompts";
-import type { CoachCallSession } from "./types";
+} from "./prompts";
+import type { CoachCallSession } from "../session/types";
 import {
   getModelText,
   getQueuedActionForStep,
   readFeedbackSummary,
-  readWorkoutFromResponse,
   sleep,
   waitForAIToFinishSpeaking,
   type AITurnState,
   type CoachSessionDebugEvent,
   type CoachSessionStep,
   type UseCoachSessionOptions,
-} from "./coachSessionHelpers";
-import { useTrainer } from "./query";
+} from "./helpers";
+import { useTrainer } from "../session/query";
 
 //──────────────────────
 // Build system instruction
@@ -47,35 +44,33 @@ export function useCoachSession(
   options: UseCoachSessionOptions & {
     trainerId?: string;
     session: CoachCallSession;
-    autoplay?: boolean;
   },
 ) {
+  const { session, autoStart = true } = options;
+
   const {
     data: trainer,
     isLoading: isTrainerLoading,
     error: trainerError,
   } = useTrainer(options.trainerId ?? "1");
+
   const sessionInstruction = useMemo(
-    () => buildSessionInstruction(options.session, trainer?.prompt),
-    [options.session, trainer?.prompt],
+    () => buildSessionInstruction(session, trainer?.prompt),
+    [session, trainer?.prompt],
   );
 
   useEffect(() => {
     console.log("Trainer prompt:", trainer?.prompt);
   }, [trainer?.prompt]);
 
-  const { autoStart = true } = options;
   const [step, setStep] = useState<CoachSessionStep>("idle");
   const [error, setError] = useState<string | null>(null);
   const [audioCapturing, setAudioCapturing] = useState(false);
-  const [selectedWorkout, setSelectedWorkout] =
-    useState<BackendWorkoutResponse | null>(null);
   const [debugEvents, setDebugEvents] = useState<CoachSessionDebugEvent[]>([]);
 
   const debugIdRef = useRef(0);
   const startedAtRef = useRef(0);
   const stepRef = useRef<CoachSessionStep>("idle");
-  const selectedWorkoutRef = useRef<BackendWorkoutResponse | null>(null);
   const hasStartedRef = useRef(false);
 
   const aiTurnStateRef = useRef<AITurnState>({
@@ -136,11 +131,6 @@ export function useCoachSession(
     setDebugEvents((current) => [event, ...current].slice(0, 12));
   }, []);
 
-  //──────────────────────
-  // Clear pending timer
-  //──────────────────────
-  const clearPendingCoachTimer = useCallback(() => {}, []);
-
   const {
     geminiConnect,
     geminiDisconnect,
@@ -160,14 +150,14 @@ export function useCoachSession(
     systemInstruction: sessionInstruction,
 
     //──────────────────────
-    // Step 1: Handle Gemini tool calls
+    // Handle Gemini tool calls
     //──────────────────────
     onToolCall: async (functionCall): Promise<FunctionResponse> => {
       const name = functionCall.name ?? "unknown_tool";
       addDebugEvent("tool call", `${name}, step=${stepRef.current}`);
 
       //──────────────────────
-      // Step 1a: Start instructions
+      // Start instructions
       //──────────────────────
       if (name === "start_instructions") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
@@ -200,12 +190,12 @@ export function useCoachSession(
       }
 
       //──────────────────────
-      // Step 1b: Start workout
+      // Start workout
       //──────────────────────
       if (name === "start_workout") {
         const queuedAction = getQueuedActionForStep(stepRef.current);
         addDebugEvent("tool-start-workout", String(queuedAction));
-        addDebugEvent("waiting for AI to finish before starting instructions");
+        addDebugEvent("waiting for AI to finish before starting workout");
         await sleep(100);
         const finished = await waitForAIToFinishSpeaking(
           () => aiTurnStateRef.current,
@@ -232,7 +222,7 @@ export function useCoachSession(
       }
 
       //──────────────────────
-      // Step 1c: Finish session feedback
+      // Finish session feedback
       //──────────────────────
       if (name === "finish_session_feedback") {
         await sleep(100);
@@ -253,25 +243,13 @@ export function useCoachSession(
       }
 
       //──────────────────────
-      // Step 1d: Forward all other tool calls
+      // Forward all other tool calls
       //──────────────────────
-      const response = await executeLiveToolCall(functionCall);
-      const workout = readWorkoutFromResponse(response);
-
-      if (workout) {
-        addDebugEvent("selected workout", workout.name);
-        selectedWorkoutRef.current = workout;
-        setSelectedWorkout(workout);
-        preloadSessionAudio(workout.instructionsAudio);
-        preloadSessionAudio(workout.workoutAudio);
-        setSessionStep("live_intro");
-      }
-
-      return response;
+      return executeLiveToolCall(functionCall);
     },
 
     //──────────────────────
-    // Step 2: Handle Gemini messages
+    // Handle Gemini messages
     //──────────────────────
     onMessage: (message) => {
       const modelText = getModelText(message);
@@ -279,7 +257,6 @@ export function useCoachSession(
       if (modelText.trim().length > 0) {
         aiTurnStateRef.current.started = true;
       }
-
 
       const generationFinished =
         Boolean(message.serverContent?.turnComplete) ||
@@ -290,19 +267,6 @@ export function useCoachSession(
 
       if (generationFinished) {
         aiTurnStateRef.current.complete = true;
-      }
-
-      //──────────────────────
-      // Step 2b: Advance after intro turn completes
-      //──────────────────────
-      if (
-        // stepRef.current === "choosing_workout" ||
-        stepRef.current === "live_intro" &&
-        // stepRef.current === "choosing_workout" ||
-        stepRef.current === "live_intro" &&
-        message.serverContent?.turnComplete
-      ) {
-        setSessionStep("waiting_instruction_approval");
       }
     },
   });
@@ -417,11 +381,10 @@ export function useCoachSession(
     pauseLive();
     setSessionStep("playing_instructions");
 
-    const workout = selectedWorkoutRef.current;
-    const instructionsAudioUrl = workout?.instructionsAudio;
+    const instructionsAudioUrl = session.instructionsAudio ?? session.instructionsAudioUrl;
 
     if (!instructionsAudioUrl) {
-      setError("Instruktionsljud saknas för vald workout.");
+      setError(COACH_PROMPTS.NO_INSTRUCTIONS_AUDIO);
       setSessionStep("error");
       return;
     }
@@ -439,7 +402,7 @@ export function useCoachSession(
       setError("Kunde inte spela upp instruktionerna.");
       setSessionStep("error");
     }
-  }, [addDebugEvent, askIfReadyForWorkout, pauseLive, setSessionStep]);
+  }, [addDebugEvent, askIfReadyForWorkout, pauseLive, session.instructionsAudio, session.instructionsAudioUrl, setSessionStep]);
 
   //──────────────────────
   // Start session
@@ -463,19 +426,8 @@ export function useCoachSession(
       return;
     }
 
-    const workoutResp = await getWorkoutEndpoint(1).catch(() => null);
-    if (!workoutResp || !workoutResp.ok) {
-      setError(COACH_PROMPTS.NO_WORKOUT_ERROR);
-      setSessionStep("error");
-      hasStartedRef.current = false;
-      return;
-    }
-
-    const workout = workoutResp.data as BackendWorkoutResponse;
-    selectedWorkoutRef.current = workout;
-    setSelectedWorkout(workout);
-    preloadSessionAudio(workout.instructionsAudio);
-    preloadSessionAudio(workout.workoutAudio);
+    preloadSessionAudio(session.instructionsAudio ?? session.instructionsAudioUrl);
+    preloadSessionAudio(session.workoutAudio ?? session.workoutAudioUrl);
 
     await geminiConnect(freshToken);
     addDebugEvent("initial live connected");
@@ -499,6 +451,10 @@ export function useCoachSession(
     geminiConnect,
     loadToken,
     sendCoachPrompt,
+    session.instructionsAudio,
+    session.instructionsAudioUrl,
+    session.workoutAudio,
+    session.workoutAudioUrl,
     setSessionStep,
     startAudioCapture,
   ]);
@@ -515,8 +471,7 @@ export function useCoachSession(
     pauseLive();
     setSessionStep("playing_workout");
 
-    const workout = selectedWorkoutRef.current;
-    const workoutAudioUrl = workout?.workoutAudio;
+    const workoutAudioUrl = session.workoutAudio ?? session.workoutAudioUrl;
 
     if (!workoutAudioUrl) {
       setError(COACH_PROMPTS.NO_WORKOUT_AUDIO);
@@ -533,8 +488,7 @@ export function useCoachSession(
           setSessionStep("collecting_feedback");
 
           try {
-            const workoutId =
-              (selectedWorkoutRef.current?.id as number | undefined) ?? null;
+            const workoutId = typeof session.id === "number" ? session.id : null;
 
             const activityResult = await executeLiveToolCall({
               name: "create_activity_log",
@@ -568,7 +522,6 @@ export function useCoachSession(
             const started = await startAudioCapture();
             setAudioCapturing(started);
             addDebugEvent("mic after workout (fallback)", started);
-
           }
         },
       });
@@ -585,6 +538,9 @@ export function useCoachSession(
     addDebugEvent,
     connectFreshLive,
     getSession,
+    session.workoutAudio,
+    session.workoutAudioUrl,
+    session.id,
     startAudioCapture,
   ]);
 
@@ -600,11 +556,10 @@ export function useCoachSession(
   //──────────────────────
   const finishSessionWithSummary = useCallback(
     async (summary = "") => {
-      clearPendingCoachTimer();
       stopSessionAudio();
 
       try {
-        const workoutId = selectedWorkoutRef.current?.id ?? null;
+        const workoutId = typeof session.id === "number" ? session.id : null;
 
         const feedbackResp = await executeLiveToolCall({
           name: "create_feedback",
@@ -666,10 +621,10 @@ export function useCoachSession(
     },
     [
       addDebugEvent,
-      clearPendingCoachTimer,
       disconnectLive,
       getAiPlaybackRemainingMs,
       getSession,
+      session.id,
       setSessionStep,
     ],
   );
@@ -688,24 +643,22 @@ export function useCoachSession(
   //──────────────────────
   const endSession = useCallback(() => {
     stopRingback();
-    clearPendingCoachTimer();
     addDebugEvent("manual end");
     stopSessionAudio();
     disconnectLive();
     hasStartedRef.current = false;
     setSessionStep("idle");
-  }, [addDebugEvent, clearPendingCoachTimer, disconnectLive, setSessionStep]);
+  }, [addDebugEvent, disconnectLive, setSessionStep]);
 
   //──────────────────────
   // Cleanup on unmount
   //──────────────────────
   useEffect(() => {
     return () => {
-      clearPendingCoachTimer();
       stopSessionAudio();
       disconnectRef.current();
     };
-  }, [clearPendingCoachTimer]);
+  }, []);
 
   useEffect(() => {
     console.log("Current turn:", currentTurn, "coach step:", stepRef.current);
@@ -732,7 +685,6 @@ export function useCoachSession(
     isGeminiActive: isActive,
     currentTurn,
     audioCapturing,
-    selectedWorkout,
     debugEvents,
     isLoadingToken: tokenLoading,
     startSession,

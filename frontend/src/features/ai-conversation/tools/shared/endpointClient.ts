@@ -1,4 +1,4 @@
-import { getJson } from "../../../../../lib/api/fetcher";
+import { getJson } from "../../../../lib/api/fetcher";
 import type { EndpointResult } from "./liveToolTypes";
 
 // Alla Live-tools ska prata med backend genom denna helper.

@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AiDevRouteImport } from './routes/ai-dev'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionWorkoutIdRouteImport } from './routes/session.$workoutId'
@@ -17,11 +16,6 @@ import { Route as AdminWorkoutsRouteImport } from './routes/admin.workouts'
 import { Route as AdminTrainersRouteImport } from './routes/admin.trainers'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 
-const AiDevRoute = AiDevRouteImport.update({
-  id: '/ai-dev',
-  path: '/ai-dev',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -56,7 +50,6 @@ const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
-  '/ai-dev': typeof AiDevRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/trainers': typeof AdminTrainersRoute
   '/admin/workouts': typeof AdminWorkoutsRoute
@@ -65,7 +58,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
-  '/ai-dev': typeof AiDevRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/trainers': typeof AdminTrainersRoute
   '/admin/workouts': typeof AdminWorkoutsRoute
@@ -75,7 +67,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
-  '/ai-dev': typeof AiDevRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/trainers': typeof AdminTrainersRoute
   '/admin/workouts': typeof AdminWorkoutsRoute
@@ -86,7 +77,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/ai-dev'
     | '/admin/feedback'
     | '/admin/trainers'
     | '/admin/workouts'
@@ -95,7 +85,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
-    | '/ai-dev'
     | '/admin/feedback'
     | '/admin/trainers'
     | '/admin/workouts'
@@ -104,7 +93,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
-    | '/ai-dev'
     | '/admin/feedback'
     | '/admin/trainers'
     | '/admin/workouts'
@@ -114,19 +102,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
-  AiDevRoute: typeof AiDevRoute
   SessionWorkoutIdRoute: typeof SessionWorkoutIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/ai-dev': {
-      id: '/ai-dev'
-      path: '/ai-dev'
-      fullPath: '/ai-dev'
-      preLoaderRoute: typeof AiDevRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -189,7 +169,6 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
-  AiDevRoute: AiDevRoute,
   SessionWorkoutIdRoute: SessionWorkoutIdRoute,
 }
 export const routeTree = rootRouteImport

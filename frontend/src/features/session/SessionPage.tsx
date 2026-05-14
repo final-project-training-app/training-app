@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { SessionCall } from "./components/SessionCall";
 import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
-import { useCoachSession } from "./useCoachSession";
-import type { CoachSessionStep } from "./coachSessionHelpers";
+import { useCoachSession } from "../ai-conversation";
+import type { CoachSessionStep } from "../ai-conversation";
 
 export function SessionPage() {
   const { workoutId } = useParams({ from: "/session/$workoutId" });
@@ -71,7 +71,6 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const {
     step,
     error,
-    selectedWorkout,
     debugEvents,
     endSession,
     getCurrentRms,
@@ -102,7 +101,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     <>
       <SessionCall
         session={session}
-        workoutName={selectedWorkout?.name ?? session.workoutName}
+        workoutName={session.name ?? session.workoutName}
         coachStep={step}
         coachStatusLabel={error ?? getCoachStatusLabel(step)}
         elapsedSeconds={elapsedSeconds}
