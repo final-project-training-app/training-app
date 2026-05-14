@@ -643,14 +643,19 @@ export function useCoachSession(
   //──────────────────────
   // Manual end session
   //──────────────────────
-  const endSession = useCallback(() => {
+  const endSession = useCallback(async () => {
     stopRingback();
     addDebugEvent("manual end");
     stopSessionAudio();
+    await waitForAIToFinishSpeaking(
+      () => aiTurnStateRef.current,
+      () => getAiPlaybackRemainingMs(),
+      { timeoutMs: 10000 },
+    );
     disconnectLive();
     hasStartedRef.current = false;
     setSessionStep("idle");
-  }, [addDebugEvent, disconnectLive, setSessionStep]);
+  }, [addDebugEvent, disconnectLive, getAiPlaybackRemainingMs, setSessionStep]);
 
   //──────────────────────
   // Cleanup on unmount
