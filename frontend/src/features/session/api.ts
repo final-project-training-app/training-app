@@ -38,7 +38,6 @@ type BackendUserResponse = {
   context: string;
 };
 
-const currentUserId = "6";
 
 function toDurationSeconds(durationMinutes?: number | null) {
   return durationMinutes ? durationMinutes * 60 : 0;
@@ -56,11 +55,13 @@ export async function getTrainer(
 
 export async function getCoachCallSession(
   workoutId: string,
+  userId: string,
 ): Promise<CoachCallSession> {
+  console.log("Fetching coach call session for workoutId=", workoutId, "and userId=", userId);
   const [workout, progress, user] = await Promise.all([
     getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`),
-    getJson<BackendProgressResponse>(`/api/users/${currentUserId}/progress`),
-    getJson<BackendUserResponse>(`/api/users/${currentUserId}`),
+    getJson<BackendProgressResponse>(`/api/users/${userId}/progress`),
+    getJson<BackendUserResponse>(`/api/users/${userId}`),
   ]);
 
   return {

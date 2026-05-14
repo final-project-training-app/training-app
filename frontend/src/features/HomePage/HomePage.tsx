@@ -10,6 +10,7 @@ import type { CoachCallSession } from "../session/types";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
+import useCurrentUser from "../../hooks/useCurrentUser";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -17,14 +18,16 @@ export default function HomePage() {
   const [open, setOpen] = useState(false);
   const { isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
+  const { userId } = useCurrentUser();
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
       return;
     }
-
-    void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
-  }, [isLoaded, isSignedIn, queryClient]);
+    if (userId) {
+      void queryClient.prefetchQuery(coachCallSessionQueryOptions("1", userId));
+    }
+  }, [isLoaded, isSignedIn, queryClient, userId]);
 
   async function primeMicrophonePermission() {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -44,7 +47,11 @@ export default function HomePage() {
     void primeSessionAudio();
     void primeMicrophonePermission();
 
-    const queryOptions = coachCallSessionQueryOptions("1");
+    if (!userId) {
+      return;
+    }
+    const queryOptions = coachCallSessionQueryOptions("1", userId);
+
     const cachedSession = queryClient.getQueryData<CoachCallSession>(
       queryOptions.queryKey,
     );

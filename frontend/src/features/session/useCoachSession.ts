@@ -32,11 +32,15 @@ import {
   type UseCoachSessionOptions,
 } from "./coachSessionHelpers";
 import { useTrainer } from "./query";
+import useCurrentUser from "../../hooks/useCurrentUser";
 
 //──────────────────────
 // Build system instruction
 //──────────────────────
-function buildSessionInstruction(session: CoachCallSession, trainerPrompt?: string | null) {
+function buildSessionInstruction(
+  session: CoachCallSession,
+  trainerPrompt?: string | null,
+) {
   const userContext = buildUserContext(session);
   const base = `${userContext} ${liveSystemInstruction}`;
   if (!trainerPrompt?.trim()) return base;
@@ -50,6 +54,7 @@ export function useCoachSession(
     autoplay?: boolean;
   },
 ) {
+  const { userId } = useCurrentUser();
   const {
     data: trainer,
     isLoading: isTrainerLoading,
@@ -279,7 +284,6 @@ export function useCoachSession(
       if (modelText.trim().length > 0) {
         aiTurnStateRef.current.started = true;
       }
-
 
       const generationFinished =
         Boolean(message.serverContent?.turnComplete) ||
@@ -538,7 +542,7 @@ export function useCoachSession(
 
             const activityResult = await executeLiveToolCall({
               name: "create_activity_log",
-              args: { userId: fixedLiveUserId, workoutId },
+              args: { userId: userId, workoutId },
             });
 
             addDebugEvent(
@@ -568,7 +572,6 @@ export function useCoachSession(
             const started = await startAudioCapture();
             setAudioCapturing(started);
             addDebugEvent("mic after workout (fallback)", started);
-
           }
         },
       });

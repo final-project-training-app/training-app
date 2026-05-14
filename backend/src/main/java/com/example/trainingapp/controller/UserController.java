@@ -86,6 +86,7 @@ public class UserController {
 
     private UserResponseDTO toResponse(User user, String clerkId) {
         return new UserResponseDTO(
+                user.getId(),
                 user.getName(),
                 user.getIntensityLevel(),
                 user.getContext(),
@@ -96,6 +97,7 @@ public class UserController {
 
     private UserResponseDTO toResponse(User user) {
         return new UserResponseDTO(
+                user.getId(),
                 user.getName(),
                 user.getIntensityLevel(),
                 user.getContext(),
