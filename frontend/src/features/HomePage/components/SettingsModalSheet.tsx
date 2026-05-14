@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Settings } from "lucide-react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
+import TrainerSelectionModal from "./TrainerSelectionModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
-import TrainerSelectionModal from "./TrainerSelectionModal";
+import { AppSheet } from "../../../components/AppSheet";
 
-const DEFAULT_DISPLAY_NAME = "No name from database";
+const DEFAULT_DISPLAY_NAME = "No name entered";
 const DEFAULT_INTENSITY_LEVEL = 2;
 const DEFAULT_CONTEXT = "";
 
@@ -58,235 +60,153 @@ function SettingsModalBody({
   context: string;
   trainerId: number | null;
 }) {
-  const DEFAULT_HEIGHT = 96;
-  const MIN_HEIGHT = 68;
-  const MAX_HEIGHT = 98;
-  const DISMISS_HEIGHT = 54;
-
-  const [sheetHeight, setSheetHeight] = useState(DEFAULT_HEIGHT);
-  const startY = useRef(0);
-  const startHeight = useRef(DEFAULT_HEIGHT);
-  const isDragging = useRef(false);
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
   const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(
-    null,
+    initialTrainerId,
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
-  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const updateProfile = useUpdateProfile();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Sync initial values when they change from the profile data (database)
-    // We need to set state here to sync prop-derived state - this is the correct pattern
-    // for initializing component state from props in React 19+
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSelectedTrainerId(initialTrainerId);
     setFullName(userName);
     setIntensityLevel(initialIntensityLevel);
     setContext(initialContext);
-  }, [initialTrainerId, userName, initialIntensityLevel, initialContext]);
+    setSelectedTrainerId(initialTrainerId);
+  }, [userName, initialIntensityLevel, initialContext, initialTrainerId]);
 
-  const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    isDragging.current = true;
-    startY.current = e.clientY;
-    startHeight.current = sheetHeight;
-    e.currentTarget.setPointerCapture(e.pointerId);
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showFeedback = (message: string) => {
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+
+    setSaveFeedback(message);
+
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setSaveFeedback(null);
+    }, 3000);
   };
 
-  const onHandlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) {
+  const handleSave = async () => {
+    setSaveFeedback(null);
+
+    if (selectedTrainerId == null) {
+      showFeedback("Du måste välja en tränare först");
       return;
     }
 
-    const deltaY = e.clientY - startY.current;
-    const deltaVh = (deltaY / window.innerHeight) * 100;
-    const nextHeight = startHeight.current - deltaVh;
-    setSheetHeight(Math.min(MAX_HEIGHT, Math.max(44, nextHeight)));
-  };
+    try {
+      await updateProfile.mutateAsync({
+        name: fullName.trim() || DEFAULT_DISPLAY_NAME,
+        intensityLevel,
+        context,
+        trainerId: Number(selectedTrainerId),
+      });
 
-  const onHandlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) {
-      return;
+      await queryClient.invalidateQueries({
+        queryKey: ["myProfile"],
+      });
+
+      showFeedback("Inställningar sparade ✓");
+    } catch (error) {
+      console.error("[SettingsModalSheet] Save failed:", error);
+      showFeedback("Kunde inte spara ändringarna");
     }
-
-    isDragging.current = false;
-    e.currentTarget.releasePointerCapture(e.pointerId);
-
-    if (sheetHeight < DISMISS_HEIGHT) {
-      setOpen(false);
-      setSheetHeight(DEFAULT_HEIGHT);
-      return;
-    }
-
-    const clamped = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, sheetHeight));
-    setSheetHeight(clamped);
   };
 
   return (
-    <>
-      {/* overlay (click outside to close) */}
-      <div
-        onClick={() => setOpen(false)}
-        className={`fixed inset-0 z-40 bg-black/35 backdrop-blur-sm transition-opacity duration-300 ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-      />
+    <AppSheet
+      open={open}
+      title="Inställningar"
+      subtitle="Anpassa träningspasset efter dig"
+      icon={<Settings size={20} strokeWidth={2.4} />}
+      onClose={() => setOpen(false)}
+      height="large"
+    >
+      <div className="space-y-6">
+        <section>
+          <label
+            htmlFor="fullName"
+            className="text-[15px] font-extrabold text-[#4f3bb8]"
+          >
+            Namn
+          </label>
 
-      {/* bottom sheet */}
-      <div
-        style={{
-          transform: open ? "translateY(0)" : "translateY(100%)",
-          height: `${sheetHeight}dvh`,
-        }}
-        className="fixed bottom-0 left-0 right-0 z-50 overflow-y-auto rounded-t-[2.25rem] bg-[linear-gradient(180deg,#faf8ff_0%,#f7f5fc_45%,#f3effb_100%)] px-6 pb-7 pt-4 shadow-[0_-12px_40px_-8px_rgba(40,29,122,0.18)] transition-[transform,box-shadow] duration-300 ease-out"
-      >
-        <div
-          onPointerDown={onHandlePointerDown}
-          onPointerMove={onHandlePointerMove}
-          onPointerUp={onHandlePointerUp}
-          onPointerCancel={onHandlePointerUp}
-          className="mx-auto mb-6 h-2.5 w-20 cursor-grab rounded-full bg-[#c8bfeb] active:cursor-grabbing"
-        />
+          <input
+            id="fullName"
+            type="text"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="mt-2 w-full rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-[16px] font-semibold text-[#3f2a7a] outline-none focus:ring-2 focus:ring-[#c8bfeb]"
+          />
 
-        <div className="mx-auto w-full max-w-4xl">
-          <h1 className="text-center text-[clamp(2.15rem,6vw,4.35rem)] font-bold leading-none tracking-tight bg-gradient-to-r from-[#1a0f52] via-[#5c35c4] to-[#281d7a] bg-clip-text text-transparent drop-shadow-sm">
-            Inställningar
-          </h1>
+          <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
+            {isLoading
+              ? "Hämtar namn från din profil..."
+              : isSuccess
+                ? fullName === DEFAULT_DISPLAY_NAME
+                  ? "Ingen namnuppgift hittades. Standardnamn används."
+                  : "Namnet är hämtat från din profil."
+                : isError
+                  ? (errorMessage ?? "Kunde inte hämta profilen.")
+                  : ""}
+          </p>
+        </section>
 
-          <section className="mt-9">
-            <div>
-              <label
-                htmlFor="fullName"
-                className="text-[clamp(1.75rem,4.4vw,3rem)] text-[#4f3bb8] font-bold leading-none tracking-tight"
-              >
-                Namn
-              </label>
+        <IntensitySlider value={intensityLevel} onChange={setIntensityLevel} />
 
-              <input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="mt-3 w-full rounded-xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-[clamp(1.15rem,3vw,1.85rem)] text-[#3f2a7a] outline-none focus:ring-2 focus:ring-[#c8bfeb]"
-              />
-              <p className="mt-2 text-sm font-medium text-[#6b59b2]">
-                {isLoading
-                  ? "Hämtar namn från din profil..."
-                  : isSuccess
-                    ? fullName === DEFAULT_DISPLAY_NAME
-                      ? "Ingen Clerk-namnuppgift hittades. Standardsnamn används."
-                      : "Namnet är hämtat från din profil."
-                    : isError
-                      ? (errorMessage ?? "Kunde inte hämta profilen.")
-                      : ""}
-              </p>
+        <ContextModel value={context} onChange={setContext} />
+
+        <section>
+          <TrainerSelectionModal
+            selectedTrainerId={selectedTrainerId}
+            onTrainerSelect={setSelectedTrainerId}
+          />
+        </section>
+
+        <section className="space-y-2.5">
+          <button
+            className="w-full rounded-2xl bg-[#5b3fd6] px-4 py-3.5 text-[16px] font-extrabold text-white transition active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={updateProfile.isPending}
+            onClick={handleSave}
+          >
+            {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
+          </button>
+
+          {saveFeedback ? (
+            <div
+              role="status"
+              className={`rounded-2xl border px-4 py-3 text-center text-[14px] font-bold ${
+                saveFeedback.includes("✓")
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-950"
+                  : "border-rose-300 bg-rose-50 text-rose-950"
+              }`}
+            >
+              {saveFeedback}
             </div>
-          </section>
+          ) : null}
 
-          <section className="mt-8">
-            <IntensitySlider
-              value={intensityLevel}
-              onChange={setIntensityLevel}
-            />
-          </section>
-
-          <section className="mt-7">
-            <ContextModel value={context} onChange={setContext} />
-          </section>
-
-          <section className="mt-6">
-            <p className="mb-3 text-center text-sm font-medium text-[#6b59b2] md:text-base">
-              Välj en tränare nedan och tryck sedan på{" "}
-              <span className="font-bold text-[#4f3bb8]">Spara ändringar</span>{" "}
-              för att spara i din profil.
-            </p>
-            <TrainerSelectionModal
-              selectedTrainerId={selectedTrainerId}
-              onTrainerSelect={setSelectedTrainerId}
-            />
-          </section>
-
-          <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
-            <button
-              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:shadow-[0_8px_28px_-6px_rgba(74,45,172,0.55)] hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
-              disabled={updateProfile.isPending}
-              onClick={async () => {
-                // Clear existing feedback timeout
-                if (feedbackTimeoutRef.current) {
-                  clearTimeout(feedbackTimeoutRef.current);
-                }
-                setSaveFeedback(null);
-
-                const profileData = {
-                  name: fullName.trim() || DEFAULT_DISPLAY_NAME,
-                  intensityLevel,
-                  context,
-                  // Ensure trainerId is a number (coerce from string if needed)
-                  trainerId:
-                    selectedTrainerId == null
-                      ? null
-                      : Number(selectedTrainerId),
-                };
-
-                if (profileData.trainerId == null) {
-                  setSaveFeedback("Du måste välja en tränare först");
-                  feedbackTimeoutRef.current = setTimeout(() => {
-                    setSaveFeedback(null);
-                  }, 3000);
-                  return;
-                }
-
-                try {
-                  await updateProfile.mutateAsync(profileData);
-
-                  await queryClient.invalidateQueries({
-                    queryKey: ["myProfile"],
-                  });
-
-                  setSaveFeedback("Inställningar sparade ✓");
-                  // Keep feedback visible for 3 seconds
-                  feedbackTimeoutRef.current = setTimeout(() => {
-                    setSaveFeedback(null);
-                  }, 3000);
-                } catch (error) {
-                  console.error("[SettingsModalSheet] Save failed:", error);
-                  setSaveFeedback("Kunde inte spara ändringarna");
-                  feedbackTimeoutRef.current = setTimeout(() => {
-                    setSaveFeedback(null);
-                  }, 3000);
-                }
-              }}
-            >
-              {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
-            </button>
-
-            {saveFeedback ? (
-              <div
-                role="status"
-                className={`rounded-2xl border px-4 py-3 text-center text-[1.05rem] font-semibold shadow-sm motion-safe:transition-all motion-safe:duration-300 ${
-                  saveFeedback.includes("✓")
-                    ? "border-emerald-400/45 bg-emerald-50/90 text-emerald-950 ring-1 ring-emerald-500/15"
-                    : "border-rose-300/50 bg-rose-50/90 text-rose-950 ring-1 ring-rose-500/15"
-                }`}
-              >
-                {saveFeedback}
-              </div>
-            ) : null}
-
-            <button
-              className="w-full rounded-xl px-4 py-3 text-[clamp(1.24rem,3.5vw,1.95rem)] font-semibold text-[#4d2a7a] transition-all duration-150
-  hover:text-[#3f2066]
-  active:bg-[#efe9fb] active:text-[#3f2066] active:scale-[0.985]"
-              onClick={() => setOpen(false)}
-            >
-              Avbryt
-            </button>
-          </section>
-        </div>
+          <button
+            className="w-full rounded-xl px-4 py-3 text-[15px] font-extrabold text-[#4d2a7a] transition active:scale-[0.985] active:bg-[#efe9fb]"
+            onClick={() => setOpen(false)}
+          >
+            Avbryt
+          </button>
+        </section>
       </div>
-    </>
+    </AppSheet>
   );
 }

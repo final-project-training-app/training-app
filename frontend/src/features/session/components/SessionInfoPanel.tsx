@@ -1,12 +1,13 @@
+import { CalendarDays, MessageSquareText, UserRound } from "lucide-react";
 import type { CoachCallSession, SessionPanel } from "../types";
 import { ExercisePanel } from "./ExercisePanel";
-import { SessionPanelModal } from "./SessionPanelModal";
 import { TrainingSuitePanel } from "./TrainingSuitePanel";
 import { UserInfoPanel } from "./UserInfoPanel";
+import { AppSheet } from "../../../components/AppSheet";
 
 type SessionInfoPanelProps = {
   session: CoachCallSession;
-  panel: Exclude<SessionPanel, "none">;
+  panel: SessionPanel;
   onClose: () => void;
 };
 
@@ -15,28 +16,51 @@ export function SessionInfoPanel({
   panel,
   onClose,
 }: SessionInfoPanelProps) {
+  if (panel === "none") return null;
+
   if (panel === "suite") {
     return (
-      <SessionPanelModal title="Träningssvit" onClose={onClose}>
+      <AppSheet
+        open
+        title="Träningssvit"
+        subtitle="Din senaste träningshistorik"
+        icon={<CalendarDays size={20} strokeWidth={2.4} />}
+        onClose={onClose}
+        height="default"
+      >
         <TrainingSuitePanel
           streakDays={session.currentStreak}
           items={session.completedWorkouts}
         />
-      </SessionPanelModal>
+      </AppSheet>
     );
   }
 
   if (panel === "exercise") {
     return (
-      <SessionPanelModal title={session.workoutName} onClose={onClose}>
+      <AppSheet
+        open
+        title="Instruktioner"
+        subtitle={session.workoutName ?? session.name}
+        icon={<MessageSquareText size={20} strokeWidth={2.4} />}
+        onClose={onClose}
+        height="large"
+      >
         <ExercisePanel session={session} />
-      </SessionPanelModal>
+      </AppSheet>
     );
   }
 
   return (
-    <SessionPanelModal title="Min info" onClose={onClose}>
+    <AppSheet
+      open
+      title="Min info"
+      subtitle="Det coachen vet om dig"
+      icon={<UserRound size={20} strokeWidth={2.4} />}
+      onClose={onClose}
+      height="default"
+    >
       <UserInfoPanel session={session} />
-    </SessionPanelModal>
+    </AppSheet>
   );
 }

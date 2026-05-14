@@ -5,20 +5,54 @@ export type CompletedWorkout = {
   workoutName: string;
 };
 
+export type Trainer = {
+  id: number;
+  name: string;
+  prompt?: string | null;
+  voice?: string | null;
+  intro?: string | null;
+  language?: string | null;
+  imageSelect?: string | null;
+  imageCall?: string | null;
+  imageStart?: string | null;
+};
+
 export type CoachCallSession = {
-  id: string;
-  workoutName: string;
-  instructions: string;
-  level?: string;
-  type?: string;
-  instructionsAudioUrl?: string;
-  workoutAudioUrl?: string;
+  id: number | string;
+
+  // Backend använder "name" för workout-namnet
+  name?: string;
+
+  // Behålls för äldre frontend-kod
+  workoutName?: string;
+
+  description?: string | null;
+  instructions?: string | null;
+
+  level?: number | string | null;
+  type?: string | null;
+
+  instructionsAudio?: string | null;
+  workoutAudio?: string | null;
+  instructionsAudioUrl?: string | null;
+  workoutAudioUrl?: string | null;
+
+  instructionsImage?: string | null;
+  workoutImage?: string | null;
+
+  kneeFriendly?: boolean;
+  lowImpact?: boolean;
+  seated?: boolean;
+  beginnerFriendly?: boolean;
+
   durationSeconds: number;
 
-  userName: string;
-  intensityLevel: number;
-  context: string;
+  trainer?: Trainer | null;
 
-  currentStreak: number;
-  completedWorkouts: CompletedWorkout[];
+  userName?: string;
+  intensityLevel?: number;
+  context?: string;
+
+  currentStreak?: number;
+  completedWorkouts?: CompletedWorkout[];
 };
