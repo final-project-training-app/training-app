@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from "react";
 import {
-  type FunctionCall,
-  type FunctionResponse,
   GoogleGenAI,
   MediaResolution,
   Modality,
+  type FunctionCall,
+  type FunctionResponse,
   type LiveServerMessage,
   type Session,
   type ToolListUnion,
 } from "@google/genai";
+import { useEffect, useRef, useState } from "react";
 
 const SAMPLE_RATE = 16000;
 const CHUNK_SAMPLES = 2560; // 160 ms @ 16 kHz
@@ -26,6 +26,8 @@ interface UseGeminiLiveProps {
   onMessage?: (message: LiveServerMessage) => void;
   onToolCall?: (functionCall: FunctionCall) => Promise<FunctionResponse>;
   onFirstAiAudio?: () => void;
+  // allow null while async-loading voice from useCurrentUser
+  voice?: string | null;
 }
 
 interface DebugStats {
@@ -59,6 +61,7 @@ export const useGeminiLive = ({
   onMessage,
   onToolCall,
   onFirstAiAudio,
+  voice,
 }: UseGeminiLiveProps) => {
   const [isActive, setIsActive] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -81,7 +84,7 @@ export const useGeminiLive = ({
   const currentRmsRef = useRef(0);
   const onFirstAiAudioRef = useRef(onFirstAiAudio);
   const firstAiAudioFiredRef = useRef(false);
-
+  const voiceRef = useRef<string | null>(voice ?? null);
   useEffect(() => {
     tokenRef.current = token;
     toolsRef.current = tools;
@@ -90,7 +93,9 @@ export const useGeminiLive = ({
     onMessageRef.current = onMessage;
     onToolCallRef.current = onToolCall;
     onFirstAiAudioRef.current = onFirstAiAudio;
-  }, [token, tools, systemInstruction, onAudioData, onMessage, onToolCall]);
+    voiceRef.current = voice ?? null;
+    console.debug("[GeminiLive] voice prop:", voice, "voiceRef.current:", voiceRef.current);
+  }, [token, tools, systemInstruction, onAudioData, onMessage, onToolCall, onFirstAiAudio, voice]);
 
   async function handleToolCalls(functionCalls: FunctionCall[]) {
     const functionResponses = await Promise.all(
@@ -134,6 +139,15 @@ export const useGeminiLive = ({
   async function geminiConnect(overrideToken?: string) {
     console.debug("[GeminiLive] connect pressed");
     setConnectionError(null);
+
+    const selectedVoice = voiceRef.current;
+    if (!selectedVoice) {
+      console.warn("[GeminiLive] connect blocked: voice not loaded yet");
+      setConnectionError("Voice not loaded yet.");
+      return;
+    }
+
+    console.debug("[GeminiLive] connecting with voiceRef:", selectedVoice);
 
     // If a manual connect is requested, allow auto-reconnect again.
     autoReconnectDisabledRef.current = false;
@@ -185,7 +199,7 @@ export const useGeminiLive = ({
             : undefined,
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: "Kore" },
+              prebuiltVoiceConfig: { voiceName: selectedVoice },
             },
           },
         },
