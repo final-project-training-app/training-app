@@ -225,7 +225,10 @@ function SettingsModalBody({
                   intensityLevel,
                   context,
                   // Ensure trainerId is a number (coerce from string if needed)
-                  trainerId: selectedTrainerId == null ? null : Number(selectedTrainerId),
+                  trainerId:
+                    selectedTrainerId == null
+                      ? null
+                      : Number(selectedTrainerId),
                 };
 
                 if (profileData.trainerId == null) {
@@ -237,12 +240,7 @@ function SettingsModalBody({
                 }
 
                 try {
-                  console.debug(
-                    "[SettingsModalSheet] Saving profileData:",
-                    profileData,
-                  );
-                  const resp = await updateProfile.mutateAsync(profileData);
-                  console.debug("[SettingsModalSheet] Update response:", resp);
+                  await updateProfile.mutateAsync(profileData);
 
                   await queryClient.invalidateQueries({
                     queryKey: ["myProfile"],

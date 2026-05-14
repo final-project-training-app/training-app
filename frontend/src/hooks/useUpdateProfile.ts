@@ -50,9 +50,7 @@ export function useUpdateProfile() {
 
       return res.json();
     },
-    onSuccess: (data) => {
-      console.debug("[useUpdateProfile] onSuccess data:", data);
-      queryClient.setQueryData(["myProfile"], data);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["myProfile"] });
     },
     onError: (error) => {

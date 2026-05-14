@@ -137,7 +137,6 @@ public class UserController {
             @RequestBody UserRequestDTO userRequest,
             Authentication authentication
     ) {
-        System.out.println("[UserController] updateCurrentUserProfile received trainerId: " + userRequest.trainerId());
         String clerkId = getClerkId(authentication);
         User updated = userService.updateUserPreferencesByClerkId(
                 clerkId,
