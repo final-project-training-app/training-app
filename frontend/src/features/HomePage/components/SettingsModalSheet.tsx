@@ -87,13 +87,7 @@ function SettingsModalBody({
       setContext(initialContext);
     }
     prevOpenRef.current = open;
-  }, [
-    open,
-    initialTrainerId,
-    userName,
-    initialIntensityLevel,
-    initialContext,
-  ]);
+  }, [open, initialTrainerId, userName, initialIntensityLevel, initialContext]);
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
@@ -168,7 +162,7 @@ function SettingsModalBody({
                 htmlFor="fullName"
                 className="text-[clamp(1.75rem,4.4vw,3rem)] text-[#4f3bb8] font-bold leading-none tracking-tight"
               >
-                Full Name
+                Namn
               </label>
 
               <input
