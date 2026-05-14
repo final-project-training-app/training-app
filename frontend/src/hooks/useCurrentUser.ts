@@ -22,6 +22,7 @@ const useCurrentUser = () => {
   const [level, setLevel] = useState<number | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [voice, setVoice] = useState<string | null>(null);
+  const [coachPrompt, setCoachPrompt] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -39,6 +40,7 @@ const useCurrentUser = () => {
         setUserId(null);
         setTrainerId(null);
         setVoice(FALLBACK_VOICE);
+        setCoachPrompt(null); 
         console.log("User is not signed in, token set to null");
       }
     };
@@ -78,12 +80,14 @@ const useCurrentUser = () => {
         setTrainerId(userData.trainerId);
         setLevel(userData.intensityLevel);
         setVoice(trainerData.voice || FALLBACK_VOICE);
+        setCoachPrompt(trainerData.prompt || null);
       } catch (err) {
         console.error("Failed to fetch user:", err);
         setUserId(null);
         setTrainerId(null);
         setLevel(null);
         setVoice(FALLBACK_VOICE);
+        setCoachPrompt(null);
       }
     };
 
@@ -99,6 +103,7 @@ const useCurrentUser = () => {
     setTrainerId,
     level,
     voice,
+    coachPrompt,
   };
 };
 

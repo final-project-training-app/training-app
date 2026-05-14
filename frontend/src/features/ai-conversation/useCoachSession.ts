@@ -41,7 +41,7 @@ function buildSessionInstruction(
   const userContext = buildUserContext(session);
   const base = `${userContext} ${liveSystemInstruction}`;
   if (!trainerPrompt?.trim()) return base;
-  return `${base}\n\nTrainer prompt:\n${trainerPrompt.trim()}`;
+  return `Trainer prompt:\n${trainerPrompt.trim()}\n\n${base}`;
 }
 
 export function useCoachSession(
@@ -52,7 +52,7 @@ export function useCoachSession(
 ) {
   const { session, autoStart = true } = options;
 
-  const { userId, voice } = useCurrentUser();
+  const { userId, voice, coachPrompt } = useCurrentUser();
   const {
     data: trainer,
     isLoading: isTrainerLoading,
@@ -60,13 +60,13 @@ export function useCoachSession(
   } = useTrainer(options.trainerId ?? "1");
 
   const sessionInstruction = useMemo(
-    () => buildSessionInstruction(session, trainer?.prompt),
-    [session, trainer?.prompt],
+    () => buildSessionInstruction(session, coachPrompt),
+    [session, coachPrompt],
   );
 
   useEffect(() => {
-    console.log("Trainer prompt:", trainer?.prompt);
-  }, [trainer?.prompt]);
+    console.log("Coach prompt:", coachPrompt);
+  }, [coachPrompt]);
 
   const [step, setStep] = useState<CoachSessionStep>("idle");
   const [error, setError] = useState<string | null>(null);
