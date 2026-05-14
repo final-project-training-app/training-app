@@ -1,26 +1,21 @@
-let sessionAudio: HTMLAudioElement | null = null;
+import {
+  getSharedAudioContext,
+  resumeSharedAudioContext,
+} from "./sharedAudioContext";
+
 type CachedAudio = {
-  objectUrl?: string;
+  arrayBuffer?: ArrayBuffer;
+  audioBuffer?: AudioBuffer;
   promise?: Promise<void>;
 };
 
 const preloadedAudio = new Map<string, CachedAudio>();
-const silentAudio =
-  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQQAAAAAAA==";
 
 type PlaySessionAudioOptions = {
   onEnded?: () => void;
 };
 
-function createSessionAudio() {
-  if (!sessionAudio) {
-    sessionAudio = new Audio();
-    sessionAudio.crossOrigin = "anonymous";
-    sessionAudio.setAttribute("playsinline", "true");
-  }
-
-  return sessionAudio;
-}
+let currentSource: AudioBufferSourceNode | null = null;
 
 export function preloadSessionAudio(url?: string | null) {
   if (!url || preloadedAudio.has(url)) {
@@ -35,14 +30,13 @@ export function preloadSessionAudio(url?: string | null) {
       if (!response.ok) {
         throw new Error(`Audio preload failed: ${response.status}`);
       }
-
-      return response.blob();
+      return response.arrayBuffer();
     })
-    .then((blob) => {
-      cached.objectUrl = URL.createObjectURL(blob);
+    .then((ab) => {
+      cached.arrayBuffer = ab;
       console.debug("[SessionAudio] Preloaded audio", {
         url,
-        bytes: blob.size,
+        bytes: ab.byteLength,
         ms: Math.round(performance.now() - startedAt),
       });
     })
@@ -58,90 +52,56 @@ export async function startSessionAudio(
   url: string,
   options: PlaySessionAudioOptions = {},
 ) {
-  const audio = createSessionAudio();
+  stopSessionAudio();
+
   const cachedAudio = preloadedAudio.get(url);
-  if (cachedAudio?.promise && !cachedAudio.objectUrl) {
+  if (cachedAudio?.promise && !cachedAudio.arrayBuffer) {
     await Promise.race([
       cachedAudio.promise,
       new Promise((resolve) => window.setTimeout(resolve, 350)),
     ]);
   }
 
-  const cachedUrl = cachedAudio?.objectUrl;
-  const playableUrl = cachedUrl ?? url;
-  const startedAt = performance.now();
+  const ctx = getSharedAudioContext();
+  await resumeSharedAudioContext();
 
-  console.debug("[SessionAudio] Play requested", {
-    url,
-    cached: Boolean(cachedUrl),
-    readyState: audio.readyState,
-    networkState: audio.networkState,
-  });
-
-  if (audio.src !== playableUrl) {
-    audio.pause();
-    audio.loop = false;
-    audio.muted = false;
-
-    audio.src = playableUrl;
-    audio.currentTime = 0;
-    audio.load();
+  if (cachedAudio && !cachedAudio.audioBuffer && cachedAudio.arrayBuffer) {
+    cachedAudio.audioBuffer = await ctx.decodeAudioData(
+      cachedAudio.arrayBuffer,
+    );
   }
 
-  audio.preload = "auto";
-  audio.onended = options.onEnded ?? null;
-
-  try {
-    await audio.play();
-    console.debug("[SessionAudio] Play started", {
-      url,
-      cached: Boolean(cachedUrl),
-      ms: Math.round(performance.now() - startedAt),
-      readyState: audio.readyState,
-      networkState: audio.networkState,
-    });
-  } catch (error) {
-    console.error("[SessionAudio] Failed to play audio", {
-      url,
-      cached: Boolean(cachedUrl),
-      error,
-      networkState: audio.networkState,
-      readyState: audio.readyState,
-      paused: audio.paused,
-    });
-    throw error;
+  let audioBuffer = cachedAudio?.audioBuffer;
+  if (!audioBuffer) {
+    const ab = await fetch(url).then((r) => r.arrayBuffer());
+    audioBuffer = await ctx.decodeAudioData(ab);
   }
 
-  return audio;
+  console.debug("[SessionAudio] Play started", { url });
+
+  const source = ctx.createBufferSource();
+  source.buffer = audioBuffer;
+  source.onended = options.onEnded ?? null;
+  source.connect(ctx.destination);
+  source.start();
+  currentSource = source;
 }
 
 export async function primeSessionAudio() {
-  const audio = createSessionAudio();
-
-  if (audio.src === silentAudio && !audio.paused) {
-    return;
-  }
-
-  audio.loop = true;
-  audio.muted = true;
-  audio.preload = "auto";
-  audio.src = silentAudio;
-  audio.currentTime = 0;
-
-  try {
-    await audio.play();
-  } catch (error) {
-    console.warn("[SessionAudio] Audio unlock failed", error);
-  }
+  await resumeSharedAudioContext();
+  const ctx = getSharedAudioContext();
+  const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination);
+  src.start();
 }
 
 export function stopSessionAudio() {
-  if (!sessionAudio) {
-    return;
-  }
-
-  sessionAudio.pause();
-  sessionAudio.loop = false;
-  sessionAudio.muted = false;
-  sessionAudio.onended = null;
+  if (!currentSource) return;
+  currentSource.onended = null;
+  try {
+    currentSource.stop();
+  } catch {}
+  currentSource = null;
 }
