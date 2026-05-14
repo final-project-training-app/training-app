@@ -43,10 +43,12 @@ class WorkoutServiceIntegrationTest {
         Workout workout = new Workout();
         workout.setName("Start Flow");
         workout.setDurationSeconds(90);
+
         Workout saved = workoutRepository.save(workout);
 
         Workout started = workoutService.startWorkout(saved.getId(), null);
 
+        assertNotNull(started);
         assertEquals(saved.getId(), started.getId());
         assertEquals(0, activityLogRepository.findAll().size());
     }
