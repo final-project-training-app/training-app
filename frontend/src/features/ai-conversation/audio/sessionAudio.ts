@@ -4,8 +4,7 @@ import {
 } from "./sharedAudioContext";
 
 type CachedAudio = {
-  arrayBuffer?: ArrayBuffer;
-  audioBuffer?: AudioBuffer;
+  objectUrl?: string;
   promise?: Promise<void>;
 };
 
@@ -15,7 +14,21 @@ type PlaySessionAudioOptions = {
   onEnded?: () => void;
 };
 
-let currentSource: AudioBufferSourceNode | null = null;
+// Persistent element + graph nodes — never disconnected after creation.
+// Changing src and calling play()/pause() does not modify the Web Audio
+// graph topology, so the audio renderer never needs to recompile the graph.
+let sessionElement: HTMLAudioElement | null = null;
+
+function setupSessionElement(ctx: AudioContext): HTMLAudioElement {
+  if (!sessionElement) {
+    sessionElement = new Audio();
+    sessionElement.setAttribute("playsinline", "true");
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    ctx.createMediaElementSource(sessionElement).connect(gain);
+  }
+  return sessionElement;
+}
 
 export function preloadSessionAudio(url?: string | null) {
   if (!url || preloadedAudio.has(url)) {
@@ -30,13 +43,13 @@ export function preloadSessionAudio(url?: string | null) {
       if (!response.ok) {
         throw new Error(`Audio preload failed: ${response.status}`);
       }
-      return response.arrayBuffer();
+      return response.blob();
     })
-    .then((ab) => {
-      cached.arrayBuffer = ab;
+    .then((blob) => {
+      cached.objectUrl = URL.createObjectURL(blob);
       console.debug("[SessionAudio] Preloaded audio", {
         url,
-        bytes: ab.byteLength,
+        bytes: blob.size,
         ms: Math.round(performance.now() - startedAt),
       });
     })
@@ -52,10 +65,8 @@ export async function startSessionAudio(
   url: string,
   options: PlaySessionAudioOptions = {},
 ) {
-  stopSessionAudio();
-
   const cachedAudio = preloadedAudio.get(url);
-  if (cachedAudio?.promise && !cachedAudio.arrayBuffer) {
+  if (cachedAudio?.promise && !cachedAudio.objectUrl) {
     await Promise.race([
       cachedAudio.promise,
       new Promise((resolve) => window.setTimeout(resolve, 350)),
@@ -64,32 +75,29 @@ export async function startSessionAudio(
 
   const ctx = getSharedAudioContext();
   await resumeSharedAudioContext();
+  const element = setupSessionElement(ctx);
 
-  if (cachedAudio && !cachedAudio.audioBuffer && cachedAudio.arrayBuffer) {
-    cachedAudio.audioBuffer = await ctx.decodeAudioData(
-      cachedAudio.arrayBuffer,
-    );
-  }
+  const playableUrl = cachedAudio?.objectUrl ?? url;
+  element.pause();
+  element.src = playableUrl;
+  element.currentTime = 0;
+  element.onended = options.onEnded ?? null;
 
-  let audioBuffer = cachedAudio?.audioBuffer;
-  if (!audioBuffer) {
-    const ab = await fetch(url).then((r) => r.arrayBuffer());
-    audioBuffer = await ctx.decodeAudioData(ab);
-  }
-
-  console.debug("[SessionAudio] Play started", { url });
-
-  const source = ctx.createBufferSource();
-  source.buffer = audioBuffer;
-  source.onended = options.onEnded ?? null;
-  source.connect(ctx.destination);
-  source.start();
-  currentSource = source;
+  console.debug("[SessionAudio] Play started", {
+    url,
+    cached: Boolean(cachedAudio?.objectUrl),
+  });
+  await element.play();
 }
 
 export async function primeSessionAudio() {
   await resumeSharedAudioContext();
   const ctx = getSharedAudioContext();
+  // Set up the persistent session element + graph connection during the
+  // user gesture so iOS allows later play() calls outside a gesture.
+  setupSessionElement(ctx);
+
+  // Warm up the AudioContext with a silent buffer.
   const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
   const src = ctx.createBufferSource();
   src.buffer = buf;
@@ -98,10 +106,7 @@ export async function primeSessionAudio() {
 }
 
 export function stopSessionAudio() {
-  if (!currentSource) return;
-  currentSource.onended = null;
-  try {
-    currentSource.stop();
-  } catch {}
-  currentSource = null;
+  if (!sessionElement) return;
+  sessionElement.onended = null;
+  sessionElement.pause();
 }

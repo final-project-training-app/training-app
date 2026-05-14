@@ -7,6 +7,10 @@ export function getSharedAudioContext(): AudioContext {
   return sharedCtx;
 }
 
+export function getSharedAudioContextIfExists(): AudioContext | null {
+  return sharedCtx;
+}
+
 export async function resumeSharedAudioContext(): Promise<void> {
   const ctx = getSharedAudioContext();
   if (ctx.state === "suspended") {
