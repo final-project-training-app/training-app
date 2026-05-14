@@ -1,7 +1,9 @@
 package com.example.trainingapp.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "users")
 public class User {
@@ -29,57 +31,5 @@ public class User {
         this.clerkId = clerkId;
         this.role = "USER";
         this.trainerId = DEFAULT_TRAINER_ID;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getIntensityLevel() {
-        return intensityLevel;
-    }
-
-    public void setIntensityLevel(Integer intensityLevel) {
-        this.intensityLevel = intensityLevel;
-    }
-
-    public String getContext() {
-        return context;
-    }
-
-    public void setContext(String context) {
-        this.context = context;
-    }
-
-    public String getClerkId() {
-        return clerkId;
-    }
-
-    public void setClerkId(String clerkId) {
-        this.clerkId = clerkId;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public Long getTrainerId() {
-        return trainerId;
-    }
-
-    public void setTrainerId(Long trainerId) {
-        this.trainerId = trainerId;
     }
 }

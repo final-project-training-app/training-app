@@ -9,9 +9,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Data
 @Entity
 @Table(name = "user_workout_preferences", indexes = {
         @Index(name = "idx_user_workout_pref_user_id", columnList = "userId"),
@@ -33,45 +35,5 @@ public class UserWorkoutPreference {
     private UserWorkoutPreferenceType preferenceType;
 
     private LocalDateTime createdAt;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Long getWorkoutId() {
-        return workoutId;
-    }
-
-    public void setWorkoutId(Long workoutId) {
-        this.workoutId = workoutId;
-    }
-
-    public UserWorkoutPreferenceType getPreferenceType() {
-        return preferenceType;
-    }
-
-    public void setPreferenceType(UserWorkoutPreferenceType preferenceType) {
-        this.preferenceType = preferenceType;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 }
 
