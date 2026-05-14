@@ -224,7 +224,8 @@ function SettingsModalBody({
                   name: fullName.trim() || DEFAULT_DISPLAY_NAME,
                   intensityLevel,
                   context,
-                  trainerId: selectedTrainerId,
+                  // Ensure trainerId is a number (coerce from string if needed)
+                  trainerId: selectedTrainerId == null ? null : Number(selectedTrainerId),
                 };
 
                 if (profileData.trainerId == null) {
