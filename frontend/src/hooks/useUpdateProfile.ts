@@ -52,6 +52,7 @@ export function useUpdateProfile() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["myProfile"], data);
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
     },
     onError: (error) => {
       console.error("[useUpdateProfile]", error);

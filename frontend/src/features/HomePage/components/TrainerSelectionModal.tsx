@@ -41,7 +41,6 @@ export default function TrainerSelectionModal({
     [trainers],
   );
 
-  // ✅ FIX 1: DO NOT fallback to first trainer (prevents wrong overwrites)
   const resolvedId = selectedTrainerId;
 
   useEffect(() => {
@@ -114,7 +113,7 @@ export default function TrainerSelectionModal({
             <ChevronRight />
           </button>
 
-          <div className="no-scrollbar flex snap-x overflow-x-auto px-4 py-6">
+          <div className="no-scrollbar flex items-center gap-3 overflow-x-auto px-4 py-10">
             {isLoading ? (
               <div>Hämtar tränare …</div>
             ) : trainers.length > 0 ? (
@@ -122,6 +121,9 @@ export default function TrainerSelectionModal({
                 <div
                   id={`trainer-card-${trainer.id}`}
                   key={trainer.id}
+                  className={`relative shrink-0 ${
+                    resolvedId === trainer.id ? "z-20" : "z-0"
+                  }`}
                   role="option"
                   aria-selected={resolvedId === trainer.id}
                 >

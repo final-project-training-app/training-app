@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
 import TrainerSelectionModal from "./TrainerSelectionModal";
 
-const DEFAULT_DISPLAY_NAME = "No name entered";
+const DEFAULT_DISPLAY_NAME = "No name from database";
+const DEFAULT_INTENSITY_LEVEL = 2;
+const DEFAULT_CONTEXT = "";
 
 export default function SettingsModalSheet({
   open,
@@ -25,8 +28,8 @@ export default function SettingsModalSheet({
       isError={isError}
       errorMessage={error instanceof Error ? error.message : null}
       userName={user?.name?.trim() ? user.name : DEFAULT_DISPLAY_NAME}
-      intensityLevel={user?.intensityLevel ?? 2}
-      context={user?.context ?? ""}
+      intensityLevel={user?.intensityLevel ?? DEFAULT_INTENSITY_LEVEL}
+      context={user?.context ?? DEFAULT_CONTEXT}
       trainerId={user?.trainerId ?? null}
     />
   );
@@ -68,19 +71,16 @@ function SettingsModalBody({
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
   const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(
-    initialTrainerId,
+    null,
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateProfile = useUpdateProfile();
+  const queryClient = useQueryClient();
   const prevOpenRef = useRef(open);
 
   useEffect(() => {
-    setSelectedTrainerId(initialTrainerId);
-  }, [initialTrainerId]);
-
-  useEffect(() => {
-    if (open && !prevOpenRef.current) {
+    if (open) {
       setSelectedTrainerId(initialTrainerId);
       setFullName(userName);
       setIntensityLevel(initialIntensityLevel);
@@ -213,7 +213,7 @@ function SettingsModalBody({
             <button
               className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:shadow-[0_8px_28px_-6px_rgba(74,45,172,0.55)] hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
               disabled={updateProfile.isPending}
-              onClick={() => {
+              onClick={async () => {
                 // Clear existing feedback timeout
                 if (feedbackTimeoutRef.current) {
                   clearTimeout(feedbackTimeoutRef.current);
@@ -224,25 +224,35 @@ function SettingsModalBody({
                   name: fullName.trim() || DEFAULT_DISPLAY_NAME,
                   intensityLevel,
                   context,
-                  trainerId: selectedTrainerId ?? null,
+                  trainerId: selectedTrainerId,
                 };
 
-                updateProfile.mutate(profileData, {
-                  onSuccess: () => {
-                    setSaveFeedback("Inställningar sparade ✓");
-                    // Keep feedback visible for 3 seconds
-                    feedbackTimeoutRef.current = setTimeout(() => {
-                      setSaveFeedback(null);
-                    }, 3000);
-                  },
-                  onError: (error) => {
-                    console.error("[SettingsModalSheet] Save failed:", error);
-                    setSaveFeedback("Kunde inte spara ändringarna");
-                    feedbackTimeoutRef.current = setTimeout(() => {
-                      setSaveFeedback(null);
-                    }, 3000);
-                  },
-                });
+                if (profileData.trainerId == null) {
+                  setSaveFeedback("Du måste välja en tränare först");
+                  feedbackTimeoutRef.current = setTimeout(() => {
+                    setSaveFeedback(null);
+                  }, 3000);
+                  return;
+                }
+
+                try {
+                  await updateProfile.mutateAsync(profileData);
+                  await queryClient.invalidateQueries({
+                    queryKey: ["myProfile"],
+                  });
+
+                  setSaveFeedback("Inställningar sparade ✓");
+                  // Keep feedback visible for 3 seconds
+                  feedbackTimeoutRef.current = setTimeout(() => {
+                    setSaveFeedback(null);
+                  }, 3000);
+                } catch (error) {
+                  console.error("[SettingsModalSheet] Save failed:", error);
+                  setSaveFeedback("Kunde inte spara ändringarna");
+                  feedbackTimeoutRef.current = setTimeout(() => {
+                    setSaveFeedback(null);
+                  }, 3000);
+                }
               }}
             >
               {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
