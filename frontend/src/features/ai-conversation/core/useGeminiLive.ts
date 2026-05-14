@@ -457,13 +457,19 @@ export const useGeminiLive = ({
     try {
       console.debug("[GeminiLive] requesting microphone access");
 
+      // On iOS, echoCancellation puts AVAudioSession into voiceChat mode which
+      // automatically ducks other audio playback (gym ambience) when new audio
+      // starts. Disabling it on iOS prevents OS-level AEC ducking.
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
           sampleRate: SAMPLE_RATE,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
+          echoCancellation: !isIOS,
+          noiseSuppression: !isIOS,
+          autoGainControl: !isIOS,
         },
       });
       mediaStreamRef.current = stream;
