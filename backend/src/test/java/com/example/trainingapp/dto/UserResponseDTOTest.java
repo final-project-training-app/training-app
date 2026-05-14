@@ -10,7 +10,7 @@ class UserResponseDTOTest {
 
     @Test
     void recordStoresValues() {
-        UserResponseDTO dto = new UserResponseDTO("Jane", 4, "context", true, 7L);
+        UserResponseDTO dto = new UserResponseDTO(1L,"Jane", 4, "context", true, 7L);
 
         assertEquals("Jane", dto.name());
         assertEquals(4, dto.intensityLevel());
