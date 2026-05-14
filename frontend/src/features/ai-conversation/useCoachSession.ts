@@ -141,6 +141,7 @@ export function useCoachSession(
     geminiDisconnect,
     startAudioCapture,
     stopAudioCapture,
+    haltCapture,
     suppressAiOutput,
     allowAiOutput,
     isActive,
@@ -290,13 +291,12 @@ export function useCoachSession(
   const pauseLive = useCallback(() => {
     console.log("Pausing during ", currentTurn + "'s turn");
     addDebugEvent("pauseAI-called", stepRef.current);
-    try {
-      stopAudioCapture?.();
-    } catch (e) {
-      console.warn("pauseLive failed", e);
-    }
+    // Halt sending audio data to Gemini without closing the AudioContext or
+    // stopping media tracks — avoids OS audio session reconfiguration that
+    // would cause a brief dropout in the gym ambience.
+    haltCapture();
     setAudioCapturing(false);
-  }, [addDebugEvent, currentTurn, stopAudioCapture]);
+  }, [addDebugEvent, currentTurn, haltCapture]);
 
   //──────────────────────
   // Disconnect live session

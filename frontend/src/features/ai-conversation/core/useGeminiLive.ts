@@ -81,6 +81,7 @@ export const useGeminiLive = ({
   const connectingRef = useRef(false);
   const autoReconnectDisabledRef = useRef(false);
   const suppressAiAudioRef = useRef(false);
+  const captureHaltedRef = useRef(false);
   const currentRmsRef = useRef(0);
   const onFirstAiAudioRef = useRef(onFirstAiAudio);
   const firstAiAudioFiredRef = useRef(false);
@@ -451,6 +452,7 @@ export const useGeminiLive = ({
       console.warn(
         "[GeminiLive] startAudioCapture() called while already capturing — ignored",
       );
+      captureHaltedRef.current = false;
       return true;
     }
 
@@ -537,6 +539,7 @@ export const useGeminiLive = ({
         const { pcm16, rms } = event.data;
         currentRmsRef.current = rms;
 
+        if (captureHaltedRef.current) return;
         if (Date.now() < playingUntilWallMsRef.current) return;
 
         const base64 = pcm16ToBase64(pcm16);
@@ -578,6 +581,10 @@ export const useGeminiLive = ({
       );
       return false;
     }
+  }
+
+  function haltCapture() {
+    captureHaltedRef.current = true;
   }
 
   function endUserTurn() {
@@ -651,6 +658,7 @@ export const useGeminiLive = ({
     geminiDisconnect,
     startAudioCapture,
     stopAudioCapture,
+    haltCapture,
     suppressAiOutput,
     allowAiOutput,
     endUserTurn,
