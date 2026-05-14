@@ -2,6 +2,7 @@ package com.example.trainingapp.service;
 
 import com.example.trainingapp.entity.Trainer;
 import com.example.trainingapp.repository.TrainerRepository;
+import com.example.trainingapp.dto.TrainerRequestDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -24,16 +25,16 @@ public class TrainerService {
         return trainerRepository.findAll();
     }
 
-    public Trainer createTrainer(Trainer request) {
+    public Trainer createTrainer(TrainerRequestDto request) {
         if (request == null) {
             throw new ResponseStatusException(BAD_REQUEST, "Request body is required");
         }
 
-        String name = normalizeRequired(request.getName(), "name", 120);
-        String prompt = normalizeRequired(request.getPrompt(), "prompt", 8000);
-        String voice = normalizeRequired(request.getVoice(), "voice", 120);
-        String intro = normalizeRequired(request.getIntro(), "intro", 2048);
-        String language = normalizeRequired(request.getLanguage(), "language", 40);
+        String name = normalizeRequired(request.name(), "name", 120);
+        String prompt = normalizeRequired(request.prompt(), "prompt", 8000);
+        String voice = normalizeRequired(request.voice(), "voice", 120);
+        String intro = normalizeRequired(request.intro(), "intro", 2048);
+        String language = normalizeRequired(request.language(), "language", 40);
 
         if (trainerRepository.existsByNameIgnoreCaseAndLanguageIgnoreCase(name, language)) {
             throw new ResponseStatusException(CONFLICT, "Trainer already exists for this language");
@@ -45,14 +46,14 @@ public class TrainerService {
         trainer.setVoice(voice);
         trainer.setIntro(intro);
         trainer.setLanguage(language);
-        trainer.setImageSelect(normalizeOptional(request.getImageSelect(), "imageSelect", 2048));
-        trainer.setImageCall(normalizeOptional(request.getImageCall(), "imageCall", 2048));
-        trainer.setImageStart(normalizeOptional(request.getImageStart(), "imageStart", 2048));
+        trainer.setImageSelect(normalizeOptional(request.imageSelect(), "imageSelect", 2048));
+        trainer.setImageCall(normalizeOptional(request.imageCall(), "imageCall", 2048));
+        trainer.setImageStart(normalizeOptional(request.imageStart(), "imageStart", 2048));
 
         return trainerRepository.save(trainer);
     }
 
-    public Trainer updateTrainer(Long id, Trainer request) {
+    public Trainer updateTrainer(Long id, TrainerRequestDto request) {
         validateId(id);
 
         if (request == null) {
@@ -62,11 +63,11 @@ public class TrainerService {
         Trainer trainer = trainerRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Trainer not found"));
 
-        String name = normalizeRequired(request.getName(), "name", 120);
-        String prompt = normalizeRequired(request.getPrompt(), "prompt", 8000);
-        String voice = normalizeRequired(request.getVoice(), "voice", 120);
-        String intro = normalizeRequired(request.getIntro(), "intro", 2048);
-        String language = normalizeRequired(request.getLanguage(), "language", 40);
+        String name = normalizeRequired(request.name(), "name", 120);
+        String prompt = normalizeRequired(request.prompt(), "prompt", 8000);
+        String voice = normalizeRequired(request.voice(), "voice", 120);
+        String intro = normalizeRequired(request.intro(), "intro", 2048);
+        String language = normalizeRequired(request.language(), "language", 40);
 
         if (trainerRepository.existsByNameIgnoreCaseAndLanguageIgnoreCase(name, language)
                 && (!name.equalsIgnoreCase(trainer.getName())
@@ -79,9 +80,9 @@ public class TrainerService {
         trainer.setVoice(voice);
         trainer.setIntro(intro);
         trainer.setLanguage(language);
-        trainer.setImageSelect(normalizeOptional(request.getImageSelect(), "imageSelect", 2048));
-        trainer.setImageCall(normalizeOptional(request.getImageCall(), "imageCall", 2048));
-        trainer.setImageStart(normalizeOptional(request.getImageStart(), "imageStart", 2048));
+        trainer.setImageSelect(normalizeOptional(request.imageSelect(), "imageSelect", 2048));
+        trainer.setImageCall(normalizeOptional(request.imageCall(), "imageCall", 2048));
+        trainer.setImageStart(normalizeOptional(request.imageStart(), "imageStart", 2048));
 
         return trainerRepository.save(trainer);
     }

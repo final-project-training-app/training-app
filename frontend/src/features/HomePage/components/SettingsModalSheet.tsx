@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Settings } from "lucide-react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
-import { AppSheet } from "../../../components/AppSheet";
 
-const DEFAULT_DISPLAY_NAME = "No name entered";
+const DEFAULT_DISPLAY_NAME = "No name from database";
+const DEFAULT_INTENSITY_LEVEL = 2;
+const DEFAULT_CONTEXT = "";
 
 export default function SettingsModalSheet({
   open,
@@ -19,12 +21,12 @@ export default function SettingsModalSheet({
 
   return (
     <SettingsModalBody
-      key={open ? "open" : "closed"}
       open={open}
       setOpen={setOpen}
       userName={user?.name?.trim() ? user.name : DEFAULT_DISPLAY_NAME}
-      intensityLevel={user?.intensityLevel ?? 2}
-      context={user?.context ?? ""}
+      intensityLevel={user?.intensityLevel ?? DEFAULT_INTENSITY_LEVEL}
+      context={user?.context ?? DEFAULT_CONTEXT}
+      trainerId={user?.trainerId ?? null}
     />
   );
 }
@@ -35,37 +37,99 @@ function SettingsModalBody({
   userName,
   intensityLevel: initialIntensityLevel,
   context: initialContext,
+  trainerId: initialTrainerId,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
   userName: string;
   intensityLevel: number;
   context: string;
+  trainerId: number | null;
 }) {
   const [fullName, setFullName] = useState(userName);
   const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
   const [context, setContext] = useState(initialContext);
+  const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(
+    null,
+  );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
-
   const updateProfile = useUpdateProfile();
 
+  const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    isDragging.current = true;
+    startY.current = e.clientY;
+    startHeight.current = sheetHeight;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onHandlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging.current) {
+      return;
+    }
+
+    const deltaY = e.clientY - startY.current;
+    const deltaVh = (deltaY / window.innerHeight) * 100;
+    const nextHeight = startHeight.current - deltaVh;
+    setSheetHeight(Math.min(MAX_HEIGHT, Math.max(44, nextHeight)));
+  };
+
+  const onHandlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging.current) {
+      return;
+    }
+
+    isDragging.current = false;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+
+    if (sheetHeight < DISMISS_HEIGHT) {
+      setOpen(false);
+      setSheetHeight(DEFAULT_HEIGHT);
+      return;
+    }
+
+    const clamped = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, sheetHeight));
+    setSheetHeight(clamped);
+  };
+
   return (
-    <AppSheet
-      open={open}
-      title="Inställningar"
-      subtitle="Anpassa träningspasset efter dig"
-      icon={<Settings size={20} strokeWidth={2.4} />}
-      onClose={() => setOpen(false)}
-      height="large"
-    >
-      <div className="space-y-6">
-        <section>
-          <label
-            htmlFor="fullName"
-            className="text-[15px] font-extrabold text-[#4f3bb8]"
-          >
-            Namn
-          </label>
+    <>
+      {/* overlay (click outside to close) */}
+      <div
+        onClick={() => setOpen(false)}
+        className={`fixed inset-0 z-40 bg-black/35 backdrop-blur-sm transition-opacity duration-300 ${
+          open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
+
+      {/* bottom sheet */}
+      <div
+        style={{
+          transform: open ? "translateY(0)" : "translateY(100%)",
+          height: `${sheetHeight}dvh`,
+        }}
+        className="fixed bottom-0 left-0 right-0 z-50 overflow-y-auto rounded-t-[2.25rem] bg-[#f7f5fc] px-6 pb-7 pt-4 shadow-2xl transition-transform duration-300"
+      >
+        <div
+          onPointerDown={onHandlePointerDown}
+          onPointerMove={onHandlePointerMove}
+          onPointerUp={onHandlePointerUp}
+          onPointerCancel={onHandlePointerUp}
+          className="mx-auto mb-6 h-2.5 w-20 cursor-grab rounded-full bg-[#c8bfeb] active:cursor-grabbing"
+        />
+
+        <div className="mx-auto w-full max-w-4xl">
+          <h1 className="text-center text-[clamp(2.15rem,6vw,4.35rem)] font-bold leading-none tracking-tight text-[#281d7a]">
+            Installningar
+          </h1>
+
+          <section className="mt-9">
+            <div>
+              <label
+                htmlFor="fullName"
+                className="text-[clamp(1.75rem,4.4vw,3rem)] text-[#4f3bb8] font-bold leading-none tracking-tight"
+              >
+                Full Name
+              </label>
 
           <input
             id="fullName"
@@ -80,39 +144,48 @@ function SettingsModalBody({
           </p>
         </section>
 
-        <IntensitySlider value={intensityLevel} onChange={setIntensityLevel} />
+          <section className="mt-8">
+            <IntensitySlider
+              value={intensityLevel}
+              onChange={setIntensityLevel}
+            />
+          </section>
 
-        <ContextModel value={context} onChange={setContext} />
+          <section className="mt-7">
+            <ContextModel value={context} onChange={setContext} />
+          </section>
 
-        <section className="space-y-2.5">
-          <button
-            className="w-full rounded-2xl bg-[#5b3fd6] px-4 py-3.5 text-[16px] font-extrabold text-white transition active:scale-[0.985]"
-            disabled={updateProfile.isPending}
-            onClick={() => {
-              setSaveFeedback(null);
+          <section className="mt-2 space-y-2.5 md:mt-1 md:space-y-2">
+            <button
+              className="w-full rounded-2xl bg-gradient-to-r from-[#5c35c4] to-[#4a2dac] px-4 py-5 text-[clamp(1.3rem,3.8vw,2.1rem)] font-semibold text-white shadow-md transition-all duration-150 hover:brightness-105 active:scale-[0.985] active:brightness-90 md:py-6"
+              disabled={updateProfile.isPending}
+              onClick={() => {
+                setSaveFeedback(null);
+                updateProfile.mutate(
+                  {
+                    name: fullName.trim() || DEFAULT_DISPLAY_NAME,
+                    intensityLevel,
+                    context,
+                  },
+                  {
+                    onSuccess: () => {
+                      setSaveFeedback("Inställningar sparade ✓");
+                    },
+                    onError: () => {
+                      setSaveFeedback("Kunde inte spara ändringarna");
+                    },
+                  },
+                );
+              }}
+            >
+              {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
+            </button>
 
-              updateProfile.mutate(
-                {
-                  name: fullName,
-                  intensityLevel,
-                  context,
-                },
-                {
-                  onSuccess: () => setSaveFeedback("Inställningar sparade ✓"),
-                  onError: () =>
-                    setSaveFeedback("Kunde inte spara ändringarna"),
-                },
-              );
-            }}
-          >
-            {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
-          </button>
-
-          {saveFeedback ? (
-            <div className="rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-center text-[14px] font-bold text-[#3f2a7a]">
-              {saveFeedback}
-            </div>
-          ) : null}
+            {saveFeedback ? (
+              <div className="rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-center text-[1.05rem] font-semibold text-[#3f2a7a] shadow-sm">
+                {saveFeedback}
+              </div>
+            ) : null}
 
           <button
             className="w-full rounded-xl px-4 py-3 text-[15px] font-extrabold text-[#4d2a7a] transition active:scale-[0.985] active:bg-[#efe9fb]"

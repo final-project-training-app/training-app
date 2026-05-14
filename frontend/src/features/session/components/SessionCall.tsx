@@ -7,11 +7,55 @@ import {
   UserRound,
   Volume2,
 } from "lucide-react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useState, type ReactNode } from "react";
 import type { CoachCallSession, SessionPanel } from "../types";
 import { SessionInfoPanel } from "./SessionInfoPanel";
 import SettingsModalSheet from "../../HomePage/components/SettingsModalSheet";
 import type { CoachSessionDebugEvent } from "../coachSessionHelpers";
+
+const INTERRUPT_THRESHOLD = 0.25;
+const METER_MAX = 0.5;
+
+function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const valRef = useRef<HTMLSpanElement>(null);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    function tick() {
+      const rms = getCurrentRms();
+      if (barRef.current)
+        barRef.current.style.width = `${Math.min(rms / METER_MAX, 1) * 100}%`;
+      if (valRef.current) valRef.current.textContent = rms.toFixed(3);
+      rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [getCurrentRms]);
+
+  const thresholdPct = (INTERRUPT_THRESHOLD / METER_MAX) * 100;
+
+  return (
+    <div className="mt-2">
+      <div className="mb-0.5 flex justify-between font-sans text-[10px] text-white/60">
+        <span>mic rms</span>
+        <span ref={valRef}>0.000</span>
+      </div>
+      <div className="relative h-3 w-full overflow-hidden rounded bg-white/10">
+        <div ref={barRef} className="h-full rounded bg-emerald-400 transition-none" style={{ width: "0%" }} />
+        <div
+          className="absolute top-0 h-full w-px bg-red-400"
+          style={{ left: `${thresholdPct}%` }}
+          title={`interrupt threshold (${INTERRUPT_THRESHOLD})`}
+        />
+      </div>
+      <div className="mt-0.5 font-sans text-[9px] text-white/40">
+        röd linje = interrupt threshold ({INTERRUPT_THRESHOLD})
+      </div>
+    </div>
+  );
+}
 
 type SessionCallProps = {
   session: CoachCallSession;
@@ -22,6 +66,7 @@ type SessionCallProps = {
   durationSeconds: number;
   activePanel: SessionPanel;
   debugEvents?: CoachSessionDebugEvent[];
+  getCurrentRms?: () => number;
   onSpeaker: () => void;
   onTrainingSuite: () => void;
   onInfo: () => void;
@@ -104,6 +149,7 @@ export function SessionCall({
   elapsedSeconds,
   activePanel,
   debugEvents = [],
+  getCurrentRms,
   onSpeaker,
   onTrainingSuite,
   onInfo,
@@ -119,8 +165,8 @@ export function SessionCall({
   const displayWorkoutName = getWorkoutName(session, workoutName);
 
   return (
-    <main className="relative h-full w-full overflow-hidden bg-[#fbf8ff] text-[#221447]">
-      {SHOW_DEV_DEBUG && import.meta.env.DEV && debugEvents.length > 0 ? (
+    <main className="relative h-dvh overflow-hidden [background:var(--brand-call-background)]">
+      {import.meta.env.DEV && debugEvents.length > 0 ? (
         <div className="absolute left-3 top-3 z-20 max-h-52 w-[calc(100%-1.5rem)] max-w-sm overflow-hidden rounded-lg bg-black/75 p-3 font-mono text-[11px] leading-4 text-white shadow-lg">
           <div className="mb-1 font-sans text-xs font-bold">Dev debug</div>
 
@@ -133,6 +179,7 @@ export function SessionCall({
               ) : null}
             </div>
           ))}
+          {getCurrentRms ? <VolumeMeter getCurrentRms={getCurrentRms} /> : null}
         </div>
       ) : null}
 

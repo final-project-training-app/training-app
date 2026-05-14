@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { SessionCall } from "./components/SessionCall";
 import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
@@ -71,11 +72,16 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const { step, error, selectedWorkout, debugEvents, endSession } =
-    useCoachSession({
-      session,
-      autoStart: true,
-    });
+  const {
+    step,
+    error,
+    selectedWorkout,
+    debugEvents,
+    endSession,
+  } = useCoachSession({
+    session,
+    autoStart: true,
+  });
 
   useEffect(() => {
     if (step === "idle" || step === "completed" || step === "error") {
@@ -105,20 +111,22 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const workoutName = selectedWorkout?.name ?? getWorkoutName(session);
 
   return (
-    <SessionCall
-      session={session}
-      workoutName={workoutName}
-      coachStep={step}
-      coachStatusLabel={error ?? getCoachStatusLabel(step)}
-      elapsedSeconds={elapsedSeconds}
-      durationSeconds={session.durationSeconds}
-      activePanel={activePanel}
-      debugEvents={debugEvents}
-      onSpeaker={() => togglePanel("exercise")}
-      onTrainingSuite={() => togglePanel("suite")}
-      onInfo={() => togglePanel("info")}
-      onClosePanel={() => setActivePanel("none")}
-      onEnd={handleEnd}
-    />
+    <>
+      <SessionCall
+        session={session}
+        workoutName={selectedWorkout?.name ?? session.workoutName}
+        coachStep={step}
+        coachStatusLabel={error ?? getCoachStatusLabel(step)}
+        elapsedSeconds={elapsedSeconds}
+        durationSeconds={0}
+        activePanel={activePanel}
+        debugEvents={debugEvents}
+        onSpeaker={() => togglePanel("exercise")}
+        onTrainingSuite={() => togglePanel("suite")}
+        onInfo={() => togglePanel("info")}
+        onClosePanel={() => setActivePanel("none")}
+        onEnd={handleEnd}
+      />
+    </>
   );
 }

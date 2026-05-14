@@ -7,6 +7,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -79,14 +80,19 @@ public class UserService {
             String clerkId,
             String name,
             int intensityLevel,
-            String context
+            String context,
+            Long trainerId
     ) {
+        if (trainerId == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Trainer is required");
+        }
+
         User user = getByClerkIdOrThrow(clerkId);
 
         user.setName(sanitizeDisplayName(name));
         user.setIntensityLevel(intensityLevel);
         user.setContext(context);
-
+        user.setTrainerId(trainerId);
         return userRepository.save(user);
     }
 

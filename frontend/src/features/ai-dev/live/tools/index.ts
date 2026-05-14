@@ -1,5 +1,6 @@
 export {
   executeLiveToolCall,
   liveTools,
+  coachLiveTools,
 } from "./liveToolRegistry";
-export { liveSystemInstruction } from "./systemInstruction";
+export { liveSystemInstruction } from "../../../session/coachPrompts";

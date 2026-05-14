@@ -19,11 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-
-record CreateUserRequest(String displayName) {
-}
 
 @RestController
 @RequestMapping("/api/users")
@@ -68,7 +66,7 @@ public class UserController {
         String givenName = jwt.getClaimAsString("given_name");
         String familyName = jwt.getClaimAsString("family_name");
         String fullName = String.join(" ",
-                java.util.Arrays.asList(givenName, familyName).stream()
+                Stream.of(givenName, familyName)
                         .filter(part -> part != null && !part.isBlank())
                         .toList()
         ).trim();
@@ -91,7 +89,8 @@ public class UserController {
                 user.getName(),
                 user.getIntensityLevel(),
                 user.getContext(),
-                userService.isAdmin(clerkId)
+                userService.isAdmin(clerkId),
+                user.getTrainerId()
         );
     }
 
@@ -100,17 +99,18 @@ public class UserController {
                 user.getName(),
                 user.getIntensityLevel(),
                 user.getContext(),
-                "ADMIN".equals(user.getRole())
+                "ADMIN".equals(user.getRole()),
+                user.getTrainerId()
         );
     }
 
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(
-            @RequestBody(required = false) CreateUserRequest request,
+            @RequestBody(required = false) Map<String, Object> request,
             Authentication authentication
     ) {
         Jwt jwt = getJwtOrThrow(authentication);
-        String requestedName = request != null ? request.displayName() : null;
+        String requestedName = request != null ? (String) request.get("displayName") : null;
 
         User created = userService.createUser(
                 jwt.getSubject(),
@@ -120,6 +120,14 @@ public class UserController {
         );
 
         return ResponseEntity.ok(toResponse(created, jwt.getSubject()));
+    }
+
+    @GetMapping("/me/profile")
+    public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
+        String clerkId = getClerkId(authentication);
+        User currentUser = userService.getByClerkIdOrThrow(clerkId);
+
+        return ResponseEntity.ok(toResponse(currentUser, clerkId));
     }
 
     @PutMapping("/me/profile")
@@ -132,7 +140,8 @@ public class UserController {
                 clerkId,
                 userRequest.name(),
                 userRequest.intensityLevel(),
-                userRequest.context()
+                userRequest.context(),
+                userRequest.trainerId()
         );
 
         return ResponseEntity.ok(toResponse(updated, clerkId));
@@ -155,7 +164,8 @@ public class UserController {
                 clerkId,
                 userRequest.name(),
                 userRequest.intensityLevel(),
-                userRequest.context()
+                userRequest.context(),
+                userRequest.trainerId()
         );
 
         return ResponseEntity.ok(toResponse(updated, clerkId));
@@ -169,12 +179,16 @@ public class UserController {
         return ResponseEntity.ok(activityLogService.getUserProgress(currentUser.getId()));
     }
 
-    @GetMapping("/me/profile")
-    public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
-        String clerkId = getClerkId(authentication);
-        User currentUser = userService.getByClerkIdOrThrow(clerkId);
 
-        return ResponseEntity.ok(toResponse(currentUser, clerkId));
+    @GetMapping("/by-clerk/{clerkId}")
+    public ResponseEntity<UserResponseDTO> getUserByClerkId(
+            @PathVariable String clerkId,
+            Authentication authentication
+    ) {
+        getJwtOrThrow(authentication);
+        User user = userService.getByClerkIdOrThrow(clerkId);
+
+        return ResponseEntity.ok(toResponse(user, clerkId));
     }
 
     @GetMapping("/{userId}/progress")

@@ -13,8 +13,7 @@ import {
 const SAMPLE_RATE = 16000;
 const CHUNK_SAMPLES = 2560; // 160 ms @ 16 kHz
 const AI_SAMPLE_RATE = 24000;
-const INTERRUPT_THRESHOLD = 0.25; // RMS required to interrupt Gemini mid-response
-const PLAYBACK_TAIL_MS = 200; // extra gate time after playback ends (speaker reverb)
+const PLAYBACK_TAIL_MS = 0;
 const LIVE_MODEL = "gemini-3.1-flash-live-preview";
 const MAX_RECONNECT_ATTEMPTS = 3;
 const RECONNECT_BASE_DELAY_MS = 500;
@@ -26,6 +25,7 @@ interface UseGeminiLiveProps {
   onAudioData?: (data: ArrayBuffer) => void;
   onMessage?: (message: LiveServerMessage) => void;
   onToolCall?: (functionCall: FunctionCall) => Promise<FunctionResponse>;
+  onFirstAiAudio?: () => void;
 }
 
 interface DebugStats {
@@ -58,6 +58,7 @@ export const useGeminiLive = ({
   onAudioData,
   onMessage,
   onToolCall,
+  onFirstAiAudio,
 }: UseGeminiLiveProps) => {
   const [isActive, setIsActive] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -76,6 +77,10 @@ export const useGeminiLive = ({
   const reconnectTimerRef = useRef<number | null>(null);
   const connectingRef = useRef(false);
   const autoReconnectDisabledRef = useRef(false);
+  const suppressAiAudioRef = useRef(false);
+  const currentRmsRef = useRef(0);
+  const onFirstAiAudioRef = useRef(onFirstAiAudio);
+  const firstAiAudioFiredRef = useRef(false);
 
   useEffect(() => {
     tokenRef.current = token;
@@ -84,6 +89,7 @@ export const useGeminiLive = ({
     onAudioRef.current = onAudioData;
     onMessageRef.current = onMessage;
     onToolCallRef.current = onToolCall;
+    onFirstAiAudioRef.current = onFirstAiAudio;
   }, [token, tools, systemInstruction, onAudioData, onMessage, onToolCall]);
 
   async function handleToolCalls(functionCalls: FunctionCall[]) {
@@ -131,6 +137,7 @@ export const useGeminiLive = ({
 
     // If a manual connect is requested, allow auto-reconnect again.
     autoReconnectDisabledRef.current = false;
+    firstAiAudioFiredRef.current = false;
 
     // Prevent parallel connects
     if (connectingRef.current) {
@@ -246,7 +253,35 @@ export const useGeminiLive = ({
       });
 
       async function handleLiveMessage(message: LiveServerMessage) {
-        console.debug("[GeminiLive] message:", message);
+        // console.debug("[GeminiLive] message:", message);
+
+        if (message.serverContent) {
+          const content = message.serverContent;
+
+          // AI IS CURRENTLY SENDING AUDIO (Data Layer speaking)
+          if (content.modelTurn?.parts?.some((p) => p.inlineData)) {
+            console.debug("[GeminiLive] turn→gemini: audio data received");
+            setCurrentTurn("gemini");
+            if (!firstAiAudioFiredRef.current) {
+              firstAiAudioFiredRef.current = true;
+              onFirstAiAudioRef.current?.();
+            }
+          }
+
+          // AI HAS FINISHED SENDING DATA
+          if (content.turnComplete) {
+            console.debug("[GeminiLive] turn→user: turnComplete");
+            setCurrentTurn("user");
+          }
+
+          // AI WAS INTERRUPTED
+          if (content.interrupted) {
+            console.debug("[GeminiLive] turn→user: interrupted");
+            aiPlayheadRef.current = 0;
+            playingUntilWallMsRef.current = 0;
+            setCurrentTurn("user");
+          }
+        }
 
         const functionCalls = message.toolCall?.functionCalls ?? [];
         if (functionCalls.length > 0) {
@@ -261,14 +296,17 @@ export const useGeminiLive = ({
           if (!b64) continue;
 
           const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-          console.debug(
+          /*  console.debug(
             "[GeminiLive] audio part:",
             part.inlineData?.mimeType ?? "(unknown mime)",
             "bytes:",
             bytes.byteLength,
           );
+          */
           onAudioRef.current?.(bytes.buffer);
-          void playAiPcm16(bytes.buffer);
+          if (!suppressAiAudioRef.current) {
+            void playAiPcm16(bytes.buffer);
+          }
           audioParts++;
         }
 
@@ -331,6 +369,22 @@ export const useGeminiLive = ({
     playingUntilWallMsRef.current = 0;
     reconnectAttemptsRef.current = 0;
     connectingRef.current = false;
+  }
+
+  function getCurrentRms() {
+    return currentRmsRef.current;
+  }
+
+  function suppressAiOutput() {
+    suppressAiAudioRef.current = true;
+    aiAudioCtxRef.current?.close();
+    aiAudioCtxRef.current = null;
+    aiPlayheadRef.current = 0;
+    playingUntilWallMsRef.current = 0;
+  }
+
+  function allowAiOutput() {
+    suppressAiAudioRef.current = false;
   }
 
   function getSession() {
@@ -470,18 +524,19 @@ export const useGeminiLive = ({
         event: MessageEvent<{ pcm16: ArrayBuffer; rms: number }>,
       ) => {
         const { pcm16, rms } = event.data;
+        currentRmsRef.current = rms;
 
-        if (
-          Date.now() < playingUntilWallMsRef.current &&
-          rms < INTERRUPT_THRESHOLD
-        )
-          return;
+        if (Date.now() < playingUntilWallMsRef.current) return;
 
         const base64 = pcm16ToBase64(pcm16);
 
         sessionRef.current?.sendRealtimeInput({
           audio: { data: base64, mimeType: `audio/pcm;rate=${SAMPLE_RATE}` },
         });
+
+        if (rms > 0.01) {
+          console.debug("[GeminiLive] mic→gemini rms:", rms.toFixed(4));
+        }
 
         statsRef.current.chunksThisSecond++;
         statsRef.current.bytesThisSecond += pcm16.byteLength;
@@ -598,11 +653,14 @@ export const useGeminiLive = ({
     geminiDisconnect,
     startAudioCapture,
     stopAudioCapture,
+    suppressAiOutput,
+    allowAiOutput,
     endUserTurn,
     isActive,
     connectionError,
     currentTurn,
     getSession,
     getAiPlaybackRemainingMs,
+    getCurrentRms,
   };
 };

@@ -1,14 +1,14 @@
 import { useAuth } from "@clerk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { getApiBaseUrl } from "../lib/apiBaseUrl";
 
-const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:8080"
-).replace(/\/$/, "");
+const API_URL = getApiBaseUrl();
 
 type ProfileData = {
   name: string;
   intensityLevel: number;
   context: string;
+  trainerId?: number | null;
 };
 
 type ProfileResponse = ProfileData;
@@ -38,15 +38,23 @@ export function useUpdateProfile() {
         body: JSON.stringify(data),
       });
 
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(
+          "[useUpdateProfile] Update failed:",
+          res.status,
+          errorText,
+        );
+        throw new Error(`Update failed: ${res.status}`);
+      }
+
       return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["myProfile"], data);
-      queryClient.invalidateQueries({
-        queryKey: ["myProfile"],
-        refetchType: "active",
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    },
+    onError: (error) => {
+      console.error("[useUpdateProfile]", error);
     },
   });
 }

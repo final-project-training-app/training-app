@@ -26,6 +26,9 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
 
       <p className="text-[15px] font-medium leading-relaxed text-[#312b70]">
         Välj hur intensiv din träning eller stretching ska vara.
+      <p className="max-w-3xl text-[clamp(1.15rem,3vw,1.85rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
+        Välj hur intensiv din träning eller stretching ska vara. Du kan alltid
+        ändra senare.
       </p>
 
       <div className="mt-6 px-1">
@@ -44,6 +47,7 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value, 10))}
             className="absolute inset-x-0 top-0 z-20 h-8 w-full cursor-pointer opacity-0"
+            className="absolute inset-x-0 top-0 z-20 h-10 w-full cursor-pointer opacity-0"
             aria-label="Välj intensitet"
           />
 
@@ -54,6 +58,7 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
                 type="button"
                 onClick={() => onChange(index)}
                 className="-mx-1 px-1"
+                className="-mx-2 px-2"
                 aria-label={`Välj ${label}`}
               >
                 <span

@@ -76,3 +76,7 @@ body {
     backdrop-filter: blur(3px);
   }
 }
+body.admin-shell {
+  overflow: hidden;
+}
+
