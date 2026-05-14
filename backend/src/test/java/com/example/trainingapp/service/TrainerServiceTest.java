@@ -1,5 +1,6 @@
 package com.example.trainingapp.service;
 
+import com.example.trainingapp.dto.TrainerRequestDto;
 import com.example.trainingapp.entity.Trainer;
 import com.example.trainingapp.repository.TrainerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,7 @@ class TrainerServiceTest {
     private TrainerService trainerService;
 
     private Trainer trainer;
+    private TrainerRequestDto trainerRequest;
 
     @BeforeEach
     void setUp() {
@@ -38,6 +40,8 @@ class TrainerServiceTest {
         trainer.setVoice("Voice");
         trainer.setIntro("Intro");
         trainer.setLanguage("en");
+
+        trainerRequest = new TrainerRequestDto("Alice Coach", "Prompt", "Voice", "Intro", "en", null, null, null);
     }
 
     @Test
@@ -45,7 +49,7 @@ class TrainerServiceTest {
         when(trainerRepository.existsByNameIgnoreCaseAndLanguageIgnoreCase("Alice Coach", "en")).thenReturn(false);
         when(trainerRepository.save(any(Trainer.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Trainer created = trainerService.createTrainer(trainer);
+        Trainer created = trainerService.createTrainer(trainerRequest);
 
         assertEquals("Alice Coach", created.getName());
     }
@@ -60,7 +64,7 @@ class TrainerServiceTest {
     void createTrainerRejectsDuplicateNameAndLanguage() {
         when(trainerRepository.existsByNameIgnoreCaseAndLanguageIgnoreCase("Alice Coach", "en")).thenReturn(true);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> trainerService.createTrainer(trainer));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> trainerService.createTrainer(trainerRequest));
         assertEquals("Trainer already exists for this language", ex.getReason());
     }
 
