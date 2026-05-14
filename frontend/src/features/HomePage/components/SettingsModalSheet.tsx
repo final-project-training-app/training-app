@@ -236,7 +236,13 @@ function SettingsModalBody({
                 }
 
                 try {
-                  await updateProfile.mutateAsync(profileData);
+                  console.debug(
+                    "[SettingsModalSheet] Saving profileData:",
+                    profileData,
+                  );
+                  const resp = await updateProfile.mutateAsync(profileData);
+                  console.debug("[SettingsModalSheet] Update response:", resp);
+
                   await queryClient.invalidateQueries({
                     queryKey: ["myProfile"],
                   });
