@@ -71,25 +71,23 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const { step, error, selectedWorkout, debugEvents, endSession } =
-    useCoachSession({
-      session,
-      autoStart: true,
-    });
+  const {
+    step,
+    error,
+    selectedWorkout,
+    debugEvents,
+    endSession,
+    getCurrentRms,
+  } = useCoachSession({
+    session,
+    autoStart: true,
+  });
 
   useEffect(() => {
-    if (step === "idle" || step === "completed" || step === "error") {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setElapsedSeconds((current) => current + 1);
-    }, 1000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [step]);
+    if (step !== "completed") return;
+    const timer = setTimeout(() => void navigate({ to: "/" }), 3000);
+    return () => clearTimeout(timer);
+  }, [step, navigate]);
 
   function handleEnd() {
     endSession();
@@ -105,20 +103,23 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const workoutName = selectedWorkout?.name ?? getWorkoutName(session);
 
   return (
-    <SessionCall
-      session={session}
-      workoutName={workoutName}
-      coachStep={step}
-      coachStatusLabel={error ?? getCoachStatusLabel(step)}
-      elapsedSeconds={elapsedSeconds}
-      durationSeconds={session.durationSeconds}
-      activePanel={activePanel}
-      debugEvents={debugEvents}
-      onSpeaker={() => togglePanel("exercise")}
-      onTrainingSuite={() => togglePanel("suite")}
-      onInfo={() => togglePanel("info")}
-      onClosePanel={() => setActivePanel("none")}
-      onEnd={handleEnd}
-    />
+    <>
+      <SessionCall
+        session={session}
+        workoutName={selectedWorkout?.name ?? session.workoutName}
+        coachStep={step}
+        coachStatusLabel={error ?? getCoachStatusLabel(step)}
+        elapsedSeconds={elapsedSeconds}
+        durationSeconds={0}
+        activePanel={activePanel}
+        debugEvents={debugEvents}
+        getCurrentRms={getCurrentRms}
+        onSpeaker={() => togglePanel("exercise")}
+        onTrainingSuite={() => togglePanel("suite")}
+        onInfo={() => togglePanel("info")}
+        onClosePanel={() => setActivePanel("none")}
+        onEnd={handleEnd}
+      />
+    </>
   );
 }

@@ -7,6 +7,8 @@ type ProfileResponse = {
   name: string;
   intensityLevel: number;
   context: string;
+  trainerId?: number | null;
+  isAdmin?: boolean;
 };
 
 export function useCreateCurrentUserProfile() {

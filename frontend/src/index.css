@@ -53,6 +53,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body.admin-shell {
+  overflow: hidden;
+}
+
+
 @keyframes app-sheet-in {
   from {
     opacity: 0;

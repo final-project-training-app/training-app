@@ -25,6 +25,17 @@ type BackendWorkoutResponse = {
 
   trainer?: Trainer | null;
 };
+export type BackendTrainerResponse = {
+  id: number;
+  name: string;
+  prompt: string;
+  voice: string;
+  intro: string;
+  language: string;
+  imageSelect: string | null;
+  imageCall: string | null;
+  imageStart: string | null;
+};
 
 type BackendProgressResponse = {
   currentStreak: number;
@@ -41,7 +52,7 @@ type BackendUserResponse = {
   context: string;
 };
 
-const currentUserId = "1";
+const currentUserId = "6";
 
 function toDurationSeconds(workout: BackendWorkoutResponse) {
   if (typeof workout.durationSeconds === "number") {
@@ -53,6 +64,16 @@ function toDurationSeconds(workout: BackendWorkoutResponse) {
   }
 
   return 0;
+}
+
+export async function getTrainers(): Promise<BackendTrainerResponse[]> {
+  return await getJson<BackendTrainerResponse[]>(`/api/trainers`);
+}
+
+export async function getTrainer(
+  trainerId: string,
+): Promise<BackendTrainerResponse> {
+  return await getJson<BackendTrainerResponse>(`/api/trainers/${trainerId}`);
 }
 
 export async function getCoachCallSession(

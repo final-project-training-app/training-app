@@ -2,6 +2,7 @@ package com.example.trainingapp.controller;
 
 import java.util.List;
 
+import com.example.trainingapp.dto.WorkoutResponseDTO;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -47,23 +48,23 @@ public class WorkoutController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Workout>> getAllWorkouts() {
+    public ResponseEntity<List<WorkoutResponseDTO>> getAllWorkouts() {
 
         return ResponseEntity.ok().body(workoutService.getAllWorkouts());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Workout> getWorkoutById(@PathVariable Long id) {
+    public ResponseEntity<WorkoutResponseDTO> getWorkoutById(@PathVariable Long id) {
         return ResponseEntity.ok().body(workoutService.getWorkoutById(id));
     }
 
     @PostMapping("/{id}/start")
-    public ResponseEntity<Workout> startWorkout(@PathVariable Long id, @RequestParam(required = false) Long userId) {
+    public ResponseEntity<WorkoutResponseDTO> startWorkout(@PathVariable Long id, @RequestParam(required = false) Long userId) {
         return ResponseEntity.ok().body(workoutService.startWorkout(id, userId));
     }
 
     @PostMapping
-    public ResponseEntity<Workout> createWorkout(@RequestBody Workout workout, Authentication authentication) {
+    public ResponseEntity<WorkoutResponseDTO> createWorkout(@RequestBody Workout workout, Authentication authentication) {
         if (!isAdmin(authentication)) {
             return ResponseEntity.status(403).build();
         }
@@ -71,7 +72,7 @@ public class WorkoutController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Workout> updateWorkout(
+    public ResponseEntity<WorkoutResponseDTO> updateWorkout(
             @PathVariable Long id,
             @RequestBody Workout workout,
             Authentication authentication

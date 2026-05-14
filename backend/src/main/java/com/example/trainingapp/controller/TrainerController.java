@@ -1,8 +1,10 @@
 package com.example.trainingapp.controller;
 
-import com.example.trainingapp.entity.Trainer;
-import com.example.trainingapp.service.TrainerService;
-import com.example.trainingapp.service.UserService;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -17,10 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import com.example.trainingapp.dto.TrainerRequestDto;
+import com.example.trainingapp.dto.TrainerResponseDto;
+import com.example.trainingapp.entity.Trainer;
+import com.example.trainingapp.service.TrainerService;
+import com.example.trainingapp.service.UserService;
 
 @RestController
 @RequestMapping("/api/trainers")
@@ -52,32 +55,55 @@ public class TrainerController {
         }
     }
 
+    private TrainerResponseDto toResponseDto(Trainer trainer) {
+        return new TrainerResponseDto(
+                trainer.getId(),
+                trainer.getName(),
+                trainer.getPrompt(),
+                trainer.getVoice(),
+                trainer.getIntro(),
+                trainer.getLanguage(),
+                trainer.getImageSelect(),
+                trainer.getImageCall(),
+                trainer.getImageStart());
+    }
+
     @GetMapping
-    public ResponseEntity<List<Trainer>> getAllTrainers() {
-        return ResponseEntity.ok().body(trainerService.getAllTrainers());
+    public ResponseEntity<List<TrainerResponseDto>> getAllTrainers() {
+        return ResponseEntity.ok(trainerService.getAllTrainers()
+                .stream()
+                .map(this::toResponseDto)
+                .toList());
     }
 
     @PostMapping
-    public ResponseEntity<Trainer> createTrainer(@RequestBody Trainer trainer, Authentication authentication) {
+    public ResponseEntity<TrainerResponseDto> createTrainer(@RequestBody TrainerRequestDto request,
+            Authentication authentication) {
         assertAdmin(authentication);
-        return ResponseEntity.ok(trainerService.createTrainer(trainer));
+        Trainer trainer = trainerService.createTrainer(request);
+        return ResponseEntity.ok(toResponseDto(trainer));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Trainer> updateTrainer(@PathVariable Long id, @RequestBody Trainer trainer, Authentication authentication) {
+    public ResponseEntity<TrainerResponseDto> updateTrainer(@PathVariable Long id,
+            @RequestBody TrainerRequestDto request, Authentication authentication) {
         assertAdmin(authentication);
-        return ResponseEntity.ok(trainerService.updateTrainer(id, trainer));
+        Trainer trainer = trainerService.updateTrainer(id, request);
+        return ResponseEntity.ok(toResponseDto(trainer));
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<Trainer> updateTrainerViaPost(@PathVariable Long id, @RequestBody Trainer trainer, Authentication authentication) {
+    public ResponseEntity<TrainerResponseDto> updateTrainerViaPost(@PathVariable Long id,
+            @RequestBody TrainerRequestDto request, Authentication authentication) {
         assertAdmin(authentication);
-        return ResponseEntity.ok(trainerService.updateTrainer(id, trainer));
+        Trainer trainer = trainerService.updateTrainer(id, request);
+        return ResponseEntity.ok(toResponseDto(trainer));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Trainer> getTrainerById(@PathVariable Long id) {
-        return ResponseEntity.ok().body(trainerService.getTrainerById(id));
+    public ResponseEntity<TrainerResponseDto> getTrainerById(@PathVariable Long id) {
+        Trainer trainer = trainerService.getTrainerById(id);
+        return ResponseEntity.ok(toResponseDto(trainer));
     }
 
     @DeleteMapping("/{id}")
@@ -87,4 +113,3 @@ public class TrainerController {
         return ResponseEntity.noContent().build();
     }
 }
-
