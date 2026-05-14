@@ -11,7 +11,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { CoachCallSession, SessionPanel } from "../types";
 import { SessionInfoPanel } from "./SessionInfoPanel";
 import SettingsModalSheet from "../../HomePage/components/SettingsModalSheet";
-import type { CoachSessionDebugEvent } from "../coachSessionHelpers";
+import type { CoachSessionDebugEvent } from "../../ai-conversation";
 
 const INTERRUPT_THRESHOLD = 0.25;
 const METER_MAX = 0.5;
