@@ -1,6 +1,6 @@
-const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:8080"
-).replace(/\/$/, "");
+import { getApiBaseUrl } from "../apiBaseUrl";
+
+const API_URL = getApiBaseUrl();
 
 type CreateCurrentUserInput = {
   token: string;
