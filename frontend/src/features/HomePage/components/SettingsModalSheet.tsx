@@ -77,17 +77,14 @@ function SettingsModalBody({
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateProfile = useUpdateProfile();
   const queryClient = useQueryClient();
-  const prevOpenRef = useRef(open);
 
   useEffect(() => {
-    if (open) {
-      setSelectedTrainerId(initialTrainerId);
-      setFullName(userName);
-      setIntensityLevel(initialIntensityLevel);
-      setContext(initialContext);
-    }
-    prevOpenRef.current = open;
-  }, [open, initialTrainerId, userName, initialIntensityLevel, initialContext]);
+    // Always sync initial values when they change from the profile data
+    setSelectedTrainerId(initialTrainerId);
+    setFullName(userName);
+    setIntensityLevel(initialIntensityLevel);
+    setContext(initialContext);
+  }, [initialTrainerId, userName, initialIntensityLevel, initialContext]);
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
