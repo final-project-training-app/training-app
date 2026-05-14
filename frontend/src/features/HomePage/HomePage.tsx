@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Phone, Settings } from "lucide-react";
-import coachHeroImage from "../../assets/image.png";
 import { primeSessionAudio } from "../session/audio";
 import { startRingback } from "../session/ringback";
 import { coachCallSessionQueryOptions } from "../session/query";
@@ -10,6 +9,20 @@ import type { CoachCallSession } from "../session/types";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
+
+const trainers = {
+  eva: { name: "Eva", image: "/start-page/eva-start.webp" },
+  jerry: { name: "Jerry", image: "/start-page/jerry-start.webp" },
+  lunken: { name: "Lunken", image: "/start-page/lunken-start.webp" },
+  elizabeth: { name: "Elizabeth", image: "/start-page/elizabeth-start.webp" },
+} as const;
+
+const activeTrainer = trainers.eva;
+
+const assets = {
+  background: "/start-page/background.webp",
+  logo: "/start-page/logo.png",
+};
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -19,17 +32,12 @@ export default function HomePage() {
   const { data: profile } = useMyProfile();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) {
-      return;
-    }
-
+    if (!isLoaded || !isSignedIn) return;
     void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
   }, [isLoaded, isSignedIn, queryClient]);
 
   async function primeMicrophonePermission() {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      return;
-    }
+    if (!navigator.mediaDevices?.getUserMedia) return;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -48,23 +56,20 @@ export default function HomePage() {
     const cachedSession = queryClient.getQueryData<CoachCallSession>(
       queryOptions.queryKey,
     );
+
     const session =
       cachedSession ??
       (await queryClient.fetchQuery(queryOptions).catch(() => null));
 
-    if (!session) {
-      return;
-    }
+    if (!session) return;
 
-    navigate({
-      to: "/session/$workoutId",
-      params: { workoutId: "1" },
-    });
+    navigate({ to: "/session/$workoutId", params: { workoutId: "1" } });
   }
 
   return (
-    <main className="relative flex h-dvh items-center justify-center overflow-hidden bg-(--brand-page) text-(--brand-ink)">
-      <div className="absolute right-3 top-[max(10px,env(safe-area-inset-top))] z-30">
+    <div className="relative h-full w-full overflow-hidden bg-[#f7f2ff] text-[#221447]">
+      {/* Auth / admin layer - stays relative to desktop viewport */}
+      <div className="fixed right-4 top-4 z-50">
         {!isLoaded ? null : isSignedIn ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             {profile?.isAdmin && (
@@ -95,42 +100,73 @@ export default function HomePage() {
         )}
       </div>
 
-      <section className="flex h-full w-full max-w-[36rem] flex-col px-5 pt-[max(2px,env(safe-area-inset-top))] pb-[max(26px,env(safe-area-inset-bottom))] [@media(max-height:700px)]:pb-[max(18px,env(safe-area-inset-bottom))]">
-        <div className="flex min-h-0 flex-[1.55] items-start justify-center overflow-hidden pt-0">
-          <img
-            src={coachHeroImage}
-            alt="Träningsapp"
-            className="h-full w-full origin-top scale-[1.24] object-contain object-top drop-shadow-[0_16px_28px_var(--brand-image-shadow)] [@media(max-height:700px)]:scale-[1.12]"
-          />
-        </div>
+      {/* Background inside phone stage */}
+      <img
+        src={assets.background}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 z-0 h-full w-full object-cover opacity-95"
+      />
 
-        <div className="relative z-10 flex w-full flex-none flex-col items-stretch gap-4 px-1 pt-1 [@media(max-height:700px)]:gap-3">
+      <div className="absolute inset-0 z-[1]" />
+
+      {/* Logo - locked position */}
+      <div className="pointer-events-none absolute left-1/2 top-[22px] z-[2] w-[370px] -translate-x-1/2">
+        <img
+          src={assets.logo}
+          alt="Ring så tränar vi"
+          className="h-auto w-full object-contain"
+        />
+      </div>
+
+      {/* Trainer - locked relation to logo */}
+      <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden">
+        <div className="absolute left-1/2 bottom-[140px] h-[360px] w-[320px] -translate-x-1/2 rounded-full bg-white/20 blur-[44px]" />
+
+        <img
+          src={activeTrainer.image}
+          alt={activeTrainer.name}
+          className="absolute left-1/2 bottom-[46px] w-[465px] -translate-x-1/2 translate-y-[21%] object-contain"
+        />
+      </div>
+
+      {/* Buttons background */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[15]">
+        <div
+          className={`absolute bottom-0 left-0 right-0 rounded-t-3xl bg-white ${
+            isLoaded && isSignedIn ? "h-[140px]" : "h-[100px]"
+          }`}
+        />
+      </div>
+
+      {/* Buttons */}
+      <footer className="absolute inset-x-5 bottom-[20px] z-20 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            void handleStartCall();
+          }}
+          className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition active:scale-[0.98]"
+        >
+          <Phone size={22} strokeWidth={2.5} />
+          Ring tränaren
+        </button>
+
+        {isLoaded && isSignedIn ? (
           <button
             type="button"
-            onClick={() => {
-              void handleStartCall();
-            }}
-            className="flex min-h-18 w-full items-center justify-center gap-4 rounded-2xl bg-(--brand-primary) px-7 text-[1.4rem] font-extrabold text-(--brand-on-primary) shadow-[0_14px_24px_var(--brand-shadow)] transition active:scale-[0.98] [@media(max-height:700px)]:min-h-15 [@media(max-height:700px)]:text-[1.2rem]"
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition active:scale-[0.98]"
           >
-            <Phone size={30} strokeWidth={2.65} />
-            Ring tränaren
+            <Settings size={16} strokeWidth={2.2} />
+            Inställningar
           </button>
-
-          {isLoaded && isSignedIn ? (
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="flex min-h-15 w-[84%] items-center justify-center gap-3 self-center rounded-xl border-2 border-(--brand-border-strong) bg-(--brand-surface-raised) px-5 text-[1.08rem] font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-[0.98] [@media(max-height:700px)]:min-h-12"
-            >
-              <Settings size={20} strokeWidth={2.55} />
-              Inställningar
-            </button>
-          ) : null}
-        </div>
-        {isLoaded && isSignedIn ? (
-          <SettingsModalSheet open={open} setOpen={setOpen} />
         ) : null}
-      </section>
-    </main>
+      </footer>
+
+      {isLoaded && isSignedIn ? (
+        <SettingsModalSheet open={open} setOpen={setOpen} />
+      ) : null}
+    </div>
   );
 }

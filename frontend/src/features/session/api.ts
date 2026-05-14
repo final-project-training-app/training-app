@@ -1,15 +1,29 @@
 import { getJson } from "../../lib/api/fetcher";
-import type { CoachCallSession } from "./types";
+import type { CoachCallSession, Trainer } from "./types";
 
 type BackendWorkoutResponse = {
   id: number;
   name: string;
+  description?: string | null;
   instructions?: string | null;
-  instructionsAudio?: string | null;
-  level?: string | null;
+
+  level?: number | string | null;
   type?: string | null;
-  durationMinutes?: number | null;
+
+  instructionsAudio?: string | null;
   workoutAudio?: string | null;
+  instructionsImage?: string | null;
+  workoutImage?: string | null;
+
+  durationMinutes?: number | null;
+  durationSeconds?: number | null;
+
+  kneeFriendly?: boolean;
+  lowImpact?: boolean;
+  seated?: boolean;
+  beginnerFriendly?: boolean;
+
+  trainer?: Trainer | null;
 };
 export type BackendTrainerResponse = {
   id: number;
@@ -40,8 +54,16 @@ type BackendUserResponse = {
 
 const currentUserId = "6";
 
-function toDurationSeconds(durationMinutes?: number | null) {
-  return durationMinutes ? durationMinutes * 60 : 0;
+function toDurationSeconds(workout: BackendWorkoutResponse) {
+  if (typeof workout.durationSeconds === "number") {
+    return workout.durationSeconds;
+  }
+
+  if (typeof workout.durationMinutes === "number") {
+    return workout.durationMinutes * 60;
+  }
+
+  return 0;
 }
 
 export async function getTrainers(): Promise<BackendTrainerResponse[]> {
@@ -64,14 +86,33 @@ export async function getCoachCallSession(
   ]);
 
   return {
-    id: String(workout.id),
+    id: workout.id,
+
+    name: workout.name,
     workoutName: workout.name,
-    instructions: workout.instructions ?? "",
-    level: workout.level || undefined,
-    type: workout.type || undefined,
-    instructionsAudioUrl: workout.instructionsAudio || undefined,
-    workoutAudioUrl: workout.workoutAudio || undefined,
-    durationSeconds: toDurationSeconds(workout.durationMinutes),
+
+    description: workout.description,
+    instructions: workout.description,
+
+    level: workout.level,
+    type: workout.type,
+
+    instructionsAudio: workout.instructionsAudio,
+    workoutAudio: workout.workoutAudio,
+    instructionsAudioUrl: workout.instructionsAudio,
+    workoutAudioUrl: workout.workoutAudio,
+
+    instructionsImage: workout.instructionsImage,
+    workoutImage: workout.workoutImage,
+
+    kneeFriendly: workout.kneeFriendly,
+    lowImpact: workout.lowImpact,
+    seated: workout.seated,
+    beginnerFriendly: workout.beginnerFriendly,
+
+    durationSeconds: toDurationSeconds(workout),
+
+    trainer: workout.trainer,
 
     userName: user.name,
     intensityLevel: user.intensityLevel,

@@ -18,7 +18,7 @@ export function SessionPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-dvh items-center justify-center">
+      <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-lg font-bold text-[#5b3fd6]">
         Laddar session...
       </div>
     );
@@ -26,7 +26,7 @@ export function SessionPage() {
 
   if (isError) {
     return (
-      <div className="flex h-dvh items-center justify-center p-8 text-center">
+      <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-base font-semibold text-[#221447]">
         {error instanceof Error ? error.message : "Något gick fel."}
       </div>
     );
@@ -43,8 +43,6 @@ function getCoachStatusLabel(step: CoachSessionStep) {
   switch (step) {
     case "idle":
       return "Ansluter till tränaren...";
-    //case "choosing_workout":
-     // return "Tränaren väljer ett pass åt dig...";
     case "live_intro":
       return "Coach-samtalet är igång.";
     case "waiting_instruction_approval":
@@ -63,6 +61,7 @@ function getCoachStatusLabel(step: CoachSessionStep) {
       return "Något gick fel.";
   }
 }
+
 
 function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
@@ -97,6 +96,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   function togglePanel(panel: Exclude<SessionPanel, "none">) {
     setActivePanel((current) => (current === panel ? "none" : panel));
   }
+
 
   return (
     <>
