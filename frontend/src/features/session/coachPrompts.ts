@@ -15,10 +15,10 @@ export const liveSystemInstruction = [
 export function buildUserContext(session: CoachCallSession): string {
   const parts: string[] = [];
   parts.push(`Användarens namn är ${session.userName}.`);
-  if (session.currentStreak > 0) {
+  if (session.currentStreak && session.currentStreak > 0) {
     parts.push(`Nuvarande streak: ${session.currentStreak} dag(ar) i rad.`);
   }
-  const last = session.completedWorkouts[0];
+  const last = session.completedWorkouts?.[0];
   if (last) {
     parts.push(`Senaste pass: ${last.workoutName} (${last.dateLabel}).`);
   }
