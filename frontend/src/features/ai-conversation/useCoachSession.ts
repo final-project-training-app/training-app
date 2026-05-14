@@ -3,7 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGeminiLive } from "./core/useGeminiLive";
 import { useLiveToken } from "./core/useLiveToken";
 import { coachLiveTools, executeLiveToolCall } from "./tools";
-import { stopRingback, startGymAmbience, stopGymAmbience } from "./audio/ringback";
+import {
+  stopRingback,
+  startGymAmbience,
+  stopGymAmbience,
+} from "./audio/ringback";
 import { fixedLiveUserId } from "./tools/shared/liveIntroDefaults";
 import {
   preloadSessionAudio,
@@ -140,7 +144,6 @@ export function useCoachSession(
     geminiConnect,
     geminiDisconnect,
     startAudioCapture,
-    stopAudioCapture,
     haltCapture,
     suppressAiOutput,
     allowAiOutput,
