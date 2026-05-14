@@ -19,11 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-
-record CreateUserRequest(String displayName) {
-}
 
 @RestController
 @RequestMapping("/api/users")
@@ -68,7 +66,7 @@ public class UserController {
         String givenName = jwt.getClaimAsString("given_name");
         String familyName = jwt.getClaimAsString("family_name");
         String fullName = String.join(" ",
-                java.util.Arrays.asList(givenName, familyName).stream()
+                Stream.of(givenName, familyName)
                         .filter(part -> part != null && !part.isBlank())
                         .toList()
         ).trim();
@@ -108,11 +106,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(
-            @RequestBody(required = false) CreateUserRequest request,
+            @RequestBody(required = false) Map<String, Object> request,
             Authentication authentication
     ) {
         Jwt jwt = getJwtOrThrow(authentication);
-        String requestedName = request != null ? request.displayName() : null;
+        String requestedName = request != null ? (String) request.get("displayName") : null;
 
         User created = userService.createUser(
                 jwt.getSubject(),
@@ -179,6 +177,18 @@ public class UserController {
                 .orElseThrow();
 
         return ResponseEntity.ok(activityLogService.getUserProgress(currentUser.getId()));
+    }
+
+
+    @GetMapping("/by-clerk/{clerkId}")
+    public ResponseEntity<UserResponseDTO> getUserByClerkId(
+            @PathVariable String clerkId,
+            Authentication authentication
+    ) {
+        getJwtOrThrow(authentication);
+        User user = userService.getByClerkIdOrThrow(clerkId);
+
+        return ResponseEntity.ok(toResponse(user, clerkId));
     }
 
     @GetMapping("/{userId}/progress")

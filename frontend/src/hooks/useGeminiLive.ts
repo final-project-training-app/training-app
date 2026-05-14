@@ -246,7 +246,31 @@ export const useGeminiLive = ({
       });
 
       async function handleLiveMessage(message: LiveServerMessage) {
-        console.debug("[GeminiLive] message:", message);
+        // console.debug("[GeminiLive] message:", message);
+
+        if (message.serverContent) {
+          const content = message.serverContent;
+
+          // AI IS CURRENTLY SENDING AUDIO (Data Layer speaking)
+          if (content.modelTurn?.parts?.some((p) => p.inlineData)) {
+            setCurrentTurn("gemini");
+          }
+
+          // AI HAS FINISHED SENDING DATA
+          if (content.turnComplete) {
+            // Note: The AI might have finished sending bytes,
+            // but your AudioContext is still playing the buffer.
+            setCurrentTurn("user");
+          }
+
+          // AI WAS INTERRUPTED
+          if (content.interrupted) {
+            // Stop local playback immediately if Gemini was cut off
+            aiPlayheadRef.current = 0;
+            playingUntilWallMsRef.current = 0;
+            setCurrentTurn("user");
+          }
+        }
 
         const functionCalls = message.toolCall?.functionCalls ?? [];
         if (functionCalls.length > 0) {
@@ -261,12 +285,13 @@ export const useGeminiLive = ({
           if (!b64) continue;
 
           const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-          console.debug(
+          /*  console.debug(
             "[GeminiLive] audio part:",
             part.inlineData?.mimeType ?? "(unknown mime)",
             "bytes:",
             bytes.byteLength,
           );
+          */
           onAudioRef.current?.(bytes.buffer);
           void playAiPcm16(bytes.buffer);
           audioParts++;

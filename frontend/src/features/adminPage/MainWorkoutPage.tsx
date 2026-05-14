@@ -1,23 +1,399 @@
-import { useState } from "react";
-import AddWorkoutPage from "./AddWorkoutPage";
-import AllWorkoutsPage from "./AllWorkoutsPage";
-import EditWorkoutPage from "./EditWorkoutPage";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@clerk/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createWorkoutWithToken,
+  deleteWorkout,
+  fetchWorkouts,
+  updateWorkout,
+} from "../../api/workouts";
+import ConfirmModal from "../../components/ConfirmModal";
 import { useToast } from "../../hooks/useToast";
+import { fetchTrainersWithToken } from "../../api/trainers";
 
-type View = "all" | "create" | "edit";
 type AdminTab = "workouts" | "trainers" | "feedback";
 
 type Props = {
   onSwitchTab?: (tab: AdminTab) => void;
+  searchTerm?: string;
 };
 
-export default function MainWorkoutPage({ onSwitchTab }: Props) {
-  const [view, setView] = useState<View>("all");
-  const [editingWorkoutId, setEditingWorkoutId] = useState<number | null>(null);
+type Workout = {
+  id: number;
+  name: string;
+  description?: string;
+  type?: string;
+  level?: number;
+  durationSeconds?: number;
+  instructionsAudio?: string;
+  workoutAudio?: string;
+  instructionsImage?: string;
+  workoutImage?: string;
+  kneeFriendly?: boolean;
+  lowImpact?: boolean;
+  seated?: boolean;
+  beginnerFriendly?: boolean;
+  trainer?: { id?: number; name?: string } | null;
+};
+
+type WorkoutForm = {
+  name: string;
+  description: string;
+  type: string;
+  level: number;
+  durationSeconds: number;
+  instructionsAudio: string;
+  workoutAudio: string;
+  instructionsImage: string;
+  workoutImage: string;
+  kneeFriendly: boolean;
+  lowImpact: boolean;
+  seated: boolean;
+  beginnerFriendly: boolean;
+};
+
+type SortBy =
+  | "newest"
+  | "name-asc"
+  | "name-desc"
+  | "duration-asc"
+  | "duration-desc";
+
+const emptyForm: WorkoutForm = {
+  name: "",
+  description: "",
+  type: "",
+  level: 1,
+  durationSeconds: 60,
+  instructionsAudio: "",
+  workoutAudio: "",
+  instructionsImage: "",
+  workoutImage: "",
+  kneeFriendly: false,
+  lowImpact: false,
+  seated: false,
+  beginnerFriendly: false,
+};
+
+function toForm(workout: Workout): WorkoutForm {
+  return {
+    name: workout.name ?? "",
+    description: workout.description ?? "",
+    type: workout.type ?? "",
+    level: workout.level ?? 1,
+    durationSeconds: workout.durationSeconds ?? 60,
+    instructionsAudio: workout.instructionsAudio ?? "",
+    workoutAudio: workout.workoutAudio ?? "",
+    instructionsImage: workout.instructionsImage ?? "",
+    workoutImage: workout.workoutImage ?? "",
+    kneeFriendly: workout.kneeFriendly ?? false,
+    lowImpact: workout.lowImpact ?? false,
+    seated: workout.seated ?? false,
+    beginnerFriendly: workout.beginnerFriendly ?? false,
+  };
+}
+
+function isValidUrl(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+
+  try {
+    new URL(trimmed);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export default function MainWorkoutPage({
+  onSwitchTab: _onSwitchTab,
+  searchTerm = "",
+}: Props) {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const { toast, showToast } = useToast();
 
+  const [mode, setMode] = useState<"view" | "create" | "edit">("view");
+  const [sortBy, setSortBy] = useState<SortBy>("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterType, setFilterType] = useState<string>("");
+  const [filterLevel, setFilterLevel] = useState<string>("");
+  const [filterTrainerId, setFilterTrainerId] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [form, setForm] = useState<WorkoutForm>(emptyForm);
+
+  const {
+    data: workouts = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Workout[]>({
+    queryKey: ["workouts"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("Missing Clerk token");
+      return fetchWorkouts(token);
+    },
+  });
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const { data: trainers = [] } = useQuery<{ id: number; name: string }[]>({
+    queryKey: ["admin-trainers"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("Missing Clerk token");
+      return fetchTrainersWithToken(token);
+    },
+  });
+
+  const uniqueTypes = useMemo(() => {
+    const types = workouts
+      .map((w) => w.type?.trim().toUpperCase())
+      .filter((t): t is string => Boolean(t));
+    return [...new Set(types)].sort();
+  }, [workouts]);
+
+  const uniqueLevels = useMemo(() => {
+    const levels = workouts
+      .map((w) => w.level)
+      .filter((l): l is number => l != null);
+    return [...new Set(levels)].sort((a, b) => a - b);
+  }, [workouts]);
+
+  const filteredWorkouts = useMemo(() => {
+    return workouts.filter((item) => {
+      if (filterType && item.type?.toUpperCase() !== filterType) return false;
+      if (filterLevel && String(item.level) !== filterLevel) return false;
+      if (filterTrainerId && String(item.trainer?.id ?? "") !== filterTrainerId) {
+        return false;
+      }
+
+      if (!normalizedSearch) return true;
+      return (
+        item.name?.toLowerCase().includes(normalizedSearch) ||
+        item.type?.toLowerCase().includes(normalizedSearch) ||
+        item.description?.toLowerCase().includes(normalizedSearch) ||
+        String(item.level ?? "").includes(normalizedSearch)
+      );
+    });
+  }, [normalizedSearch, workouts, filterType, filterLevel, filterTrainerId]);
+
+  const sortedWorkouts = useMemo(() => {
+    const next = [...filteredWorkouts];
+
+    next.sort((a, b) => {
+      if (sortBy === "name-asc") {
+        return (a.name ?? "").localeCompare(b.name ?? "");
+      }
+      if (sortBy === "name-desc") {
+        return (b.name ?? "").localeCompare(a.name ?? "");
+      }
+      if (sortBy === "duration-asc") {
+        return (a.durationSeconds ?? 0) - (b.durationSeconds ?? 0);
+      }
+      if (sortBy === "duration-desc") {
+        return (b.durationSeconds ?? 0) - (a.durationSeconds ?? 0);
+      }
+
+      // Newest as default proxy by id
+      return (b.id ?? 0) - (a.id ?? 0);
+    });
+
+    return next;
+  }, [filteredWorkouts, sortBy]);
+
+  const pageSize = 6;
+  const totalPages = Math.max(1, Math.ceil(sortedWorkouts.length / pageSize));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [normalizedSearch, sortBy, filterType, filterLevel, filterTrainerId]);
+
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
+
+  const pagedWorkouts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedWorkouts.slice(start, start + pageSize);
+  }, [currentPage, sortedWorkouts]);
+
+  const pageStart = sortedWorkouts.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const pageEnd = Math.min(currentPage * pageSize, sortedWorkouts.length);
+
+  useEffect(() => {
+    if (sortedWorkouts.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+
+    if (selectedId == null || !sortedWorkouts.some((item) => item.id === selectedId)) {
+      setSelectedId(sortedWorkouts[0].id);
+    }
+  }, [selectedId, sortedWorkouts]);
+
+  const selectedWorkout = useMemo(
+    () => workouts.find((item) => item.id === selectedId) ?? null,
+    [selectedId, workouts],
+  );
+
+  useEffect(() => {
+    if (mode === "edit" && selectedWorkout != null) {
+      setForm(toForm(selectedWorkout));
+      setErrors([]);
+    }
+  }, [mode, selectedWorkout]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("Missing Clerk token");
+
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        type: form.type.trim(),
+        level: form.level,
+        durationSeconds: form.durationSeconds,
+        instructionsAudio: form.instructionsAudio.trim(),
+        workoutAudio: form.workoutAudio.trim(),
+        instructionsImage: form.instructionsImage.trim(),
+        workoutImage: form.workoutImage.trim(),
+        kneeFriendly: form.kneeFriendly,
+        lowImpact: form.lowImpact,
+        seated: form.seated,
+        beginnerFriendly: form.beginnerFriendly,
+      };
+
+      if (mode === "edit") {
+        if (selectedId == null) throw new Error("No workout selected");
+        return updateWorkout(selectedId, payload, token);
+      }
+
+      return createWorkoutWithToken(payload, token);
+    },
+    onSuccess: async (saved) => {
+      await queryClient.invalidateQueries({ queryKey: ["workouts"] });
+
+      if (mode === "create") {
+        const createdId = (saved as Workout)?.id;
+        if (typeof createdId === "number") {
+          setSelectedId(createdId);
+        }
+      }
+
+      setMode("view");
+      setErrors([]);
+      showToast(mode === "create" ? "Workout created." : "Workout updated.", {
+        type: "success",
+      });
+    },
+    onError: () => {
+      showToast("Failed to save workout.", { type: "error" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const token = await getToken();
+      if (!token || selectedId == null) throw new Error("Missing Clerk token");
+      return deleteWorkout(selectedId, token);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["workouts"] });
+      setMode("view");
+      setConfirmDelete(false);
+      showToast("Workout deleted.", { type: "success" });
+    },
+    onError: () => {
+      setConfirmDelete(false);
+      showToast("Failed to delete workout.", { type: "error" });
+    },
+  });
+
+  const validate = () => {
+    const nextErrors: string[] = [];
+
+    if (!form.name.trim()) nextErrors.push("Name is required");
+    if (form.level < 0 || form.level > 4) {
+      nextErrors.push("Level must be between 0 and 4");
+    }
+    if (form.durationSeconds < 0) {
+      nextErrors.push("Duration cannot be negative");
+    }
+
+    if (!isValidUrl(form.instructionsAudio)) {
+      nextErrors.push("Instructions audio must be a valid URL");
+    }
+    if (!isValidUrl(form.workoutAudio)) {
+      nextErrors.push("Workout audio must be a valid URL");
+    }
+    if (!isValidUrl(form.instructionsImage)) {
+      nextErrors.push("Instructions image must be a valid URL");
+    }
+    if (!isValidUrl(form.workoutImage)) {
+      nextErrors.push("Workout image must be a valid URL");
+    }
+
+    setErrors(nextErrors);
+    return nextErrors.length === 0;
+  };
+
+  const onSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!validate()) return;
+    showToast("Saving workout...", { type: "info" });
+    await saveMutation.mutateAsync();
+  };
+
+  const onFormChange = (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value, type } = event.target;
+
+    let nextValue: string | number | boolean =
+      type === "checkbox"
+        ? (event.target as HTMLInputElement).checked
+        : type === "number"
+          ? Number(value)
+          : value;
+
+    if (name === "durationSeconds") {
+      const onlyDigits = String(value).replace(/\D/g, "");
+      nextValue = onlyDigits.length > 0 ? Number(onlyDigits) : 0;
+    }
+
+    setForm((prev) => ({ ...prev, [name]: nextValue }));
+  };
+
+  const openCreate = () => {
+    setMode("create");
+    setForm(emptyForm);
+    setErrors([]);
+  };
+
+  const openEdit = () => {
+    if (selectedWorkout == null) return;
+    setMode("edit");
+    setForm(toForm(selectedWorkout));
+    setErrors([]);
+  };
+
+  if (isLoading) {
+    return <p className="text-sm text-(--brand-muted)">Loading workouts...</p>;
+  }
+
+  if (isError) {
+    return <p className="text-sm text-red-500">{(error as Error).message}</p>;
+  }
+
   return (
-    <main className="flex min-h-dvh flex-col bg-(--brand-page) text-(--brand-ink)">
+    <section className="space-y-4">
       {toast && (
         <div
           className={`pointer-events-none fixed right-6 top-6 z-20 rounded-lg px-4 py-2 text-sm font-medium ${
@@ -32,89 +408,501 @@ export default function MainWorkoutPage({ onSwitchTab }: Props) {
         </div>
       )}
 
-      {/* Top Navigation */}
-      {view === "all" && (
-        <div className="flex gap-3 border-b border-(--brand-border) px-6 py-4">
-          <button
-            onClick={() => setView("all")}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              view === "all"
-                ? "bg-(--brand-primary) text-(--brand-on-primary)"
-                : "bg-(--brand-surface-glass) text-(--brand-muted)"
+      {confirmDelete && selectedWorkout != null && (
+        <ConfirmModal
+          open={true}
+          title="Delete workout"
+          body={`Delete workout "${selectedWorkout.name}"? This removes it immediately.`}
+          requireTyping="DELETE"
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          onConfirm={() => deleteMutation.mutate()}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
+
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-[#100b2f]">Workouts</h2>
+          <p className="text-sm text-[#6f6a93]">
+            Manage and organize all workouts in the app.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={openCreate}
+          className="rounded-xl bg-[#5836d6] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4527b8] active:scale-95"
+        >
+          + Add Workout
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#ece5ff] bg-white px-4 py-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={filterType}
+            onChange={(event) => setFilterType(event.target.value)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+              filterType
+                ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]"
+                : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
             }`}
           >
-            All Workouts
-          </button>
-        </div>
-      )}
+            <option value="">All Categories</option>
+            {uniqueTypes.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
 
-      {view !== "all" && (
-        <div className="flex flex-wrap gap-2 border-b border-(--brand-border) px-6 py-4">
-          <button
-            type="button"
-            onClick={() => {
-              setView("all");
-              showToast("Back to workouts.", { type: "info" });
-            }}
-            className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
+          <select
+            value={filterLevel}
+            onChange={(event) => setFilterLevel(event.target.value)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+              filterLevel
+                ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]"
+                : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
+            }`}
           >
-            Back to Workouts
-          </button>
+            <option value="">All Levels</option>
+            {uniqueLevels.map((l) => (
+              <option key={l} value={String(l)}>
+                Level {l}
+              </option>
+            ))}
+          </select>
 
-          {onSwitchTab && (
-            <>
-              <button
-                type="button"
-                onClick={() => onSwitchTab("trainers")}
-                className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
-              >
-                Go to Trainers
-              </button>
+          <select
+            value={filterTrainerId}
+            onChange={(event) => setFilterTrainerId(event.target.value)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+              filterTrainerId
+                ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]"
+                : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
+            }`}
+          >
+            <option value="">All Trainers</option>
+            {trainers.map((tr) => (
+              <option key={tr.id} value={String(tr.id)}>
+                {tr.name}
+              </option>
+            ))}
+          </select>
 
-              <button
-                type="button"
-                onClick={() => onSwitchTab("feedback")}
-                className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
-              >
-                Go to Feedback
-              </button>
-            </>
+          {(filterType || filterLevel || filterTrainerId) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFilterType("");
+                setFilterLevel("");
+                setFilterTrainerId("");
+              }}
+              className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500 transition hover:bg-red-100"
+            >
+              ✕ Clear filters
+            </button>
           )}
         </div>
-      )}
 
-      {/* Page Content */}
-      <div className="flex-1 p-6">
-        {view === "all" && (
-          <AllWorkoutsPage
-            onEdit={(workoutId) => {
-              setEditingWorkoutId(workoutId);
-              setView("edit");
-              showToast("Opening edit page...", { type: "info" });
-            }}
-            onCreate={() => {
-              setView("create");
-              showToast("Opening add workout page...", { type: "info" });
-            }}
-            onStatusChange={showToast}
-          />
-        )}
-
-        {view === "create" && (
-          <AddWorkoutPage
-            onBack={() => setView("all")}
-            onStatusChange={showToast}
-          />
-        )}
-
-        {view === "edit" && editingWorkoutId != null && (
-          <EditWorkoutPage
-            workoutId={editingWorkoutId}
-            onBack={() => setView("all")}
-            onStatusChange={showToast}
-          />
-        )}
+        <select
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value as SortBy)}
+          className="rounded-lg border border-[#ece5ff] px-3 py-1.5 text-xs font-semibold text-[#6f6a93] hover:border-[#5836d6]"
+        >
+          <option value="newest">Sort: Newest</option>
+          <option value="name-asc">Sort: Name A-Z</option>
+          <option value="name-desc">Sort: Name Z-A</option>
+          <option value="duration-asc">Sort: Duration ↑</option>
+          <option value="duration-desc">Sort: Duration ↓</option>
+        </select>
       </div>
-    </main>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="space-y-3">
+          <div className="overflow-hidden rounded-2xl border border-[#ece5ff] bg-white shadow-sm">
+            {pagedWorkouts.map((workout, index) => (
+              <article
+                key={workout.id}
+                onClick={() => {
+                  setSelectedId(workout.id);
+                  if (mode === "create") setMode("view");
+                }}
+                className={`cursor-pointer border-b border-[#f3eeff] p-3 transition last:border-b-0 ${
+                  selectedId === workout.id
+                    ? "bg-[#f3eeff]"
+                    : "bg-white hover:bg-[#faf8ff]"
+                } ${index === 0 ? "" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-[#ece5ff]">
+                    {(workout.workoutImage || workout.instructionsImage) ? (
+                      <img
+                        src={workout.workoutImage || workout.instructionsImage}
+                        alt={workout.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-[#b0a0e0] text-lg">
+                        🏋️
+                      </div>
+                    )}
+                    {selectedId === workout.id && (
+                      <div className="absolute inset-0 rounded-lg ring-2 ring-[#5836d6]" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[#100b2f]">
+                      {workout.name}
+                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      {workout.type && (
+                        <span className="rounded-full bg-[#ede9ff] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#5836d6]">
+                          {workout.type}
+                        </span>
+                      )}
+                      <span className="text-xs text-[#9b96b8]">
+                        Level {workout.level ?? "-"}
+                      </span>
+                      <span className="text-xs text-[#9b96b8]">·</span>
+                      <span className="text-xs text-[#9b96b8]">
+                        {workout.durationSeconds ?? "-"} sec
+                      </span>
+                    </div>
+                  </div>
+
+                  {selectedId === workout.id && (
+                    <div className="h-2 w-2 shrink-0 rounded-full bg-[#5836d6]" />
+                  )}
+                </div>
+              </article>
+            ))}
+
+            {pagedWorkouts.length === 0 && (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                <span className="text-3xl">🔍</span>
+                <p className="text-sm font-semibold text-[#100b2f]">No workouts found</p>
+                <p className="text-xs text-[#9b96b8]">
+                  Try adjusting your search or filters
+                </p>
+                {(filterType || filterLevel || filterTrainerId) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilterType("");
+                      setFilterLevel("");
+                      setFilterTrainerId("");
+                    }}
+                    className="mt-1 rounded-lg bg-[#f3eeff] px-3 py-1.5 text-xs font-semibold text-[#5836d6] hover:bg-[#ede9ff]"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+            <p className="text-xs text-[#9b96b8]">
+              {sortedWorkouts.length === 0
+                ? "No results"
+                : `Showing ${pageStart}–${pageEnd} of ${sortedWorkouts.length} workouts`}
+            </p>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
+                >
+                  ← Prev
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                      currentPage === page
+                        ? "bg-[#5836d6] text-white shadow-sm"
+                        : "border border-[#ece5ff] bg-white text-[#5836d6] hover:bg-[#f3eeff]"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <aside className="h-fit rounded-2xl border border-[#ece5ff] bg-white shadow-sm xl:sticky xl:top-5">
+          {mode === "view" && selectedWorkout != null && (
+            <div className="space-y-0">
+              <div className="relative h-44 w-full overflow-hidden rounded-t-2xl bg-[#ece5ff]">
+                {(selectedWorkout.workoutImage || selectedWorkout.instructionsImage) ? (
+                  <img
+                    src={selectedWorkout.workoutImage || selectedWorkout.instructionsImage}
+                    alt={selectedWorkout.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-5xl">
+                    🏋️
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
+                <button
+                  type="button"
+                  onClick={openEdit}
+                  className="absolute right-3 top-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#5836d6] shadow-sm backdrop-blur-sm transition hover:bg-white"
+                >
+                  ✏️ Edit
+                </button>
+                {selectedWorkout.type && (
+                  <span className="absolute bottom-3 left-3 rounded-full bg-[#5836d6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                    {selectedWorkout.type}
+                  </span>
+                )}
+              </div>
+
+              <div className="p-4 space-y-4">
+                <div>
+                  <h3 className="text-lg font-bold text-[#100b2f]">{selectedWorkout.name}</h3>
+                  <p className="text-xs text-[#9b96b8]">
+                    Level {selectedWorkout.level ?? "-"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+                      Duration
+                    </p>
+                    <p className="mt-1 text-base font-bold text-[#100b2f]">
+                      {selectedWorkout.durationSeconds ?? "-"}s
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+                      Level
+                    </p>
+                    <p className="mt-1 text-base font-bold text-[#100b2f]">
+                      {selectedWorkout.level ?? "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+                      Type
+                    </p>
+                    <p className="mt-1 truncate text-base font-bold text-[#100b2f]">
+                      {selectedWorkout.type ? selectedWorkout.type.toUpperCase() : "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedWorkout.description && (
+                  <div>
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+                      Description
+                    </p>
+                    <p className="text-sm leading-relaxed text-[#3d3860]">
+                      {selectedWorkout.description}
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={openEdit}
+                  className="w-full rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] active:scale-95"
+                >
+                  Edit Workout
+                </button>
+              </div>
+            </div>
+          )}
+
+          {(mode === "create" || mode === "edit") && (
+            <form onSubmit={onSubmit} className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-[#100b2f]">
+                  {mode === "create" ? "New Workout" : "Edit Workout"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("view");
+                    setErrors([]);
+                  }}
+                  className="rounded-full border border-[#ece5ff] px-3 py-1 text-xs font-semibold text-[#6f6a93] transition hover:border-[#5836d6] hover:text-[#5836d6]"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-[#6f6a93]">Name *</label>
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={onFormChange}
+                  placeholder="e.g. Axellyft"
+                  className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-[#6f6a93]">Description</label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={onFormChange}
+                  placeholder="Short description of the workout..."
+                  className="min-h-20 w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-[#6f6a93]">Type</label>
+                  <input
+                    name="type"
+                    value={form.type}
+                    onChange={onFormChange}
+                    placeholder="STRENGTH"
+                    className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-[#6f6a93]">Level</label>
+                  <input
+                    type="number"
+                    name="level"
+                    min="0"
+                    max="4"
+                    value={form.level}
+                    onChange={onFormChange}
+                    className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-[#6f6a93]">Seconds</label>
+                  <input
+                    type="text"
+                    name="durationSeconds"
+                    inputMode="numeric"
+                    value={form.durationSeconds}
+                    onChange={onFormChange}
+                    className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-[#6f6a93]">Workout image URL</label>
+                <input
+                  name="workoutImage"
+                  value={form.workoutImage}
+                  onChange={onFormChange}
+                  placeholder="https://..."
+                  className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                />
+              </div>
+
+              <details className="rounded-xl border border-[#ece5ff]">
+                <summary className="cursor-pointer px-3 py-2.5 text-xs font-semibold text-[#5836d6]">
+                  More fields ▾
+                </summary>
+                <div className="space-y-3 px-3 pb-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-[#6f6a93]">Instructions image URL</label>
+                    <input
+                      name="instructionsImage"
+                      value={form.instructionsImage}
+                      onChange={onFormChange}
+                      placeholder="https://..."
+                      className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-[#6f6a93]">Workout audio URL</label>
+                    <input
+                      name="workoutAudio"
+                      value={form.workoutAudio}
+                      onChange={onFormChange}
+                      placeholder="https://..."
+                      className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-[#6f6a93]">Instructions audio URL</label>
+                    <input
+                      name="instructionsAudio"
+                      value={form.instructionsAudio}
+                      onChange={onFormChange}
+                      placeholder="https://..."
+                      className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                    />
+                  </div>
+                </div>
+              </details>
+
+              {errors.length > 0 && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-600">
+                  {errors.map((item) => (
+                    <p key={item} className="flex items-center gap-1">
+                      <span>⚠</span> {item}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-1">
+                {mode === "edit" && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(true)}
+                    className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-500 transition hover:bg-red-100"
+                  >
+                    Delete
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={saveMutation.isPending}
+                  className="flex-1 rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] disabled:opacity-50 active:scale-95"
+                >
+                  {saveMutation.isPending ? "Saving…" : "Save"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {mode === "view" && selectedWorkout == null && (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <span className="text-4xl">👆</span>
+              <p className="text-sm font-semibold text-[#100b2f]">Select a workout</p>
+              <p className="text-xs text-[#9b96b8]">Click any row to see details here</p>
+            </div>
+          )}
+        </aside>
+      </div>
+
+    </section>
   );
 }
