@@ -10,7 +10,10 @@ export default async function fetchMyProfile(token: string) {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to fetch user profile");
+    const errorText = await res.text().catch(() => "");
+    throw new Error(
+      errorText || `Failed to fetch user profile (${res.status})`,
+    );
   }
 
   return res.json();
