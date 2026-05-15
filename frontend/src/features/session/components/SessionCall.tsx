@@ -214,9 +214,7 @@ export function SessionCall({
             {trainerName}
           </h1>
 
-          <p className="mt-[clamp(0.25rem,0.75cqh,0.45rem)] text-[clamp(15px,1.9cqh,19px)] font-extrabold leading-none text-[#5b3fd6]">
-            {formatTime(elapsedSeconds)}
-          </p>
+          <span className="sr-only">Samtalstid {formatTime(elapsedSeconds)}</span>
 
           <p className="mt-[clamp(0.3rem,0.9cqh,0.7rem)] max-w-[320px] text-[clamp(11px,1.4cqh,14px)] font-bold leading-snug text-[#6f6a93]">
             {displayWorkoutName}
