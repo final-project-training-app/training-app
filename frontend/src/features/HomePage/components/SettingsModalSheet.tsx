@@ -155,7 +155,9 @@ function SettingsModalBody({
           </button>
 
           {saveFeedback ? (
-            <AppSheetNotice tone={saveFeedback.includes("✓") ? "success" : "danger"}>
+            <AppSheetNotice
+              tone={saveFeedback.includes("✓") ? "success" : "danger"}
+            >
               {saveFeedback}
             </AppSheetNotice>
           ) : null}

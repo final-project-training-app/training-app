@@ -141,9 +141,7 @@ export function AppSheet({
           </div>
 
           {footer ? (
-            <div className="app-sheet-footer shrink-0 pt-3">
-              {footer}
-            </div>
+            <div className="app-sheet-footer shrink-0 pt-3">{footer}</div>
           ) : null}
         </div>
       </section>

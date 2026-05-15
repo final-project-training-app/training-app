@@ -60,7 +60,10 @@ export default function TrainerSelectionModal({
   }, [onTrainerSelect, selectedTrainerId, trainers]);
 
   const selectedIndex = useMemo(
-    () => trainers.findIndex((trainer: Trainer) => trainer.id === selectedTrainerId),
+    () =>
+      trainers.findIndex(
+        (trainer: Trainer) => trainer.id === selectedTrainerId,
+      ),
     [selectedTrainerId, trainers],
   );
 
@@ -121,13 +124,9 @@ export default function TrainerSelectionModal({
       </AppSheetCard>
 
       {isLoading ? (
-        <AppSheetNotice>
-          Hämtar tränare...
-        </AppSheetNotice>
+        <AppSheetNotice>Hämtar tränare...</AppSheetNotice>
       ) : isError ? (
-        <AppSheetNotice tone="danger">
-          Kunde inte hämta tränare.
-        </AppSheetNotice>
+        <AppSheetNotice tone="danger">Kunde inte hämta tränare.</AppSheetNotice>
       ) : trainers.length > 0 ? (
         <>
           <AppSheetCard>
@@ -155,7 +154,9 @@ export default function TrainerSelectionModal({
               <button
                 type="button"
                 onClick={() => moveSelection(1)}
-                disabled={trainers.length <= 1 || activeIndex >= trainers.length - 1}
+                disabled={
+                  trainers.length <= 1 || activeIndex >= trainers.length - 1
+                }
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#ddd2ff] bg-white text-[#5b3fd6] transition active:scale-95 disabled:opacity-40"
                 aria-label="Nästa tränare"
               >
@@ -187,14 +188,13 @@ export default function TrainerSelectionModal({
             ) : null}
 
             <p className="mt-4 text-center text-[14px] font-semibold leading-relaxed text-[#5c567f]">
-              Byt med pilarna tills du hittar en röst som känns tydlig och trygg.
+              Byt med pilarna tills du hittar en röst som känns tydlig och
+              trygg.
             </p>
           </AppSheetCard>
         </>
       ) : (
-        <AppSheetNotice>
-          Inga tränare hittades.
-        </AppSheetNotice>
+        <AppSheetNotice>Inga tränare hittades.</AppSheetNotice>
       )}
     </section>
   );

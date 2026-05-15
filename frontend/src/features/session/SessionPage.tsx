@@ -67,16 +67,11 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const {
-    step,
-    error,
-    debugEvents,
-    endSession,
-    getCurrentRms,
-  } = useCoachSession({
-    session,
-    autoStart: true,
-  });
+  const { step, error, debugEvents, endSession, getCurrentRms } =
+    useCoachSession({
+      session,
+      autoStart: true,
+    });
 
   useEffect(() => {
     if (step !== "completed") return;

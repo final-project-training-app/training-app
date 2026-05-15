@@ -73,9 +73,7 @@ function TrainerCardInner({
 
           <p
             className={`mt-2 inline-flex rounded-full px-3 py-1 text-[12px] font-extrabold tracking-wide ${
-              selected
-                ? "bg-[#5b3fd6] text-white"
-                : "bg-white text-[#6b59b2]"
+              selected ? "bg-[#5b3fd6] text-white" : "bg-white text-[#6b59b2]"
             }`}
           >
             {selected ? "Vald tränare" : "Tryck för att välja"}
