@@ -67,7 +67,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#f7f2ff] text-[#221447]">
+    <div className="home-stage relative h-full w-full overflow-hidden bg-[#f7f2ff] text-[#221447]">
       {/* Auth / admin layer - stays relative to desktop viewport */}
       <div className="fixed right-4 top-4 z-50">
         {!isLoaded ? null : isSignedIn ? (
@@ -111,7 +111,7 @@ export default function HomePage() {
       <div className="absolute inset-0 z-[1]" />
 
       {/* Logo - locked position */}
-      <div className="pointer-events-none absolute left-1/2 top-[22px] z-[2] w-[370px] -translate-x-1/2">
+      <div className="home-stage-logo pointer-events-none absolute left-1/2 z-[2] -translate-x-1/2">
         <img
           src={assets.logo}
           alt="Ring så tränar vi"
@@ -121,12 +121,12 @@ export default function HomePage() {
 
       {/* Trainer - locked relation to logo */}
       <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden">
-        <div className="absolute left-1/2 bottom-[140px] h-[360px] w-[320px] -translate-x-1/2 rounded-full bg-white/20 blur-[44px]" />
+        <div className="home-stage-trainer-glow absolute left-1/2 -translate-x-1/2 rounded-full bg-white/20 blur-[44px]" />
 
         <img
           src={activeTrainer.image}
           alt={activeTrainer.name}
-          className="absolute left-1/2 bottom-[46px] w-[465px] -translate-x-1/2 translate-y-[21%] object-contain"
+          className="home-stage-trainer-image absolute left-1/2 -translate-x-1/2 object-contain"
         />
       </div>
 

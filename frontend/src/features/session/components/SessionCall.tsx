@@ -42,7 +42,11 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
         <span ref={valRef}>0.000</span>
       </div>
       <div className="relative h-3 w-full overflow-hidden rounded bg-white/10">
-        <div ref={barRef} className="h-full rounded bg-emerald-400 transition-none" style={{ width: "0%" }} />
+        <div
+          ref={barRef}
+          className="h-full rounded bg-emerald-400 transition-none"
+          style={{ width: "0%" }}
+        />
         <div
           className="absolute top-0 h-full w-px bg-red-400"
           style={{ left: `${thresholdPct}%` }}
@@ -118,12 +122,14 @@ function ControlButton({
       onClick={onClick}
       disabled={disabled}
       aria-pressed={active}
-      className="group flex flex-col items-center gap-2.5 text-center disabled:opacity-60"
+      className="group flex min-w-0 flex-col items-center gap-[clamp(0.35rem,0.95cqh,0.65rem)] text-center disabled:opacity-60"
     >
       <div
         className={[
-          "flex h-[84px] w-[84px] items-center justify-center rounded-full transition group-active:scale-95",
-          active ? "bg-[#5b3fd6] text-white" : "bg-[#f0e9ff] text-[#5b3fd6]",
+          "flex h-[clamp(56px,8.5cqh,80px)] w-[clamp(56px,8.5cqh,80px)] items-center justify-center rounded-full shadow-[inset_0_0_0_1px_rgba(91,63,214,0.06)] transition group-active:scale-95 [&>svg]:h-[clamp(24px,3.45cqh,32px)] [&>svg]:w-[clamp(24px,3.45cqh,32px)]",
+          active
+            ? "bg-[#5b3fd6] text-white shadow-[0_10px_24px_rgba(91,63,214,0.22)]"
+            : "bg-[#ece7f8] text-[#5b3fd6]",
         ].join(" ")}
       >
         {children}
@@ -131,7 +137,7 @@ function ControlButton({
 
       <span
         className={[
-          "text-[15px] font-bold leading-tight",
+          "max-w-[6.6rem] text-[clamp(11px,1.5cqh,15px)] font-extrabold leading-tight",
           active ? "text-[#100b2f]" : "text-[#221447]",
         ].join(" ")}
       >
@@ -182,42 +188,43 @@ export function SessionCall({
         </div>
       ) : null}
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#f7f1ff_0%,#fffaff_58%,#fbf8ff_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#f5efff_0%,#fffaff_46%,#f1ebfb_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-[46%] bg-[linear-gradient(to_bottom,rgba(255,255,255,0),rgba(232,224,249,0.74))]" />
 
-      <div className="relative z-10 flex h-full w-full flex-col px-6 pb-7 pt-12">
-        <section className="flex flex-col items-center text-center">
-          <div className="mb-5 flex h-[210px] w-[210px] items-center justify-center rounded-full bg-[#f0e9ff]">
+      <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-[clamp(1.25rem,5cqw,1.75rem)] pb-[max(clamp(0.9rem,2.4cqh,1.75rem),calc(env(safe-area-inset-bottom)+0.5rem))] pt-[max(clamp(1.15rem,4.1cqh,3rem),calc(env(safe-area-inset-top)+0.75rem))]">
+        <section className="flex shrink-0 flex-col items-center text-center">
+          <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] flex h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)] items-center justify-center rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
             {trainerImage ? (
               <img
                 src={trainerImage}
                 alt={trainerName}
-                className="h-[190px] w-[190px] rounded-full object-cover"
+                className="h-[clamp(96px,17.8cqh,168px)] w-[clamp(96px,17.8cqh,168px)] rounded-full object-cover"
               />
             ) : (
-              <div className="flex h-[190px] w-[190px] items-center justify-center rounded-full bg-[#eee7fb] text-5xl font-extrabold text-[#5b3fd6]">
+              <div className="flex h-[clamp(96px,17.8cqh,168px)] w-[clamp(96px,17.8cqh,168px)] items-center justify-center rounded-full bg-[#e8e1f8] text-[clamp(2rem,5.2cqh,3rem)] font-extrabold text-[#5b3fd6]">
                 PT
               </div>
             )}
           </div>
 
-          <h1 className="text-[36px] font-extrabold leading-none text-[#100b2f]">
+          <h1 className="text-[clamp(25px,3.45cqh,34px)] font-extrabold leading-none text-[#100b2f]">
             {trainerName}
           </h1>
 
-          <p className="mt-2 text-[20px] font-bold leading-none text-[#5b3fd6]">
+          <p className="mt-[clamp(0.25rem,0.75cqh,0.45rem)] text-[clamp(15px,1.9cqh,19px)] font-extrabold leading-none text-[#5b3fd6]">
             {formatTime(elapsedSeconds)}
           </p>
 
-          <p className="mt-3 max-w-[320px] text-[14px] font-semibold text-[#6f6a93]">
+          <p className="mt-[clamp(0.3rem,0.9cqh,0.7rem)] max-w-[320px] text-[clamp(11px,1.4cqh,14px)] font-bold leading-snug text-[#6f6a93]">
             {displayWorkoutName}
           </p>
 
-          <p className="mt-1 max-w-[320px] text-[13px] font-semibold text-[#8a83aa]">
+          <p className="mt-1 max-w-[320px] text-[clamp(10px,1.25cqh,13px)] font-bold text-[#8a83aa]">
             {coachStatusLabel}
           </p>
         </section>
 
-        <section className="mt-9 grid grid-cols-3 justify-items-center gap-x-3 gap-y-8">
+        <section className="mx-auto mt-[clamp(0.85rem,3.3cqh,2.6rem)] grid w-full max-w-[360px] shrink-0 grid-cols-3 justify-items-center gap-x-[clamp(0.75rem,3.5cqw,1.35rem)] gap-y-[clamp(0.7rem,2.7cqh,2.05rem)]">
           <ControlButton
             label={isMuted ? "Ljud av" : "Ljud på"}
             active={isMuted}
@@ -254,18 +261,18 @@ export function SessionCall({
           </ControlButton>
         </section>
 
-        <div className="flex-1" />
-
         <button
           type="button"
           onClick={onEnd}
-          className="mb-1 flex flex-col items-center gap-2.5 transition active:scale-95"
+          className="mx-auto mt-auto flex w-full max-w-[360px] flex-col items-center gap-[clamp(0.35rem,1cqh,0.6rem)] pb-[clamp(0rem,0.8cqh,0.25rem)] transition active:scale-95"
         >
-          <div className="flex h-[92px] w-[92px] items-center justify-center rounded-full bg-[#ef4444] text-white">
-            <PhoneOff size={42} strokeWidth={1.5} />
+          <div className="flex h-[clamp(58px,8.8cqh,84px)] w-[clamp(58px,8.8cqh,84px)] items-center justify-center rounded-full bg-[#ef4444] text-white shadow-[0_12px_26px_rgba(239,68,68,0.22)] [&>svg]:h-[clamp(28px,3.9cqh,38px)] [&>svg]:w-[clamp(28px,3.9cqh,38px)]">
+            <PhoneOff strokeWidth={1.75} />
           </div>
 
-          <span className="text-[17px] font-bold text-[#221447]">Lägg på</span>
+          <span className="text-[clamp(13px,1.6cqh,16px)] font-extrabold text-[#221447]">
+            Lägg på
+          </span>
         </button>
       </div>
 

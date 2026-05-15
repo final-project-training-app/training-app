@@ -12,9 +12,9 @@ type AppSheetProps = {
 };
 
 const maxHeightClass = {
-  compact: "max-h-[58dvh]",
-  default: "max-h-[76dvh]",
-  large: "max-h-[92dvh]",
+  compact: "max-h-[58%]",
+  default: "max-h-[76%]",
+  large: "max-h-[92%]",
 };
 
 export function AppSheet({
@@ -31,7 +31,7 @@ export function AppSheet({
       <div
         onClick={onClose}
         className={[
-          "fixed inset-0 z-40 bg-[#221447]/18 backdrop-blur-[3px]",
+          "absolute inset-0 z-40 bg-[#221447]/18 backdrop-blur-[3px]",
           "transition-opacity duration-200 ease-out",
           open
             ? "opacity-100 motion-safe:animate-[app-backdrop-in_220ms_ease-out_both]"
@@ -41,7 +41,7 @@ export function AppSheet({
 
       <section
         className={[
-          "fixed bottom-0 left-1/2 z-50 w-full max-w-[430px]",
+          "absolute inset-x-0 bottom-0 z-50 w-full",
           "overflow-hidden rounded-t-[2rem] bg-[#fbf8ff]",
           "shadow-[0_-18px_60px_rgba(55,38,110,0.20)]",
           "will-change-transform",
@@ -54,7 +54,7 @@ export function AppSheet({
       >
         <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-[#c8bfeb]" />
 
-        <div className="flex max-h-[inherit] flex-col px-5 pb-5 pt-4">
+        <div className="flex max-h-[inherit] flex-col px-5 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.25rem))] pt-4">
           <header className="flex shrink-0 items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-[#5b3fd6]">

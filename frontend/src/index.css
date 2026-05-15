@@ -41,14 +41,17 @@
 html,
 body,
 #root {
+  height: 100%;
   min-height: 100%;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--brand-page);
   color: var(--brand-ink);
+  overflow: hidden;
+  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -57,16 +60,59 @@ body.admin-shell {
   overflow: hidden;
 }
 
+#root {
+  overflow: hidden;
+}
+
+.home-stage {
+  --hero-logo-top: clamp(14px, 2.4cqh, 22px);
+  --hero-logo-width: min(86cqw, 48cqh, 370px);
+  --hero-logo-height: calc(var(--hero-logo-width) * 0.546);
+  --hero-logo-bottom: calc(var(--hero-logo-top) + var(--hero-logo-height));
+  --hero-logo-overlap: clamp(18px, calc(var(--hero-logo-height) * 0.12), 24px);
+  --hero-trainer-width: clamp(240px, min(100cqw, 64cqh), 430px);
+  --hero-trainer-height: calc(var(--hero-trainer-width) * 2.02);
+  --hero-trainer-top: calc(var(--hero-logo-bottom) - var(--hero-logo-overlap));
+  --hero-trainer-glow-width: clamp(
+    220px,
+    calc(var(--hero-trainer-width) * 0.74),
+    320px
+  );
+  --hero-trainer-glow-height: clamp(
+    230px,
+    calc(var(--hero-trainer-width) * 0.84),
+    360px
+  );
+  --hero-trainer-glow-top: calc(
+    var(--hero-trainer-top) + clamp(92px, 13cqh, 128px)
+  );
+}
+
+.home-stage-logo {
+  top: var(--hero-logo-top);
+  width: var(--hero-logo-width);
+}
+
+.home-stage-trainer-glow {
+  top: var(--hero-trainer-glow-top);
+  width: var(--hero-trainer-glow-width);
+  height: var(--hero-trainer-glow-height);
+}
+
+.home-stage-trainer-image {
+  top: var(--hero-trainer-top);
+  width: var(--hero-trainer-width);
+}
 
 @keyframes app-sheet-in {
   from {
     opacity: 0;
-    transform: translate(-50%, 18px) scale(0.985);
+    transform: translateY(18px) scale(0.985);
   }
 
   to {
     opacity: 1;
-    transform: translate(-50%, 0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 

@@ -33,7 +33,7 @@ export default function RootLayout() {
 
   return (
     <main
-      className="relative flex h-[100svh] max-h-[100svh] items-center justify-center overflow-hidden text-[#221447]"
+      className="relative flex h-[100dvh] min-h-[100dvh] w-full items-center justify-center overflow-hidden text-[#221447]"
       style={{
         backgroundColor: "#eee7fb",
         backgroundImage: `
