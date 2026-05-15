@@ -23,7 +23,9 @@ type BackendWorkoutResponse = {
   seated?: boolean;
   beginnerFriendly?: boolean;
 
-  trainer?: Trainer | null;
+  trainer?:
+    | ({ id: number } & Partial<Trainer>)
+    | null;
 };
 export type BackendTrainerResponse = {
   id: number;
@@ -50,9 +52,34 @@ type BackendUserResponse = {
   name: string;
   intensityLevel: number;
   context: string;
+  trainerId?: number | null;
 };
 
-const currentUserId = "6";
+const DEFAULT_TRAINER_ID = 1;
+
+function toTrainerSummary(
+  trainer: BackendTrainerResponse | ({ id: number } & Partial<Trainer>) | null,
+): Trainer | null {
+  if (!trainer) {
+    return null;
+  }
+
+  if (!trainer.name?.trim()) {
+    return null;
+  }
+
+  return {
+    id: trainer.id,
+    name: trainer.name,
+    prompt: trainer.prompt ?? null,
+    voice: trainer.voice ?? null,
+    intro: trainer.intro ?? null,
+    language: trainer.language ?? null,
+    imageSelect: trainer.imageSelect ?? null,
+    imageCall: trainer.imageCall ?? null,
+    imageStart: trainer.imageStart ?? null,
+  };
+}
 
 function toDurationSeconds(workout: BackendWorkoutResponse) {
   if (typeof workout.durationSeconds === "number") {
@@ -78,21 +105,69 @@ export async function getTrainer(
 
 export async function getCoachCallSession(
   workoutId: string,
+  token?: string | null,
 ): Promise<CoachCallSession> {
-  const [workout, progress, user] = await Promise.all([
-    getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`),
-    getJson<BackendProgressResponse>(`/api/users/${currentUserId}/progress`),
-    getJson<BackendUserResponse>(`/api/users/${currentUserId}`),
-  ]);
+  const workout = await getJson<BackendWorkoutResponse>(
+    `/api/workouts/${workoutId}`,
+  );
+
+  let user: BackendUserResponse | null = null;
+  let progress: BackendProgressResponse | null = null;
+
+  if (token) {
+    try {
+      user = await getJson<BackendUserResponse>(`/api/users/me/profile`, {
+        token,
+      });
+    } catch (error) {
+      console.warn("[session/api] Could not fetch user profile", error);
+    }
+
+    try {
+      progress = await getJson<BackendProgressResponse>(
+        `/api/users/me/progress`,
+        { token },
+      );
+    } catch (error) {
+      console.warn("[session/api] Could not fetch user progress", error);
+    }
+  }
+
+  const resolvedTrainerId = user?.trainerId ?? DEFAULT_TRAINER_ID;
+
+  let trainer: BackendTrainerResponse | null = null;
+
+  try {
+    trainer = await getTrainer(String(resolvedTrainerId));
+  } catch (error) {
+    console.warn("[session/api] Could not fetch trainer details", error);
+  }
+
+  const resolvedTrainer =
+    toTrainerSummary(trainer) ??
+    (resolvedTrainerId === DEFAULT_TRAINER_ID
+      ? {
+          id: DEFAULT_TRAINER_ID,
+          name: "Eva",
+          prompt: null,
+          voice: null,
+          intro: null,
+          language: null,
+          imageSelect: null,
+          imageCall: null,
+          imageStart: null,
+        }
+      : null);
 
   return {
     id: workout.id,
+    isAuthenticated: Boolean(token && user),
 
     name: workout.name,
     workoutName: workout.name,
 
     description: workout.description,
-    instructions: workout.description,
+    instructions: workout.instructions ?? workout.description,
 
     level: workout.level,
     type: workout.type,
@@ -112,13 +187,13 @@ export async function getCoachCallSession(
 
     durationSeconds: toDurationSeconds(workout),
 
-    trainer: workout.trainer,
+    trainer: resolvedTrainer,
 
-    userName: user.name,
-    intensityLevel: user.intensityLevel,
-    context: user.context,
+    userName: user?.name,
+    intensityLevel: user?.intensityLevel,
+    context: user?.context,
 
-    currentStreak: progress.currentStreak,
-    completedWorkouts: progress.completedWorkouts,
+    currentStreak: progress?.currentStreak,
+    completedWorkouts: progress?.completedWorkouts,
   };
 }

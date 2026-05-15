@@ -59,7 +59,7 @@ export function TrainingSuitePanel({
             </div>
 
             <p className="text-sm font-extrabold text-[#100b2f]">
-              completedWorkouts saknas eller är tom
+              Ingen träningshistorik hittades.
             </p>
           </div>
         )}

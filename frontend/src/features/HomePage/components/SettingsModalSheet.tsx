@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/react";
 import { Settings } from "lucide-react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
@@ -17,9 +17,66 @@ import {
   appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
 
-const DEFAULT_DISPLAY_NAME = "No name entered";
-const DEFAULT_INTENSITY_LEVEL = 2;
-const DEFAULT_CONTEXT = "";
+type ProfileSettings = {
+  name?: string | null;
+  intensityLevel?: number | null;
+  context?: string | null;
+  trainerId?: number | null;
+};
+
+const INTENSITY_MIN = 1;
+const INTENSITY_MAX = 5;
+const DEFAULT_INTENSITY_LEVEL = 3;
+const DEFAULT_TRAINER_ID = 1;
+
+function normalizeIntensityLevel(value?: number | null) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return DEFAULT_INTENSITY_LEVEL;
+  }
+
+  return Math.min(INTENSITY_MAX, Math.max(INTENSITY_MIN, value));
+}
+
+function normalizeTrainerId(value?: number | null) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return DEFAULT_TRAINER_ID;
+  }
+
+  return value;
+}
+
+function SettingsStatusSheet({
+  open,
+  setOpen,
+  message,
+}: {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  message: string;
+}) {
+  return (
+    <AppSheet
+      open={open}
+      title="Inställningar"
+      subtitle=""
+      icon={<Settings size={20} strokeWidth={2.4} />}
+      onClose={() => setOpen(false)}
+      height="compact"
+      footer={
+        <section className="space-y-2.5 pb-1">
+          <button
+            className={appSheetSecondaryButtonClass}
+            onClick={() => setOpen(false)}
+          >
+            Stäng
+          </button>
+        </section>
+      }
+    >
+      <AppSheetNotice>{message}</AppSheetNotice>
+    </AppSheet>
+  );
+}
 
 export default function SettingsModalSheet({
   open,
@@ -28,20 +85,52 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
+  if (!open) {
+    return null;
+  }
+
+  const { isLoaded, isSignedIn } = useAuth();
   const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
+
+  if (isLoaded && !isSignedIn) {
+    return (
+      <SettingsStatusSheet
+        open={open}
+        setOpen={setOpen}
+        message="Du är inte inloggad."
+      />
+    );
+  }
+
+  if (!isLoaded || isLoading) {
+    return (
+      <SettingsStatusSheet
+        open={open}
+        setOpen={setOpen}
+        message="Hämtar inställningar..."
+      />
+    );
+  }
+
+  if (isError || !isSuccess || !user) {
+    return (
+      <SettingsStatusSheet
+        open={open}
+        setOpen={setOpen}
+        message={
+          error instanceof Error
+            ? error.message
+            : "Kunde inte hämta inställningar."
+        }
+      />
+    );
+  }
 
   return (
     <SettingsModalBody
       open={open}
       setOpen={setOpen}
-      isSuccess={isSuccess}
-      isLoading={isLoading}
-      isError={isError}
-      errorMessage={error instanceof Error ? error.message : null}
-      userName={user?.name?.trim() ? user.name : DEFAULT_DISPLAY_NAME}
-      intensityLevel={user?.intensityLevel ?? DEFAULT_INTENSITY_LEVEL}
-      context={user?.context ?? DEFAULT_CONTEXT}
-      trainerId={user?.trainerId ?? null}
+      profile={user}
     />
   );
 }
@@ -49,45 +138,25 @@ export default function SettingsModalSheet({
 function SettingsModalBody({
   open,
   setOpen,
-  isSuccess,
-  isLoading,
-  isError,
-  errorMessage,
-  userName,
-  intensityLevel: initialIntensityLevel,
-  context: initialContext,
-  trainerId: initialTrainerId,
+  profile,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
-  isSuccess: boolean;
-  isLoading: boolean;
-  isError: boolean;
-  errorMessage: string | null;
-  userName: string;
-  intensityLevel: number;
-  context: string;
-  trainerId: number | null;
+  profile: ProfileSettings;
 }) {
-  const [fullName, setFullName] = useState(userName);
-  const [intensityLevel, setIntensityLevel] = useState(initialIntensityLevel);
-  const [context, setContext] = useState(initialContext);
+  const [fullName, setFullName] = useState(profile.name?.trim() ?? "");
+  const [intensityLevel, setIntensityLevel] = useState(() =>
+    normalizeIntensityLevel(profile.intensityLevel),
+  );
+  const [context, setContext] = useState(profile.context ?? "");
   const [selectedTrainerId, setSelectedTrainerId] = useState<number | null>(
-    initialTrainerId,
+    normalizeTrainerId(profile.trainerId),
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
 
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateProfile = useUpdateProfile();
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    setFullName(userName);
-    setIntensityLevel(initialIntensityLevel);
-    setContext(initialContext);
-    setSelectedTrainerId(initialTrainerId);
-  }, [userName, initialIntensityLevel, initialContext, initialTrainerId]);
 
   useEffect(() => {
     return () => {
@@ -119,14 +188,10 @@ function SettingsModalBody({
 
     try {
       await updateProfile.mutateAsync({
-        name: fullName.trim() || DEFAULT_DISPLAY_NAME,
-        intensityLevel,
+        name: fullName.trim(),
+        intensityLevel: normalizeIntensityLevel(intensityLevel),
         context,
         trainerId: Number(selectedTrainerId),
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["myProfile"],
       });
 
       showFeedback("Inställningar sparade ✓");
@@ -192,15 +257,9 @@ function SettingsModalBody({
           </div>
 
           <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
-            {isLoading
-              ? "Hämtar namn från din profil..."
-              : isSuccess
-                ? fullName === DEFAULT_DISPLAY_NAME
-                  ? "Ingen namnuppgift hittades. Standardnamn används."
-                  : "Namnet är hämtat från din profil."
-                : isError
-                  ? (errorMessage ?? "Kunde inte hämta profilen.")
-                  : ""}
+            {fullName.trim()
+              ? "Namnet är hämtat från din profil."
+              : "Ingen namnuppgift hittades."}
           </p>
         </AppSheetCard>
 

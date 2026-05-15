@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getApiBaseUrl } from "../lib/apiBaseUrl";
+import { setStoredTrainerId } from "../features/HomePage/trainerPreference";
 
 const API_URL = getApiBaseUrl();
 
@@ -12,6 +13,10 @@ type ProfileData = {
 };
 
 type ProfileResponse = ProfileData;
+type CachedProfile = ProfileResponse & {
+  id?: number;
+  isAdmin?: boolean;
+};
 
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
@@ -50,8 +55,18 @@ export function useUpdateProfile() {
 
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+    onSuccess: (profile) => {
+      if (typeof profile.trainerId === "number") {
+        setStoredTrainerId(profile.trainerId);
+      }
+
+      queryClient.setQueryData<CachedProfile | undefined>(
+        ["myProfile"],
+        (current) => ({
+          ...current,
+          ...profile,
+        }),
+      );
     },
     onError: (error) => {
       console.error("[useUpdateProfile]", error);

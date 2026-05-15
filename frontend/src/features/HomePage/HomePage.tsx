@@ -5,36 +5,85 @@ import { Phone, Settings } from "lucide-react";
 import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
 import { startRingback } from "../ai-conversation/audio/ringback";
 import { coachCallSessionQueryOptions } from "../session/query";
-import type { CoachCallSession } from "../session/types";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
-
-const trainers = {
-  eva: { name: "Eva", image: "/start-page/eva-start.webp" },
-  jerry: { name: "Jerry", image: "/start-page/jerry-start.webp" },
-  lunken: { name: "Lunken", image: "/start-page/lunken-start.webp" },
-  elizabeth: { name: "Elizabeth", image: "/start-page/elizabeth-start.webp" },
-} as const;
-
-const activeTrainer = trainers.eva;
+import {
+  DEFAULT_TRAINER_ID,
+  getStoredTrainerId,
+  setStoredTrainerId,
+} from "./trainerPreference";
 
 const assets = {
   background: "/start-page/background.webp",
   logo: "/start-page/logo.png",
 };
 
+const homepageTrainers: Record<number, { name: string; image: string }> = {
+  1: {
+    name: "Eva",
+    image: "/start-page/eva-start.webp",
+  },
+  2: {
+    name: "Lunken",
+    image: "/start-page/lunken-start.webp",
+  },
+  3: {
+    name: "Jerry",
+    image: "/start-page/jerry-start.webp",
+  },
+  4: {
+    name: "Elizabeth",
+    image: "/start-page/elizabeth-start.webp",
+  },
+};
+
+function getHomepageTrainer(trainerId?: number | null) {
+  if (typeof trainerId === "number" && homepageTrainers[trainerId]) {
+    return homepageTrainers[trainerId];
+  }
+
+  return homepageTrainers[DEFAULT_TRAINER_ID];
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const { isLoaded, isSignedIn } = useAuth();
+  const [cachedTrainerId, setCachedTrainerId] = useState<number | null>(() =>
+    getStoredTrainerId(),
+  );
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
-    void queryClient.prefetchQuery(coachCallSessionQueryOptions("1"));
-  }, [isLoaded, isSignedIn, queryClient]);
+    if (typeof profile?.trainerId !== "number") {
+      return;
+    }
+
+    setCachedTrainerId(profile.trainerId);
+    setStoredTrainerId(profile.trainerId);
+  }, [profile?.trainerId]);
+
+  const activeTrainerId = !isLoaded
+    ? cachedTrainerId ?? DEFAULT_TRAINER_ID
+    : isSignedIn
+      ? profile?.trainerId ?? cachedTrainerId ?? DEFAULT_TRAINER_ID
+      : DEFAULT_TRAINER_ID;
+
+  const activeTrainer = getHomepageTrainer(activeTrainerId);
+
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+
+    void (async () => {
+      const token = isSignedIn ? await getToken() : null;
+
+      await queryClient.prefetchQuery(coachCallSessionQueryOptions("1", token));
+    })();
+  }, [getToken, isLoaded, isSignedIn, queryClient]);
 
   async function primeMicrophonePermission() {
     if (!navigator.mediaDevices?.getUserMedia) return;
@@ -51,15 +100,6 @@ export default function HomePage() {
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
-
-    const queryOptions = coachCallSessionQueryOptions("1");
-    const cachedSession = queryClient.getQueryData<CoachCallSession>(
-      queryOptions.queryKey,
-    );
-
-    if (!cachedSession) {
-      void queryClient.prefetchQuery(queryOptions);
-    }
 
     navigate({ to: "/session/$workoutId", params: { workoutId: "1" } });
   }

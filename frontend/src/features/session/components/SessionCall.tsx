@@ -90,15 +90,20 @@ function formatTime(totalSeconds: number) {
 }
 
 function getTrainerName(session: CoachCallSession) {
-  return session.trainer?.name ?? "Tränaren";
+  return session.trainer?.name?.trim() || "Tränare saknas";
 }
 
 function getTrainerImage(session: CoachCallSession) {
-  return session.trainer?.imageCall ?? session.trainer?.imageStart ?? null;
+  return (
+    session.trainer?.imageCall ??
+    session.trainer?.imageStart ??
+    session.trainer?.imageSelect ??
+    null
+  );
 }
 
 function getWorkoutName(session: CoachCallSession, workoutName?: string) {
-  return session.name ?? session.workoutName ?? workoutName ?? "Träningspass";
+  return session.name ?? session.workoutName ?? workoutName ?? "Pass saknas";
 }
 
 function ControlButton({
@@ -200,7 +205,7 @@ export function SessionCall({
               />
             ) : (
               <div className="flex h-[clamp(96px,17.8cqh,168px)] w-[clamp(96px,17.8cqh,168px)] items-center justify-center rounded-full bg-[#e8e1f8] text-[clamp(2rem,5.2cqh,3rem)] font-extrabold text-[#5b3fd6]">
-                PT
+                <UserRound size={56} strokeWidth={1.8} />
               </div>
             )}
           </div>

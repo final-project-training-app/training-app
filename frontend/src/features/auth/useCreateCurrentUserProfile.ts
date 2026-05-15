@@ -64,7 +64,7 @@ export function useCreateCurrentUserProfile() {
         user?.username?.trim() ||
         user?.primaryEmailAddress?.emailAddress?.trim() ||
         claimName?.trim() ||
-        "No name entered";
+        "";
 
       if (!token) {
         return;

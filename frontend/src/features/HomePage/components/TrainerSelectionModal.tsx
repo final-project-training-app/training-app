@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, UserRound } from "lucide-react";
@@ -53,12 +53,6 @@ export default function TrainerSelectionModal({
     onTrainerSelect?.(id);
   };
 
-  useEffect(() => {
-    if (selectedTrainerId == null && trainers.length > 0) {
-      onTrainerSelect?.(trainers[0].id);
-    }
-  }, [onTrainerSelect, selectedTrainerId, trainers]);
-
   const selectedIndex = useMemo(
     () =>
       trainers.findIndex(
@@ -92,6 +86,14 @@ export default function TrainerSelectionModal({
 
     selectTrainerByIndex(nextIndex);
   };
+
+  if (isSignedIn === false) {
+    return (
+      <section aria-labelledby="trainer-selection-title">
+        <AppSheetNotice>Du är inte inloggad.</AppSheetNotice>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="trainer-selection-title" className="space-y-4">

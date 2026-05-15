@@ -21,8 +21,8 @@ export function useMyProfile() {
       return fetchMyProfile(token);
     },
     enabled: isLoaded && isSignedIn,
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    staleTime: 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 }

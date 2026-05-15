@@ -10,6 +10,9 @@ type IntensitySliderProps = {
   onChange: (value: number) => void;
 };
 
+const INTENSITY_MIN = 1;
+const INTENSITY_MAX = 5;
+
 const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
   const steps = [
     "Mycket lätt",
@@ -18,7 +21,9 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
     "Intensiv",
     "Mycket intensiv",
   ];
-  const progress = (value / (steps.length - 1)) * 100;
+  const safeValue = Math.min(INTENSITY_MAX, Math.max(INTENSITY_MIN, value));
+  const progress =
+    ((safeValue - INTENSITY_MIN) / (INTENSITY_MAX - INTENSITY_MIN)) * 100;
 
   return (
     <AppSheetCard>
@@ -46,9 +51,9 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
 
           <input
             type="range"
-            min="0"
-            max={steps.length - 1}
-            value={value}
+            min={INTENSITY_MIN}
+            max={INTENSITY_MAX}
+            value={safeValue}
             onChange={(e) => onChange(parseInt(e.target.value, 10))}
             className="absolute inset-x-0 top-0 z-20 h-10 w-full cursor-pointer opacity-0"
             aria-label="Välj intensitet"
@@ -56,34 +61,46 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
 
           <div className="relative z-30 flex items-center justify-between">
             {steps.map((label, index) => (
+              (() => {
+                const stepValue = index + INTENSITY_MIN;
+
+                return (
               <button
                 key={label}
                 type="button"
-                onClick={() => onChange(index)}
+                onClick={() => onChange(stepValue)}
                 className="-mx-2 px-2"
                 aria-label={`Välj ${label}`}
               >
                 <span
                   className={`block rounded-full transition-all duration-150 ${
-                    index === value
+                    stepValue === safeValue
                       ? "h-9 w-9 border-4 border-[#5b44c9] bg-[#5b44c9]"
                       : "h-7 w-7 border-[3px] border-[#b6abd9] bg-[#f5f2fb]"
                   }`}
                 />
               </button>
+                );
+              })()
             ))}
           </div>
 
           <div className="mt-4 grid grid-cols-5 gap-1 text-center">
             {steps.map((label, index) => (
+              (() => {
+                const stepValue = index + INTENSITY_MIN;
+
+                return (
               <span
                 key={label}
                 className={`text-[11px] font-bold leading-tight transition ${
-                  index === value ? "text-[#2b2277]" : "text-[#6f6a93]"
+                  stepValue === safeValue ? "text-[#2b2277]" : "text-[#6f6a93]"
                 }`}
               >
                 {label}
               </span>
+                );
+              })()
             ))}
           </div>
         </div>

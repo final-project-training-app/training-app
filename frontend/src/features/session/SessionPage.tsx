@@ -70,6 +70,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const { step, error, debugEvents, endSession, getCurrentRms } =
     useCoachSession({
       session,
+      trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
       autoStart: true,
     });
 
