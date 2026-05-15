@@ -4,10 +4,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { Phone, Settings } from "lucide-react";
 import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
 import { startRingback } from "../ai-conversation/audio/ringback";
+import type { BackendWorkoutResponse } from "../ai-conversation/tools/workout/workoutTypes";
 import { coachCallSessionQueryOptions } from "../session/query";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
+import { getJson } from "../../lib/api/fetcher";
+import useCurrentWorkout from "../../hooks/useCurrentWorkout";
 import {
   DEFAULT_TRAINER_ID,
   getStoredTrainerId,
@@ -17,6 +20,13 @@ import {
 const assets = {
   background: "/start-page/background.webp",
   logo: "/start-page/logo.png",
+};
+
+const GUEST_USER_ID = 1;
+
+type BackendUserWorkoutProfile = {
+  trainerId: number | null;
+  intensityLevel: number | null;
 };
 
 const homepageTrainers: Record<number, { name: string; image: string }> = {
@@ -53,8 +63,10 @@ export default function HomePage() {
   const [cachedTrainerId, setCachedTrainerId] = useState<number | null>(() =>
     getStoredTrainerId(),
   );
+  const [guestWorkoutId, setGuestWorkoutId] = useState<string | null>(null);
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
+  const { currentWorkout } = useCurrentWorkout();
 
   useEffect(() => {
     if (typeof profile?.trainerId !== "number") {
@@ -70,8 +82,40 @@ export default function HomePage() {
     : isSignedIn
       ? profile?.trainerId ?? cachedTrainerId ?? DEFAULT_TRAINER_ID
       : DEFAULT_TRAINER_ID;
+  const selectedWorkoutId = isSignedIn
+    ? currentWorkout ?? "1"
+    : guestWorkoutId ?? "1";
 
   const activeTrainer = getHomepageTrainer(activeTrainerId);
+
+  useEffect(() => {
+    if (!isLoaded || isSignedIn) {
+      setGuestWorkoutId(null);
+      return;
+    }
+
+    void (async () => {
+      try {
+        const [guestProfile, workouts] = await Promise.all([
+          getJson<BackendUserWorkoutProfile>(`/api/users/${GUEST_USER_ID}`),
+          getJson<BackendWorkoutResponse[]>(`/api/workouts`),
+        ]);
+
+        const matchingWorkout = workouts.find(
+          (workout) =>
+            workout.trainer?.id === guestProfile.trainerId &&
+            Number(workout.level) === guestProfile.intensityLevel,
+        );
+
+        setGuestWorkoutId(
+          matchingWorkout?.id ? String(matchingWorkout.id) : "1",
+        );
+      } catch (error) {
+        console.warn("[HomePage] Guest workout fallback failed", error);
+        setGuestWorkoutId("1");
+      }
+    })();
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -81,9 +125,12 @@ export default function HomePage() {
     void (async () => {
       const token = isSignedIn ? await getToken() : null;
 
-      await queryClient.prefetchQuery(coachCallSessionQueryOptions("1", token));
+      // Keep AI conversation aligned with the workout selected from user level/trainer.
+      await queryClient.prefetchQuery(
+        coachCallSessionQueryOptions(selectedWorkoutId, token),
+      );
     })();
-  }, [getToken, isLoaded, isSignedIn, queryClient]);
+  }, [getToken, isLoaded, isSignedIn, queryClient, selectedWorkoutId]);
 
   async function primeMicrophonePermission() {
     if (!navigator.mediaDevices?.getUserMedia) return;
@@ -101,7 +148,7 @@ export default function HomePage() {
     void primeSessionAudio();
     void primeMicrophonePermission();
 
-    navigate({ to: "/session/$workoutId", params: { workoutId: "1" } });
+    navigate({ to: "/session/$workoutId", params: { workoutId: selectedWorkoutId } });
   }
 
   return (
