@@ -60,7 +60,7 @@ export function SessionPanelModal({
           </button>
         </header>
 
-        <div className="max-h-[58dvh] overflow-y-auto pr-1">{children}</div>
+        <div className="max-h-[58%] overflow-y-auto pr-1">{children}</div>
       </section>
     </div>
   );

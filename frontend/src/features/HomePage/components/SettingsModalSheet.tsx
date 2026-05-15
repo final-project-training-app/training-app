@@ -6,7 +6,16 @@ import ContextModel from "./ContextModal";
 import TrainerSelectionModal from "./TrainerSelectionModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
-import { AppSheet } from "../../../components/AppSheet";
+import {
+  AppSheet,
+  AppSheetCard,
+  AppSheetNotice,
+  AppSheetSectionText,
+  AppSheetSectionTitle,
+  appSheetFieldClass,
+  appSheetPrimaryButtonClass,
+  appSheetSecondaryButtonClass,
+} from "../../../components/AppSheet";
 
 const DEFAULT_DISPLAY_NAME = "No name entered";
 const DEFAULT_INTENSITY_LEVEL = 2;
@@ -135,23 +144,50 @@ function SettingsModalBody({
       icon={<Settings size={20} strokeWidth={2.4} />}
       onClose={() => setOpen(false)}
       height="large"
-    >
-      <div className="space-y-6">
-        <section>
-          <label
-            htmlFor="fullName"
-            className="text-[15px] font-extrabold text-[#4f3bb8]"
+      footer={
+        <section className="space-y-2.5 pb-1">
+          <button
+            className={appSheetPrimaryButtonClass}
+            disabled={updateProfile.isPending}
+            onClick={handleSave}
           >
-            Namn
+            {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
+          </button>
+
+          {saveFeedback ? (
+            <AppSheetNotice tone={saveFeedback.includes("✓") ? "success" : "danger"}>
+              {saveFeedback}
+            </AppSheetNotice>
+          ) : null}
+
+          <button
+            className={appSheetSecondaryButtonClass}
+            onClick={() => setOpen(false)}
+          >
+            Avbryt
+          </button>
+        </section>
+      }
+    >
+      <div className="space-y-4 pb-2">
+        <AppSheetCard>
+          <label htmlFor="fullName" className="block">
+            <AppSheetSectionTitle>Namn</AppSheetSectionTitle>
           </label>
 
-          <input
-            id="fullName"
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="mt-2 w-full rounded-2xl border border-[#ddd2ff] bg-[#f1ecff] px-4 py-3 text-[16px] font-semibold text-[#3f2a7a] outline-none focus:ring-2 focus:ring-[#c8bfeb]"
-          />
+          <AppSheetSectionText>
+            Namnet används av coachen under samtalet.
+          </AppSheetSectionText>
+
+          <div className={`${appSheetFieldClass} mt-3 px-3 py-2.5`}>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full border-none bg-transparent px-1 py-1 text-[16px] font-semibold text-[#221447] outline-none placeholder:text-[#8f89b3]"
+            />
+          </div>
 
           <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
             {isLoading
@@ -164,11 +200,7 @@ function SettingsModalBody({
                   ? (errorMessage ?? "Kunde inte hämta profilen.")
                   : ""}
           </p>
-        </section>
-
-        <IntensitySlider value={intensityLevel} onChange={setIntensityLevel} />
-
-        <ContextModel value={context} onChange={setContext} />
+        </AppSheetCard>
 
         <section>
           <TrainerSelectionModal
@@ -177,35 +209,9 @@ function SettingsModalBody({
           />
         </section>
 
-        <section className="space-y-2.5">
-          <button
-            className="w-full rounded-2xl bg-[#5b3fd6] px-4 py-3.5 text-[16px] font-extrabold text-white transition active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={updateProfile.isPending}
-            onClick={handleSave}
-          >
-            {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
-          </button>
+        <IntensitySlider value={intensityLevel} onChange={setIntensityLevel} />
 
-          {saveFeedback ? (
-            <div
-              role="status"
-              className={`rounded-2xl border px-4 py-3 text-center text-[14px] font-bold ${
-                saveFeedback.includes("✓")
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-950"
-                  : "border-rose-300 bg-rose-50 text-rose-950"
-              }`}
-            >
-              {saveFeedback}
-            </div>
-          ) : null}
-
-          <button
-            className="w-full rounded-xl px-4 py-3 text-[15px] font-extrabold text-[#4d2a7a] transition active:scale-[0.985] active:bg-[#efe9fb]"
-            onClick={() => setOpen(false)}
-          >
-            Avbryt
-          </button>
-        </section>
+        <ContextModel value={context} onChange={setContext} />
       </div>
     </AppSheet>
   );

@@ -77,15 +77,26 @@ export default function AppStageFrame({ children }: AppStageFrameProps) {
       ? Math.max(viewport.height - WIDE_FRAME_VERTICAL_PADDING, 0)
       : viewport.height;
   const showPhoneFrame = useWideFrame && viewport.height >= 640;
+  const framePositionStyle = useWideFrame
+    ? {
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+      }
+    : {
+        left: "50%",
+        top: 0,
+        transform: "translateX(-50%)",
+      };
 
   return (
     <div ref={frameRef} className="relative z-10 h-full w-full">
       <div
-        className="absolute left-1/2 top-1/2 transition-[width,height] duration-200 ease-out"
+        className="absolute transition-[width,height] duration-200 ease-out"
         style={{
           width: stageWidth,
           height: stageHeight,
-          transform: "translate(-50%, -50%)",
+          ...framePositionStyle,
         }}
       >
         <div

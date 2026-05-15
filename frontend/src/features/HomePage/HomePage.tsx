@@ -57,19 +57,17 @@ export default function HomePage() {
       queryOptions.queryKey,
     );
 
-    const session =
-      cachedSession ??
-      (await queryClient.fetchQuery(queryOptions).catch(() => null));
-
-    if (!session) return;
+    if (!cachedSession) {
+      void queryClient.prefetchQuery(queryOptions);
+    }
 
     navigate({ to: "/session/$workoutId", params: { workoutId: "1" } });
   }
 
   return (
     <div className="home-stage relative h-full w-full overflow-hidden bg-[#f7f2ff] text-[#221447]">
-      {/* Auth / admin layer - stays relative to desktop viewport */}
-      <div className="fixed right-4 top-4 z-50">
+      {/* Auth / admin layer - stays inside the shared app stage */}
+      <div className="absolute right-[var(--home-auth-right)] top-[var(--home-auth-top)] z-50">
         {!isLoaded ? null : isSignedIn ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             {profile?.isAdmin && (
@@ -133,20 +131,22 @@ export default function HomePage() {
       {/* Buttons background */}
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[15]">
         <div
-          className={`absolute bottom-0 left-0 right-0 rounded-t-3xl bg-white ${
-            isLoaded && isSignedIn ? "h-[140px]" : "h-[100px]"
+          className={`app-shell-footer-surface absolute bottom-0 left-0 right-0 rounded-t-3xl ${
+            isLoaded && isSignedIn
+              ? "h-[var(--home-footer-height-auth)]"
+              : "h-[var(--home-footer-height)]"
           }`}
         />
       </div>
 
       {/* Buttons */}
-      <footer className="absolute inset-x-5 bottom-[20px] z-20 flex flex-col items-center gap-3">
+      <footer className="absolute inset-x-[var(--stage-inline-pad)] bottom-[var(--home-footer-bottom)] z-20 flex flex-col items-center gap-[var(--home-footer-gap)]">
         <button
           type="button"
           onClick={() => {
             void handleStartCall();
           }}
-          className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition active:scale-[0.98]"
+          className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition active:scale-[0.98]"
         >
           <Phone size={22} strokeWidth={2.5} />
           Ring tränaren

@@ -1,5 +1,9 @@
 import React from "react";
 import { Check, Loader, Square, Volume2 } from "lucide-react";
+import {
+  appSheetCardClass,
+  appSheetFieldClass,
+} from "../../../components/AppSheet";
 
 type Trainer = {
   id: number;
@@ -27,10 +31,10 @@ function TrainerCardInner({
 }: Props) {
   return (
     <article
-      className={`relative overflow-hidden rounded-3xl border bg-white shadow-sm transition-colors duration-150 ${
+      className={`relative overflow-hidden ${appSheetCardClass} p-0 transition-[border-color,box-shadow,transform] duration-150 ${
         selected
-          ? "border-[#5c35c4] ring-2 ring-[#5c35c4]/20"
-          : "border-[#ddd2ff]"
+          ? "border-[#5c35c4] shadow-[0_12px_30px_rgba(91,63,214,0.16)] ring-2 ring-[#5c35c4]/18"
+          : "hover:border-[#c9bcf5]"
       }`}
     >
       <button
@@ -39,7 +43,7 @@ function TrainerCardInner({
         aria-pressed={selected}
         className="block w-full text-left"
       >
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#f1ecff]">
+        <div className="relative aspect-4/3 w-full overflow-hidden rounded-b-[1.4rem] bg-[#efe7ff]">
           {trainer.imageSelect ? (
             <img
               src={trainer.imageSelect}
@@ -62,12 +66,19 @@ function TrainerCardInner({
           ) : null}
         </div>
 
-        <div className="p-4 text-center">
-          <h3 className="text-[17px] font-extrabold leading-tight text-[#281d7a]">
+        <div className="px-4 pb-3 pt-4 text-center">
+          <h3 className="text-[20px] font-extrabold leading-tight text-[#281d7a]">
             {trainer.name}
           </h3>
-          <p className="mt-1 text-[12px] font-bold text-[#6b59b2]">
-            Personlig tränare
+
+          <p
+            className={`mt-2 inline-flex rounded-full px-3 py-1 text-[12px] font-extrabold tracking-wide ${
+              selected
+                ? "bg-[#5b3fd6] text-white"
+                : "bg-white text-[#6b59b2]"
+            }`}
+          >
+            {selected ? "Vald tränare" : "Tryck för att välja"}
           </p>
         </div>
       </button>
@@ -80,10 +91,10 @@ function TrainerCardInner({
             onPlay?.();
           }}
           disabled={loading}
-          className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-[13px] font-extrabold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
+          className={`flex w-full items-center justify-center gap-2 ${appSheetFieldClass} px-3 py-3 text-[15px] font-extrabold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
             playing
               ? "border-rose-300 bg-rose-50 text-rose-800"
-              : "border-[#ddd2ff] bg-[#f1ecff] text-[#3f2a7a]"
+              : "text-[#3f2a7a]"
           }`}
         >
           {loading ? (

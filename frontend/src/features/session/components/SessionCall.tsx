@@ -63,10 +63,8 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
 type SessionCallProps = {
   session: CoachCallSession;
   workoutName?: string;
-  coachStep: string;
   coachStatusLabel: string;
   elapsedSeconds: number;
-  durationSeconds: number;
   activePanel: SessionPanel;
   debugEvents?: CoachSessionDebugEvent[];
   getCurrentRms?: () => number;
@@ -191,7 +189,7 @@ export function SessionCall({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#f5efff_0%,#fffaff_46%,#f1ebfb_100%)]" />
       <div className="absolute inset-x-0 bottom-0 h-[46%] bg-[linear-gradient(to_bottom,rgba(255,255,255,0),rgba(232,224,249,0.74))]" />
 
-      <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-[clamp(1.25rem,5cqw,1.75rem)] pb-[max(clamp(0.9rem,2.4cqh,1.75rem),calc(env(safe-area-inset-bottom)+0.5rem))] pt-[max(clamp(1.15rem,4.1cqh,3rem),calc(env(safe-area-inset-top)+0.75rem))]">
+      <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-[var(--stage-inline-pad)] pb-[var(--stage-safe-bottom)] pt-[var(--stage-safe-top)]">
         <section className="flex shrink-0 flex-col items-center text-center">
           <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] flex h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)] items-center justify-center rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
             {trainerImage ? (
@@ -224,7 +222,7 @@ export function SessionCall({
           </p>
         </section>
 
-        <section className="mx-auto mt-[clamp(0.85rem,3.3cqh,2.6rem)] grid w-full max-w-[360px] shrink-0 grid-cols-3 justify-items-center gap-x-[clamp(0.75rem,3.5cqw,1.35rem)] gap-y-[clamp(0.7rem,2.7cqh,2.05rem)]">
+        <section className="mx-auto mt-[clamp(0.85rem,3.3cqh,2.6rem)] grid w-full max-w-[var(--stage-control-max-width)] shrink-0 grid-cols-3 justify-items-center gap-x-[clamp(0.75rem,3.5cqw,1.35rem)] gap-y-[clamp(0.7rem,2.7cqh,2.05rem)]">
           <ControlButton
             label={isMuted ? "Ljud av" : "Ljud på"}
             active={isMuted}
@@ -264,7 +262,7 @@ export function SessionCall({
         <button
           type="button"
           onClick={onEnd}
-          className="mx-auto mt-auto flex w-full max-w-[360px] flex-col items-center gap-[clamp(0.35rem,1cqh,0.6rem)] pb-[clamp(0rem,0.8cqh,0.25rem)] transition active:scale-95"
+          className="mx-auto mt-auto flex w-full max-w-[var(--stage-control-max-width)] flex-col items-center gap-[clamp(0.35rem,1cqh,0.6rem)] pb-[clamp(0rem,0.8cqh,0.25rem)] transition active:scale-95"
         >
           <div className="flex h-[clamp(58px,8.8cqh,84px)] w-[clamp(58px,8.8cqh,84px)] items-center justify-center rounded-full bg-[#ef4444] text-white shadow-[0_12px_26px_rgba(239,68,68,0.22)] [&>svg]:h-[clamp(28px,3.9cqh,38px)] [&>svg]:w-[clamp(28px,3.9cqh,38px)]">
             <PhoneOff strokeWidth={1.75} />

@@ -62,7 +62,6 @@ function getCoachStatusLabel(step: CoachSessionStep) {
   }
 }
 
-
 function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
@@ -96,25 +95,20 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     setActivePanel((current) => (current === panel ? "none" : panel));
   }
 
-
   return (
-    <>
-      <SessionCall
-        session={session}
-        workoutName={session.name ?? session.workoutName}
-        coachStep={step}
-        coachStatusLabel={error ?? getCoachStatusLabel(step)}
-        elapsedSeconds={elapsedSeconds}
-        durationSeconds={0}
-        activePanel={activePanel}
-        debugEvents={debugEvents}
-        getCurrentRms={getCurrentRms}
-        onSpeaker={() => togglePanel("exercise")}
-        onTrainingSuite={() => togglePanel("suite")}
-        onInfo={() => togglePanel("info")}
-        onClosePanel={() => setActivePanel("none")}
-        onEnd={handleEnd}
-      />
-    </>
+    <SessionCall
+      session={session}
+      workoutName={session.name ?? session.workoutName}
+      coachStatusLabel={error ?? getCoachStatusLabel(step)}
+      elapsedSeconds={elapsedSeconds}
+      activePanel={activePanel}
+      debugEvents={debugEvents}
+      getCurrentRms={getCurrentRms}
+      onSpeaker={() => togglePanel("exercise")}
+      onTrainingSuite={() => togglePanel("suite")}
+      onInfo={() => togglePanel("info")}
+      onClosePanel={() => setActivePanel("none")}
+      onEnd={handleEnd}
+    />
   );
 }

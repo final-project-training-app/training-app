@@ -1,4 +1,9 @@
 import { Settings } from "lucide-react";
+import {
+  AppSheetCard,
+  AppSheetSectionText,
+  AppSheetSectionTitle,
+} from "../../../components/AppSheet";
 
 type IntensitySliderProps = {
   value: number;
@@ -16,20 +21,21 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
   const progress = (value / (steps.length - 1)) * 100;
 
   return (
-    <section>
+    <AppSheetCard>
       <div className="mb-2 flex items-center gap-2 text-[#4f3bb8]">
-        <Settings className="text-[var(--brand-primary)]" size={20} />
-        <h2 className="text-[22px] font-extrabold leading-none tracking-tight">
-          Intensitet
-        </h2>
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-(--brand-primary)">
+          <Settings size={20} />
+        </div>
+
+        <AppSheetSectionTitle>Intensitet</AppSheetSectionTitle>
       </div>
 
-      <p className="max-w-3xl text-[clamp(1.15rem,3vw,1.85rem)] leading-relaxed tracking-[0.01em] text-[#312b70]">
+      <AppSheetSectionText>
         Välj hur intensiv din träning eller stretching ska vara. Du kan alltid
         ändra senare.
-      </p>
+      </AppSheetSectionText>
 
-      <div className="mt-6 px-1">
+      <div className="mt-5 px-1">
         <div className="relative">
           <div className="pointer-events-none absolute left-2 right-2 top-4 h-1 rounded-full bg-[#c7bfe8]" />
 
@@ -60,7 +66,7 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
                 <span
                   className={`block rounded-full transition-all duration-150 ${
                     index === value
-                      ? "h-9 w-9 border-[4px] border-[#5b44c9] bg-[#5b44c9]"
+                      ? "h-9 w-9 border-4 border-[#5b44c9] bg-[#5b44c9]"
                       : "h-7 w-7 border-[3px] border-[#b6abd9] bg-[#f5f2fb]"
                   }`}
                 />
@@ -82,7 +88,7 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
           </div>
         </div>
       </div>
-    </section>
+    </AppSheetCard>
   );
 };
 
