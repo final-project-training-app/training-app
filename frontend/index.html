@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta
       name="viewport"
@@ -25,8 +26,18 @@
     />
     <meta name="apple-mobile-web-app-title" content="Ring sa tranar vi" />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#58429B" />
     <title>Ring sa tranar vi</title>
   </head>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/service-worker.js")
+          .then(() => console.log("SW registered"));
+      });
+    }
+  </script>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
