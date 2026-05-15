@@ -80,8 +80,8 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     return () => clearTimeout(timer);
   }, [step, navigate]);
 
-  function handleEnd() {
-    endSession();
+  async function handleEnd() {
+    await endSession();
     setActivePanel("none");
     setElapsedSeconds(0);
     void navigate({ to: "/" });

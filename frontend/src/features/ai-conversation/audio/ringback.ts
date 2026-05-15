@@ -1,4 +1,17 @@
+import {
+  getSharedAudioContext,
+  resumeSharedAudioContext,
+} from "./sharedAudioContext";
+
 let ringback: HTMLAudioElement | null = null;
+
+const disconnectClick = new Audio("/phone-sounds/phone_click.mp3");
+disconnectClick.preload = "auto";
+
+function playDisconnectClick() {
+  disconnectClick.currentTime = 0;
+  void disconnectClick.play().catch(() => {});
+}
 
 export function startRingback() {
   if (ringback) return;
@@ -14,4 +27,42 @@ export function stopRingback() {
 
   const click = new Audio("/phone-sounds/phone_click.mp3");
   void click.play().catch(() => {});
+}
+
+let gymAmbienceBuffer: AudioBuffer | null = null;
+let gymAmbienceSource: AudioBufferSourceNode | null = null;
+let gymAmbienceGain: GainNode | null = null;
+
+export async function startGymAmbience() {
+  if (gymAmbienceSource) return;
+  const ctx = getSharedAudioContext();
+  await resumeSharedAudioContext();
+
+  if (!gymAmbienceBuffer) {
+    const response = await fetch("/phone-sounds/gym-ambience-loop.mp3");
+    const ab = await response.arrayBuffer();
+    gymAmbienceBuffer = await ctx.decodeAudioData(ab);
+  }
+
+  const gain = ctx.createGain();
+  gain.gain.value = 0.7;
+  gain.connect(ctx.destination);
+
+  const source = ctx.createBufferSource();
+  source.buffer = gymAmbienceBuffer;
+  source.loop = true;
+  source.connect(gain);
+  source.start();
+
+  gymAmbienceSource = source;
+  gymAmbienceGain = gain;
+}
+
+export function stopGymAmbience() {
+  if (!gymAmbienceSource) return;
+  playDisconnectClick();
+  gymAmbienceSource.stop();
+  gymAmbienceSource = null;
+  gymAmbienceGain?.disconnect();
+  gymAmbienceGain = null;
 }

@@ -6,7 +6,6 @@ type BackendWorkoutResponse = {
   name: string;
   description?: string | null;
   instructions?: string | null;
-
   level?: number | string | null;
   type?: string | null;
 
@@ -23,9 +22,7 @@ type BackendWorkoutResponse = {
   seated?: boolean;
   beginnerFriendly?: boolean;
 
-  trainer?:
-    | ({ id: number } & Partial<Trainer>)
-    | null;
+  trainer?: ({ id: number } & Partial<Trainer>) | null;
 };
 export type BackendTrainerResponse = {
   id: number;
@@ -101,6 +98,10 @@ export async function getTrainer(
   trainerId: string,
 ): Promise<BackendTrainerResponse> {
   return await getJson<BackendTrainerResponse>(`/api/trainers/${trainerId}`);
+}
+
+export async function getWorkouts(): Promise<BackendWorkoutResponse[]> {
+  return await getJson<BackendWorkoutResponse[]>(`/api/workouts`);
 }
 
 export async function getCoachCallSession(

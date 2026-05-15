@@ -1,25 +1,33 @@
-let sessionAudio: HTMLAudioElement | null = null;
+import {
+  getSharedAudioContext,
+  resumeSharedAudioContext,
+} from "./sharedAudioContext";
+
 type CachedAudio = {
   objectUrl?: string;
   promise?: Promise<void>;
 };
 
 const preloadedAudio = new Map<string, CachedAudio>();
-const silentAudio =
-  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQQAAAAAAA==";
 
 type PlaySessionAudioOptions = {
   onEnded?: () => void;
 };
 
-function createSessionAudio() {
-  if (!sessionAudio) {
-    sessionAudio = new Audio();
-    sessionAudio.crossOrigin = "anonymous";
-    sessionAudio.setAttribute("playsinline", "true");
-  }
+// Persistent element + graph nodes — never disconnected after creation.
+// Changing src and calling play()/pause() does not modify the Web Audio
+// graph topology, so the audio renderer never needs to recompile the graph.
+let sessionElement: HTMLAudioElement | null = null;
 
-  return sessionAudio;
+function setupSessionElement(ctx: AudioContext): HTMLAudioElement {
+  if (!sessionElement) {
+    sessionElement = new Audio();
+    sessionElement.setAttribute("playsinline", "true");
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    ctx.createMediaElementSource(sessionElement).connect(gain);
+  }
+  return sessionElement;
 }
 
 export function preloadSessionAudio(url?: string | null) {
@@ -35,7 +43,6 @@ export function preloadSessionAudio(url?: string | null) {
       if (!response.ok) {
         throw new Error(`Audio preload failed: ${response.status}`);
       }
-
       return response.blob();
     })
     .then((blob) => {
@@ -58,7 +65,6 @@ export async function startSessionAudio(
   url: string,
   options: PlaySessionAudioOptions = {},
 ) {
-  const audio = createSessionAudio();
   const cachedAudio = preloadedAudio.get(url);
   if (cachedAudio?.promise && !cachedAudio.objectUrl) {
     await Promise.race([
@@ -67,81 +73,40 @@ export async function startSessionAudio(
     ]);
   }
 
-  const cachedUrl = cachedAudio?.objectUrl;
-  const playableUrl = cachedUrl ?? url;
-  const startedAt = performance.now();
+  const ctx = getSharedAudioContext();
+  await resumeSharedAudioContext();
+  const element = setupSessionElement(ctx);
 
-  console.debug("[SessionAudio] Play requested", {
+  const playableUrl = cachedAudio?.objectUrl ?? url;
+  element.pause();
+  element.src = playableUrl;
+  element.currentTime = 0;
+  element.onended = options.onEnded ?? null;
+
+  console.debug("[SessionAudio] Play started", {
     url,
-    cached: Boolean(cachedUrl),
-    readyState: audio.readyState,
-    networkState: audio.networkState,
+    cached: Boolean(cachedAudio?.objectUrl),
   });
-
-  if (audio.src !== playableUrl) {
-    audio.pause();
-    audio.loop = false;
-    audio.muted = false;
-
-    audio.src = playableUrl;
-    audio.currentTime = 0;
-    audio.load();
-  }
-
-  audio.preload = "auto";
-  audio.onended = options.onEnded ?? null;
-
-  try {
-    await audio.play();
-    console.debug("[SessionAudio] Play started", {
-      url,
-      cached: Boolean(cachedUrl),
-      ms: Math.round(performance.now() - startedAt),
-      readyState: audio.readyState,
-      networkState: audio.networkState,
-    });
-  } catch (error) {
-    console.error("[SessionAudio] Failed to play audio", {
-      url,
-      cached: Boolean(cachedUrl),
-      error,
-      networkState: audio.networkState,
-      readyState: audio.readyState,
-      paused: audio.paused,
-    });
-    throw error;
-  }
-
-  return audio;
+  await element.play();
 }
 
 export async function primeSessionAudio() {
-  const audio = createSessionAudio();
+  await resumeSharedAudioContext();
+  const ctx = getSharedAudioContext();
+  // Set up the persistent session element + graph connection during the
+  // user gesture so iOS allows later play() calls outside a gesture.
+  setupSessionElement(ctx);
 
-  if (audio.src === silentAudio && !audio.paused) {
-    return;
-  }
-
-  audio.loop = true;
-  audio.muted = true;
-  audio.preload = "auto";
-  audio.src = silentAudio;
-  audio.currentTime = 0;
-
-  try {
-    await audio.play();
-  } catch (error) {
-    console.warn("[SessionAudio] Audio unlock failed", error);
-  }
+  // Warm up the AudioContext with a silent buffer.
+  const buf = ctx.createBuffer(1, 1, ctx.sampleRate);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination);
+  src.start();
 }
 
 export function stopSessionAudio() {
-  if (!sessionAudio) {
-    return;
-  }
-
-  sessionAudio.pause();
-  sessionAudio.loop = false;
-  sessionAudio.muted = false;
-  sessionAudio.onended = null;
+  if (!sessionElement) return;
+  sessionElement.onended = null;
+  sessionElement.pause();
 }

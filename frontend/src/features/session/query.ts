@@ -7,7 +7,11 @@ export function coachCallSessionQueryOptions(
   token?: string | null,
 ) {
   return {
-    queryKey: ["coach-call-session", workoutId, token ? "auth" : "guest"] as const,
+    queryKey: [
+      "coach-call-session",
+      workoutId,
+      token ? "auth" : "guest",
+    ] as const,
     queryFn: () => getCoachCallSession(workoutId, token),
     retry: 1,
   };
