@@ -5,45 +5,85 @@ import { Phone, Settings } from "lucide-react";
 import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
 import { startRingback } from "../ai-conversation/audio/ringback";
 import { coachCallSessionQueryOptions } from "../session/query";
-import type { CoachCallSession } from "../session/types";
 import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
-
-const trainers = {
-  eva: { name: "Eva", image: "/start-page/eva-start.webp" },
-  jerry: { name: "Jerry", image: "/start-page/jerry-start.webp" },
-  lunken: { name: "Lunken", image: "/start-page/lunken-start.webp" },
-  elizabeth: { name: "Elizabeth", image: "/start-page/elizabeth-start.webp" },
-} as const;
-
-const activeTrainer = trainers.eva;
+import {
+  DEFAULT_TRAINER_ID,
+  getStoredTrainerId,
+  setStoredTrainerId,
+} from "./trainerPreference";
 
 const assets = {
   background: "/start-page/background.webp",
   logo: "/start-page/logo.png",
 };
-import useCurrentUser from "../../hooks/useCurrentUser";
-import useCurrentWorkout from "../../hooks/useCurrentWorkout";
+
+const homepageTrainers: Record<number, { name: string; image: string }> = {
+  1: {
+    name: "Eva",
+    image: "/start-page/eva-start.webp",
+  },
+  2: {
+    name: "Lunken",
+    image: "/start-page/lunken-start.webp",
+  },
+  3: {
+    name: "Jerry",
+    image: "/start-page/jerry-start.webp",
+  },
+  4: {
+    name: "Elizabeth",
+    image: "/start-page/elizabeth-start.webp",
+  },
+};
+
+function getHomepageTrainer(trainerId?: number | null) {
+  if (typeof trainerId === "number" && homepageTrainers[trainerId]) {
+    return homepageTrainers[trainerId];
+  }
+
+  return homepageTrainers[DEFAULT_TRAINER_ID];
+}
 
 export default function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const { isLoaded, isSignedIn } = useAuth();
+  const [cachedTrainerId, setCachedTrainerId] = useState<number | null>(() =>
+    getStoredTrainerId(),
+  );
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
-  const { userId } = useCurrentUser();
-  const {currentWorkout} = useCurrentWorkout();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) {
+    if (typeof profile?.trainerId !== "number") {
       return;
     }
-    if (userId) {
-      console.log("Prefetching coach call session for userId =", userId);
-      void queryClient.prefetchQuery(coachCallSessionQueryOptions(currentWorkout ?? "1", userId));
+
+    setCachedTrainerId(profile.trainerId);
+    setStoredTrainerId(profile.trainerId);
+  }, [profile?.trainerId]);
+
+  const activeTrainerId = !isLoaded
+    ? cachedTrainerId ?? DEFAULT_TRAINER_ID
+    : isSignedIn
+      ? profile?.trainerId ?? cachedTrainerId ?? DEFAULT_TRAINER_ID
+      : DEFAULT_TRAINER_ID;
+
+  const activeTrainer = getHomepageTrainer(activeTrainerId);
+
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
     }
-  }, [isLoaded, isSignedIn, queryClient, userId, currentWorkout]);
+
+    void (async () => {
+      const token = isSignedIn ? await getToken() : null;
+
+      await queryClient.prefetchQuery(coachCallSessionQueryOptions("1", token));
+    })();
+  }, [getToken, isLoaded, isSignedIn, queryClient]);
 
   async function primeMicrophonePermission() {
     if (!navigator.mediaDevices?.getUserMedia) return;
@@ -57,34 +97,17 @@ export default function HomePage() {
   }
 
   async function handleStartCall() {
-    if (!userId) {
-      console.log("User is undefined");
-      return;
-    }
-    console.log("Starting call for userId =", userId);
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
 
-    const queryOptions = coachCallSessionQueryOptions(currentWorkout ?? "1", userId);
-
-    const cachedSession = queryClient.getQueryData<CoachCallSession>(
-      queryOptions.queryKey,
-    );
-
-    const session =
-      cachedSession ??
-      (await queryClient.fetchQuery(queryOptions).catch(() => null));
-
-    if (!session) return;
-
-    navigate({ to: "/session/$workoutId", params: { workoutId: currentWorkout ?? "1" } });
+    navigate({ to: "/session/$workoutId", params: { workoutId: "1" } });
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#f7f2ff] text-[#221447]">
-      {/* Auth / admin layer - stays relative to desktop viewport */}
-      <div className="fixed right-4 top-4 z-50">
+    <div className="home-stage relative h-full w-full overflow-hidden bg-[#f7f2ff] text-[#221447]">
+      {/* Auth / admin layer - stays inside the shared app stage */}
+      <div className="absolute right-[var(--home-auth-right)] top-[var(--home-auth-top)] z-50">
         {!isLoaded ? null : isSignedIn ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             {profile?.isAdmin && (
@@ -126,7 +149,7 @@ export default function HomePage() {
       <div className="absolute inset-0 z-[1]" />
 
       {/* Logo - locked position */}
-      <div className="pointer-events-none absolute left-1/2 top-[22px] z-[2] w-[370px] -translate-x-1/2">
+      <div className="home-stage-logo pointer-events-none absolute left-1/2 z-[2] -translate-x-1/2">
         <img
           src={assets.logo}
           alt="Ring så tränar vi"
@@ -136,32 +159,34 @@ export default function HomePage() {
 
       {/* Trainer - locked relation to logo */}
       <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden">
-        <div className="absolute left-1/2 bottom-[140px] h-[360px] w-[320px] -translate-x-1/2 rounded-full bg-white/20 blur-[44px]" />
+        <div className="home-stage-trainer-glow absolute left-1/2 -translate-x-1/2 rounded-full bg-white/20 blur-[44px]" />
 
         <img
           src={activeTrainer.image}
           alt={activeTrainer.name}
-          className="absolute left-1/2 bottom-[46px] w-[465px] -translate-x-1/2 translate-y-[21%] object-contain"
+          className="home-stage-trainer-image absolute left-1/2 -translate-x-1/2 object-contain"
         />
       </div>
 
       {/* Buttons background */}
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[15]">
         <div
-          className={`absolute bottom-0 left-0 right-0 rounded-t-3xl bg-white ${
-            isLoaded && isSignedIn ? "h-[140px]" : "h-[100px]"
+          className={`app-shell-footer-surface absolute bottom-0 left-0 right-0 rounded-t-3xl ${
+            isLoaded && isSignedIn
+              ? "h-[var(--home-footer-height-auth)]"
+              : "h-[var(--home-footer-height)]"
           }`}
         />
       </div>
 
       {/* Buttons */}
-      <footer className="absolute inset-x-5 bottom-[20px] z-20 flex flex-col items-center gap-3">
+      <footer className="absolute inset-x-[var(--stage-inline-pad)] bottom-[var(--home-footer-bottom)] z-20 flex flex-col items-center gap-[var(--home-footer-gap)]">
         <button
           type="button"
           onClick={() => {
             void handleStartCall();
           }}
-          className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition active:scale-[0.98]"
+          className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition active:scale-[0.98]"
         >
           <Phone size={22} strokeWidth={2.5} />
           Ring tränaren

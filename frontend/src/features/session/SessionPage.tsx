@@ -5,18 +5,16 @@ import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
 import { useCoachSession } from "../ai-conversation";
 import type { CoachSessionStep } from "../ai-conversation";
-import useCurrentUser from "../../hooks/useCurrentUser";
 
 export function SessionPage() {
   const { workoutId } = useParams({ from: "/session/$workoutId" });
-  const { userId } = useCurrentUser();
 
   const {
     data: session,
     isLoading,
     isError,
     error,
-  } = useCoachCallSession(workoutId, userId);
+  } = useCoachCallSession(workoutId);
 
   if (isLoading) {
     return (
@@ -69,16 +67,12 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  const {
-    step,
-    error,
-    debugEvents,
-    endSession,
-    getCurrentRms,
-  } = useCoachSession({
-    session,
-    autoStart: true,
-  });
+  const { step, error, debugEvents, endSession, getCurrentRms } =
+    useCoachSession({
+      session,
+      trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
+      autoStart: true,
+    });
 
   useEffect(() => {
     if (step !== "completed") return;
@@ -98,23 +92,19 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   }
 
   return (
-    <>
-      <SessionCall
-        session={session}
-        workoutName={session.name ?? session.workoutName}
-        coachStep={step}
-        coachStatusLabel={error ?? getCoachStatusLabel(step)}
-        elapsedSeconds={elapsedSeconds}
-        durationSeconds={0}
-        activePanel={activePanel}
-        debugEvents={debugEvents}
-        getCurrentRms={getCurrentRms}
-        onSpeaker={() => togglePanel("exercise")}
-        onTrainingSuite={() => togglePanel("suite")}
-        onInfo={() => togglePanel("info")}
-        onClosePanel={() => setActivePanel("none")}
-        onEnd={handleEnd}
-      />
-    </>
+    <SessionCall
+      session={session}
+      workoutName={session.name ?? session.workoutName}
+      coachStatusLabel={error ?? getCoachStatusLabel(step)}
+      elapsedSeconds={elapsedSeconds}
+      activePanel={activePanel}
+      debugEvents={debugEvents}
+      getCurrentRms={getCurrentRms}
+      onSpeaker={() => togglePanel("exercise")}
+      onTrainingSuite={() => togglePanel("suite")}
+      onInfo={() => togglePanel("info")}
+      onClosePanel={() => setActivePanel("none")}
+      onEnd={handleEnd}
+    />
   );
 }

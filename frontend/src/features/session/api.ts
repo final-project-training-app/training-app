@@ -1,8 +1,29 @@
 import { getJson } from "../../lib/api/fetcher";
-import type { BackendWorkoutResponse } from "../ai-conversation/tools/workout/workoutTypes";
-import type { CoachCallSession, } from "./types";
+import type { CoachCallSession, Trainer } from "./types";
 
+type BackendWorkoutResponse = {
+  id: number;
+  name: string;
+  description?: string | null;
+  instructions?: string | null;
+  level?: number | string | null;
+  type?: string | null;
 
+  instructionsAudio?: string | null;
+  workoutAudio?: string | null;
+  instructionsImage?: string | null;
+  workoutImage?: string | null;
+
+  durationMinutes?: number | null;
+  durationSeconds?: number | null;
+
+  kneeFriendly?: boolean;
+  lowImpact?: boolean;
+  seated?: boolean;
+  beginnerFriendly?: boolean;
+
+  trainer?: ({ id: number } & Partial<Trainer>) | null;
+};
 export type BackendTrainerResponse = {
   id: number;
   name: string;
@@ -28,8 +49,34 @@ type BackendUserResponse = {
   name: string;
   intensityLevel: number;
   context: string;
+  trainerId?: number | null;
 };
 
+const DEFAULT_TRAINER_ID = 1;
+
+function toTrainerSummary(
+  trainer: BackendTrainerResponse | ({ id: number } & Partial<Trainer>) | null,
+): Trainer | null {
+  if (!trainer) {
+    return null;
+  }
+
+  if (!trainer.name?.trim()) {
+    return null;
+  }
+
+  return {
+    id: trainer.id,
+    name: trainer.name,
+    prompt: trainer.prompt ?? null,
+    voice: trainer.voice ?? null,
+    intro: trainer.intro ?? null,
+    language: trainer.language ?? null,
+    imageSelect: trainer.imageSelect ?? null,
+    imageCall: trainer.imageCall ?? null,
+    imageStart: trainer.imageStart ?? null,
+  };
+}
 
 function toDurationSeconds(workout: BackendWorkoutResponse) {
   if (typeof workout.durationSeconds === "number") {
@@ -59,23 +106,69 @@ export async function getWorkouts(): Promise<BackendWorkoutResponse[]> {
 
 export async function getCoachCallSession(
   workoutId: string,
-  userId: string,
+  token?: string | null,
 ): Promise<CoachCallSession> {
-  console.log("Fetching coach call session for workoutId=", workoutId, "and userId=", userId);
-  const [workout, progress, user] = await Promise.all([
-    getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`),
-    getJson<BackendProgressResponse>(`/api/users/${userId}/progress`),
-    getJson<BackendUserResponse>(`/api/users/${userId}`),
-  ]);
+  const workout = await getJson<BackendWorkoutResponse>(
+    `/api/workouts/${workoutId}`,
+  );
+
+  let user: BackendUserResponse | null = null;
+  let progress: BackendProgressResponse | null = null;
+
+  if (token) {
+    try {
+      user = await getJson<BackendUserResponse>(`/api/users/me/profile`, {
+        token,
+      });
+    } catch (error) {
+      console.warn("[session/api] Could not fetch user profile", error);
+    }
+
+    try {
+      progress = await getJson<BackendProgressResponse>(
+        `/api/users/me/progress`,
+        { token },
+      );
+    } catch (error) {
+      console.warn("[session/api] Could not fetch user progress", error);
+    }
+  }
+
+  const resolvedTrainerId = user?.trainerId ?? DEFAULT_TRAINER_ID;
+
+  let trainer: BackendTrainerResponse | null = null;
+
+  try {
+    trainer = await getTrainer(String(resolvedTrainerId));
+  } catch (error) {
+    console.warn("[session/api] Could not fetch trainer details", error);
+  }
+
+  const resolvedTrainer =
+    toTrainerSummary(trainer) ??
+    (resolvedTrainerId === DEFAULT_TRAINER_ID
+      ? {
+          id: DEFAULT_TRAINER_ID,
+          name: "Eva",
+          prompt: null,
+          voice: null,
+          intro: null,
+          language: null,
+          imageSelect: null,
+          imageCall: null,
+          imageStart: null,
+        }
+      : null);
 
   return {
     id: workout.id,
+    isAuthenticated: Boolean(token && user),
 
     name: workout.name,
     workoutName: workout.name,
 
     description: workout.description,
-    instructions: workout.description,
+    instructions: workout.instructions ?? workout.description,
 
     level: workout.level,
     type: workout.type,
@@ -95,13 +188,13 @@ export async function getCoachCallSession(
 
     durationSeconds: toDurationSeconds(workout),
 
-    trainer: workout.trainer,
+    trainer: resolvedTrainer,
 
-    userName: user.name,
-    intensityLevel: user.intensityLevel,
-    context: user.context,
+    userName: user?.name,
+    intensityLevel: user?.intensityLevel,
+    context: user?.context,
 
-    currentStreak: progress.currentStreak,
-    completedWorkouts: progress.completedWorkouts,
+    currentStreak: progress?.currentStreak,
+    completedWorkouts: progress?.completedWorkouts,
   };
 }

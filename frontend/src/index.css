@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  --brand-browser-top: #d8cef2;
   --brand-primary: #5836d6;
   --brand-primary-strong: #5b3fe6;
 
@@ -42,31 +43,231 @@ html,
 body,
 #root {
   min-height: 100%;
+  background-color: var(--brand-browser-top);
+}
+
+html {
+  min-height: 100svh;
+  min-height: 100dvh;
+  background-color: var(--brand-browser-top);
+  background:
+    radial-gradient(circle at top, rgba(123, 99, 217, 0.18), transparent 38%),
+    linear-gradient(180deg, var(--brand-browser-top) 0%, #efe7fb 100%);
+  color-scheme: light;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
+  position: relative;
   margin: 0;
-  min-height: 100vh;
-  background: var(--brand-page);
+  min-height: 100svh;
+  min-height: 100dvh;
+  background-color: var(--brand-browser-top);
+  background:
+    radial-gradient(circle at top, rgba(123, 99, 217, 0.16), transparent 34%),
+    linear-gradient(180deg, var(--brand-browser-top) 0%, #efe7fb 100%);
   color: var(--brand-ink);
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-body.admin-shell {
-  overflow: hidden;
+body::before {
+  content: "";
+  position: fixed;
+  inset: calc(-28svh - env(safe-area-inset-top)) 0 0 0;
+  background-color: #eee7fb;
+  background-image:
+    linear-gradient(rgba(238, 231, 251, 0.92), rgba(238, 231, 251, 0.72)),
+    url("/start-page/background.webp");
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: -1;
 }
 
+button,
+[role="button"],
+a,
+label,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role="button"],
+a {
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+input:not([type="range"]),
+textarea,
+select {
+  font-size: 16px;
+}
+
+::selection {
+  background: rgba(91, 63, 214, 0.18);
+  color: var(--brand-ink);
+}
+
+body.admin-shell {
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100svh;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+.app-root {
+  height: 100svh;
+  height: 100dvh;
+  min-height: 100svh;
+  min-height: 100dvh;
+}
+
+.app-root-shell {
+  background-color: #eee7fb;
+  background-image:
+    linear-gradient(rgba(238, 231, 251, 0.9), rgba(238, 231, 251, 0.6)),
+    url("/start-page/background.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.app-stage {
+  --stage-inline-pad: clamp(1.25rem, 5cqw, 1.75rem);
+  --stage-safe-top: max(
+    clamp(1.15rem, 4.1cqh, 3rem),
+    calc(env(safe-area-inset-top) + 0.75rem)
+  );
+  --stage-safe-bottom: max(
+    clamp(0.9rem, 2.4cqh, 1.75rem),
+    calc(env(safe-area-inset-bottom) + 0.5rem)
+  );
+  --stage-control-max-width: min(
+    calc(100% - (var(--stage-inline-pad) * 2)),
+    360px
+  );
+  isolation: isolate;
+  background:
+    radial-gradient(circle at top, rgba(136, 111, 226, 0.18), transparent 32%),
+    linear-gradient(180deg, #fbf8ff 0%, #f5efff 100%);
+}
+
+.home-stage {
+  --home-auth-top: var(--stage-safe-top);
+  --home-auth-right: var(--stage-inline-pad);
+  --home-footer-gap: clamp(0.6rem, 1.4cqh, 0.75rem);
+  --home-footer-bottom: max(20px, calc(var(--stage-safe-bottom) - 0.1rem));
+  --home-footer-height: clamp(96px, 14cqh, 100px);
+  --home-footer-height-auth: clamp(116px, 17cqh, 140px);
+  --home-cta-min-height: clamp(56px, 7cqh, 60px);
+  --hero-logo-top: clamp(14px, 2.4cqh, 22px);
+  --hero-logo-width: min(86cqw, 48cqh, 370px);
+  --hero-logo-height: calc(var(--hero-logo-width) * 0.546);
+  --hero-logo-bottom: calc(var(--hero-logo-top) + var(--hero-logo-height));
+  --hero-logo-overlap: clamp(18px, calc(var(--hero-logo-height) * 0.12), 24px);
+  --hero-trainer-width: clamp(240px, min(100cqw, 64cqh), 430px);
+  --hero-trainer-height: calc(var(--hero-trainer-width) * 2.02);
+  --hero-trainer-top: calc(var(--hero-logo-bottom) - var(--hero-logo-overlap));
+  --hero-trainer-glow-width: clamp(
+    220px,
+    calc(var(--hero-trainer-width) * 0.74),
+    320px
+  );
+  --hero-trainer-glow-height: clamp(
+    230px,
+    calc(var(--hero-trainer-width) * 0.84),
+    360px
+  );
+  --hero-trainer-glow-top: calc(
+    var(--hero-trainer-top) + clamp(92px, 13cqh, 128px)
+  );
+}
+
+.home-stage-logo {
+  top: var(--hero-logo-top);
+  width: var(--hero-logo-width);
+}
+
+.home-stage-trainer-glow {
+  top: var(--hero-trainer-glow-top);
+  width: var(--hero-trainer-glow-width);
+  height: var(--hero-trainer-glow-height);
+}
+
+.home-stage-trainer-image {
+  top: var(--hero-trainer-top);
+  width: var(--hero-trainer-width);
+}
+
+.app-sheet-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-sheet-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.app-sheet-surface {
+  border-top: 1px solid rgba(255, 255, 255, 0.92);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 254, 255, 0.98) 0%,
+    rgba(250, 245, 255, 0.98) 52%,
+    rgba(245, 238, 255, 0.98) 100%
+  );
+  box-shadow:
+    0 -20px 60px rgba(55, 38, 110, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.app-sheet-footer {
+  border-top: 1px solid rgba(216, 204, 255, 0.8);
+  background: linear-gradient(
+    180deg,
+    rgba(252, 248, 255, 0.82) 0%,
+    rgba(247, 241, 255, 0.96) 100%
+  );
+  backdrop-filter: blur(12px);
+}
+
+.app-shell-footer-surface {
+  border-top: 1px solid rgba(255, 255, 255, 0.75);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 255, 0.9) 0%,
+    rgba(247, 241, 255, 0.98) 100%
+  );
+  box-shadow:
+    0 -16px 44px rgba(55, 38, 110, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+}
 
 @keyframes app-sheet-in {
   from {
     opacity: 0;
-    transform: translate(-50%, 18px) scale(0.985);
+    transform: translateY(18px) scale(0.985);
   }
 
   to {
     opacity: 1;
-    transform: translate(-50%, 0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 

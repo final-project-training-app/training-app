@@ -1,5 +1,17 @@
 import { X } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef } from "react";
+
+export const appSheetFieldClass =
+  "rounded-2xl border border-[#ddd2ff] bg-[#f5f2fb]";
+
+export const appSheetCardClass =
+  "rounded-3xl border border-[#e3d9ff] bg-[#f5f2fb] p-4";
+
+export const appSheetPrimaryButtonClass =
+  "w-full rounded-2xl bg-[#5b3fd6] px-4 py-3.5 text-[16px] font-extrabold text-white transition active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-70";
+
+export const appSheetSecondaryButtonClass =
+  "w-full rounded-xl px-4 py-3 text-[15px] font-extrabold text-[#4d2a7a] transition active:scale-[0.985] active:bg-[#efe9fb]";
 
 type AppSheetProps = {
   open: boolean;
@@ -7,14 +19,15 @@ type AppSheetProps = {
   subtitle?: string;
   icon?: ReactNode;
   children: ReactNode;
+  footer?: ReactNode;
   onClose: () => void;
   height?: "compact" | "default" | "large";
 };
 
 const maxHeightClass = {
-  compact: "max-h-[58dvh]",
-  default: "max-h-[76dvh]",
-  large: "max-h-[92dvh]",
+  compact: "max-h-[58%]",
+  default: "max-h-[76%]",
+  large: "max-h-[92%]",
 };
 
 export function AppSheet({
@@ -23,15 +36,48 @@ export function AppSheet({
   subtitle,
   icon,
   children,
+  footer,
   onClose,
   height = "default",
 }: AppSheetProps) {
+  const scrollBodyRef = useRef<HTMLDivElement>(null);
+
+  function handleWheel(event: React.WheelEvent<HTMLElement>) {
+    const scrollBody = scrollBodyRef.current;
+
+    if (!scrollBody || event.deltaY === 0) {
+      return;
+    }
+
+    if (event.target instanceof Element) {
+      const isInsideScrollBody = event.target.closest(
+        '[data-app-sheet-scroll="true"]',
+      );
+
+      if (isInsideScrollBody) {
+        return;
+      }
+    }
+
+    const canScrollDown =
+      event.deltaY > 0 &&
+      scrollBody.scrollTop + scrollBody.clientHeight < scrollBody.scrollHeight;
+    const canScrollUp = event.deltaY < 0 && scrollBody.scrollTop > 0;
+
+    if (!canScrollDown && !canScrollUp) {
+      return;
+    }
+
+    event.preventDefault();
+    scrollBody.scrollBy({ top: event.deltaY, behavior: "auto" });
+  }
+
   return (
     <>
       <div
         onClick={onClose}
         className={[
-          "fixed inset-0 z-40 bg-[#221447]/18 backdrop-blur-[3px]",
+          "absolute inset-0 z-40 bg-[#221447]/18 backdrop-blur-[3px]",
           "transition-opacity duration-200 ease-out",
           open
             ? "opacity-100 motion-safe:animate-[app-backdrop-in_220ms_ease-out_both]"
@@ -40,10 +86,10 @@ export function AppSheet({
       />
 
       <section
+        onWheel={handleWheel}
         className={[
-          "fixed bottom-0 left-1/2 z-50 w-full max-w-[430px]",
-          "overflow-hidden rounded-t-[2rem] bg-[#fbf8ff]",
-          "shadow-[0_-18px_60px_rgba(55,38,110,0.20)]",
+          "absolute inset-x-0 bottom-0 z-50 flex w-full flex-col",
+          "app-sheet-surface overflow-hidden rounded-t-4xl",
           "will-change-transform",
           "transition-[transform,opacity] duration-200 ease-out",
           maxHeightClass[height],
@@ -54,7 +100,7 @@ export function AppSheet({
       >
         <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-[#c8bfeb]" />
 
-        <div className="flex max-h-[inherit] flex-col px-5 pb-5 pt-4">
+        <div className="min-h-0 flex flex-1 flex-col px-5 pb-[max(1.25rem,var(--stage-safe-bottom))] pt-4">
           <header className="flex shrink-0 items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-[#5b3fd6]">
@@ -86,7 +132,17 @@ export function AppSheet({
             </button>
           </header>
 
-          <div className="mt-4 min-h-0 overflow-y-auto pr-1">{children}</div>
+          <div
+            ref={scrollBodyRef}
+            data-app-sheet-scroll="true"
+            className="app-sheet-scroll mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 pb-1 touch-pan-y"
+          >
+            {children}
+          </div>
+
+          {footer ? (
+            <div className="app-sheet-footer shrink-0 pt-3">{footer}</div>
+          ) : null}
         </div>
       </section>
     </>
@@ -94,8 +150,44 @@ export function AppSheet({
 }
 
 export function AppSheetCard({ children }: { children: ReactNode }) {
+  return <div className={appSheetCardClass}>{children}</div>;
+}
+
+export function AppSheetSectionTitle({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-3xl border border-[#e3d9ff] bg-[#f5f2fb] p-4">
+    <h3 className="text-[18px] font-extrabold leading-tight text-[#281d7a]">
+      {children}
+    </h3>
+  );
+}
+
+export function AppSheetSectionText({ children }: { children: ReactNode }) {
+  return (
+    <p className="mt-1.5 text-[14px] font-semibold leading-relaxed text-[#5c567f]">
+      {children}
+    </p>
+  );
+}
+
+export function AppSheetNotice({
+  children,
+  tone = "neutral",
+}: {
+  children: ReactNode;
+  tone?: "neutral" | "success" | "danger";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "border-emerald-300 bg-emerald-50 text-emerald-950"
+      : tone === "danger"
+        ? "border-rose-300 bg-rose-50 text-rose-950"
+        : "border-[#ddd2ff] bg-[#f1ecff] text-[#3f2a7a]";
+
+  return (
+    <div
+      role="status"
+      className={`rounded-2xl border px-4 py-3 text-center text-[14px] font-bold ${toneClass}`}
+    >
       {children}
     </div>
   );

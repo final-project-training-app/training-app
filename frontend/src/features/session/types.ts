@@ -19,6 +19,7 @@ export type Trainer = {
 
 export type CoachCallSession = {
   id: number | string;
+  isAuthenticated: boolean;
 
   // Backend använder "name" för workout-namnet
   name?: string;

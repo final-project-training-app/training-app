@@ -3,7 +3,7 @@ import type { CoachCallSession, SessionPanel } from "../types";
 import { ExercisePanel } from "./ExercisePanel";
 import { TrainingSuitePanel } from "./TrainingSuitePanel";
 import { UserInfoPanel } from "./UserInfoPanel";
-import { AppSheet } from "../../../components/AppSheet";
+import { AppSheet, AppSheetNotice } from "../../../components/AppSheet";
 
 type SessionInfoPanelProps = {
   session: CoachCallSession;
@@ -28,10 +28,14 @@ export function SessionInfoPanel({
         onClose={onClose}
         height="default"
       >
-        <TrainingSuitePanel
-          streakDays={session.currentStreak}
-          items={session.completedWorkouts}
-        />
+        {session.isAuthenticated ? (
+          <TrainingSuitePanel
+            streakDays={session.currentStreak}
+            items={session.completedWorkouts}
+          />
+        ) : (
+          <AppSheetNotice>Du är inte inloggad.</AppSheetNotice>
+        )}
       </AppSheet>
     );
   }
@@ -60,7 +64,11 @@ export function SessionInfoPanel({
       onClose={onClose}
       height="default"
     >
-      <UserInfoPanel session={session} />
+      {session.isAuthenticated ? (
+        <UserInfoPanel session={session} />
+      ) : (
+        <AppSheetNotice>Du är inte inloggad.</AppSheetNotice>
+      )}
     </AppSheet>
   );
 }
