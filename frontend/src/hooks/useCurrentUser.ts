@@ -9,7 +9,7 @@ export const DEBUG_USER_ID = import.meta.env.VITE_DEBUG_USER_ID ?? "1";
 export const DEBUG_TRAINER_ID = Number(
   import.meta.env.VITE_DEBUG_TRAINER_ID ?? "1",
 );
-const FALLBACK_VOICE = "Puck"; // keep as fallback constant
+const FALLBACK_VOICE = "Kore"; // keep as fallback constant
 
 const useCurrentUser = () => {
   const { userId: clerkId, isSignedIn, getToken } = useAuth();
