@@ -143,14 +143,25 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
 
     if (!listChanged) return;
 
-    // List changed, sync selection
-    if (filteredTrainers.length === 0) {
-      setSelectedId(null);
-    } else if (
-      selectedId === null ||
-      !filteredTrainers.some((t) => t.id === selectedId)
-    ) {
-      setSelectedId(filteredTrainers[0].id);
+    // List changed, compute new selection
+    let newSelection: number | null = null;
+
+    if (filteredTrainers.length > 0) {
+      // If current selection is valid, keep it
+      if (
+        selectedId !== null &&
+        filteredTrainers.some((t) => t.id === selectedId)
+      ) {
+        newSelection = selectedId;
+      } else {
+        // Otherwise select first trainer
+        newSelection = filteredTrainers[0].id;
+      }
+    }
+
+    // Only update if selection actually changed
+    if (newSelection !== selectedId) {
+      setSelectedId(newSelection);
     }
   }, [filteredTrainers, selectedId]);
 
