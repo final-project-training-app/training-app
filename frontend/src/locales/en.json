@@ -64,5 +64,18 @@
     "title": "Context",
     "description": "Tell us about your needs, goals, or any limitations so we can customize the session better.",
     "textAreaPlaceholder": "Example: I have knee pain and want to train gently."
+  },
+  "exercisePanel": {
+    "noInstructions": "No instructions saved for this exercise yet.",
+    "lowImpact": "Low impact",
+    "seated": "Can be done seated",
+    "beginnerFriendly": "Beginner friendly",
+    "kneeFriendly": "Knee friendly",
+    "workoutTitle": "Workout",
+    "passMissing": "Pass missing",
+    "type": "Type",
+    "instructions": "Instructions",
+    "time": "Time",
+    "seconds": "seconds"
   }
 }

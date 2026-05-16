@@ -5,6 +5,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { CoachCallSession } from "../types";
+import { useTranslation } from "react-i18next";
 
 type ExercisePanelProps = {
   session: CoachCallSession;
@@ -37,38 +38,40 @@ function InstructionCard({
 }
 
 export function ExercisePanel({ session }: ExercisePanelProps) {
+  const { t } = useTranslation();
   const instructions =
-    session.instructions?.trim() ||
-    "Inga instruktioner finns sparade för detta pass ännu.";
+    session.instructions?.trim() || t("exercisePanel.noInstructions");
 
   const durationSeconds = session.durationSeconds ?? 0;
 
   const tags = [
-    session.lowImpact ? "Låg belastning" : null,
-    session.seated ? "Kan göras sittande" : null,
-    session.beginnerFriendly ? "Nybörjarvänlig" : null,
-    session.kneeFriendly ? "Knävänlig" : null,
+    session.lowImpact ? t("exercisePanel.lowImpact") : null,
+    session.seated ? t("exercisePanel.seated") : null,
+    session.beginnerFriendly ? t("exercisePanel.beginnerFriendly") : null,
+    session.kneeFriendly ? t("exercisePanel.kneeFriendly") : null,
   ].filter(Boolean);
 
   return (
     <div className="space-y-4">
       <InstructionCard
-        label="Träningspass"
+        label={t("exercisePanel.workoutTitle")}
         icon={<MessageSquareText size={20} strokeWidth={2.4} />}
       >
         <p className="text-lg font-extrabold leading-snug text-[#100b2f]">
-          {session.workoutName || session.name || "Pass saknas"}
+          {session.workoutName ||
+            session.name ||
+            t("exercisePanel.unnamedWorkout")}
         </p>
 
         {session.type ? (
           <p className="mt-1 text-sm font-bold text-[#6f6a93]">
-            Typ: {session.type}
+            {t("exercisePanel.type")}: {session.type}
           </p>
         ) : null}
       </InstructionCard>
 
       <InstructionCard
-        label="Instruktioner"
+        label={t("exercisePanel.instructions")}
         icon={<Headphones size={20} strokeWidth={2.4} />}
       >
         <p className="whitespace-pre-line text-[15px] font-semibold leading-relaxed text-[#33295e]">
@@ -78,11 +81,11 @@ export function ExercisePanel({ session }: ExercisePanelProps) {
 
       {durationSeconds > 0 ? (
         <InstructionCard
-          label="Tid"
+          label={t("exercisePanel.time")}
           icon={<Clock3 size={20} strokeWidth={2.4} />}
         >
           <p className="text-lg font-extrabold leading-snug text-[#100b2f]">
-            {durationSeconds} sekunder
+            {durationSeconds} {t("exercisePanel.seconds")}
           </p>
         </InstructionCard>
       ) : null}

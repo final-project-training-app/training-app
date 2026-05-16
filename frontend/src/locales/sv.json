@@ -63,5 +63,18 @@
     "title": "Kontext",
     "description": "Berätta om behov, mål eller eventuella begränsningar så att passet kan anpassas bättre.",
     "textAreaPlaceholder": "Exempel: Jag har ont i knät och vill träna skonsamt."
+  },
+  "exercisePanel": {
+    "noInstructions": "Inga instruktioner finns sparade för detta pass ännu.",
+    "lowImpact": "Låg belastning",
+    "seated": "Kan göras sittande",
+    "beginnerFriendly": "Nybörjarvänlig",
+    "kneeFriendly": "Knävänlig",
+    "workoutTitle": "Träningspass",
+    "passMissing": "Pass saknas",
+    "type": "Typ",
+    "instructions": "Instruktioner",
+    "time": "Tid",
+    "seconds": "sekunder"
   }
 }
