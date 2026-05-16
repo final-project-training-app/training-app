@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   AppSheetCard,
   AppSheetSectionText,
@@ -13,6 +14,7 @@ type ContextModelProps = {
 
 const ContextModel = ({ value, onChange }: ContextModelProps) => {
   const MAX_CHARS = 1000;
+  const { t } = useTranslation();
 
   return (
     <AppSheetCard>
@@ -21,20 +23,17 @@ const ContextModel = ({ value, onChange }: ContextModelProps) => {
           <FileText size={20} />
         </div>
 
-        <AppSheetSectionTitle>Kontext</AppSheetSectionTitle>
+        <AppSheetSectionTitle>{t("context.title")}</AppSheetSectionTitle>
       </div>
 
-      <AppSheetSectionText>
-        Berätta om behov, mål eller eventuella begränsningar så att passet kan
-        anpassas bättre.
-      </AppSheetSectionText>
+      <AppSheetSectionText>{t("context.description")}</AppSheetSectionText>
 
       <div className={`${appSheetFieldClass} mt-3 p-3`}>
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value.slice(0, MAX_CHARS))}
           maxLength={MAX_CHARS}
-          placeholder="T.ex. Jag har ont i knät och vill träna skonsamt."
+          placeholder={t("context.textAreaPlaceholder")}
           className="h-[132px] w-full resize-none border-none bg-transparent px-1 py-0.5 text-[16px] font-medium leading-relaxed text-[#1f1b3a] outline-none placeholder:text-[#8f89b3]"
         />
 

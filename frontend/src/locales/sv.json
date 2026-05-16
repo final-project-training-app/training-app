@@ -58,5 +58,10 @@
     "description": "Välj hur intensiv din träning eller stretching ska vara. Du kan alltid ändra senare.",
     "sliderTitle": "Välj intensitet",
     "choose": "Välj"
+  },
+  "context": {
+    "title": "Kontext",
+    "description": "Berätta om behov, mål eller eventuella begränsningar så att passet kan anpassas bättre.",
+    "textAreaPlaceholder": "Exempel: Jag har ont i knät och vill träna skonsamt."
   }
 }

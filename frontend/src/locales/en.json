@@ -59,5 +59,10 @@
     "description": "Choose how intense your training or stretching should be. You can always change this later.",
     "sliderTitle": "Select Intensity",
     "choose": "Choose"
+  },
+  "context": {
+    "title": "Context",
+    "description": "Tell us about your needs, goals, or any limitations so we can customize the session better.",
+    "textAreaPlaceholder": "Example: I have knee pain and want to train gently."
   }
 }
