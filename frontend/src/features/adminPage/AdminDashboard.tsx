@@ -410,6 +410,25 @@ export default function AdminDashboard({
               const workout = workouts.find((w) => w.id === fb.workoutId);
               const type = workout?.type ?? "STRENGTH";
               const emoji = typeEmoji[type.toUpperCase()] ?? "🏋️";
+              const statusMsg =
+                fb.status === "GOOD"
+                  ? t("admin.feedbackMessages.good")
+                  : fb.status === "NEEDS_REVIEW"
+                    ? t("admin.feedbackMessages.needsReview")
+                    : t("admin.feedbackMessages.bad");
+              return (
+                <div
+                  key={fb.workoutId}
+                  className="flex items-start gap-3"
+                >
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ${workoutTypeColor(type)}`}
+                  >
+                    {emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#100b2f]">
+                      {fb.workoutName}
                     </p>
                     <p className="truncate text-xs text-[#6f6a93]">{statusMsg}</p>
                   </div>

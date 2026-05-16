@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   createTrainerWithToken,
@@ -127,13 +127,27 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
     [trainers, selectedId],
   );
 
+  const prevFilteredRef = useRef<typeof filteredTrainers>(filteredTrainers);
+
+  // Sync selected trainer when filter changes
   useEffect(() => {
+    // Check if filtered list changed
+    const listChanged =
+      filteredTrainers.length !== prevFilteredRef.current.length ||
+      filteredTrainers.some(
+        (t) =>
+          !prevFilteredRef.current.some((prev) => prev.id === t.id),
+      );
+
+    prevFilteredRef.current = filteredTrainers;
+
+    if (!listChanged) return;
+
+    // List changed, sync selection
     if (filteredTrainers.length === 0) {
       setSelectedId(null);
-      return;
-    }
-    if (
-      selectedId == null ||
+    } else if (
+      selectedId === null ||
       !filteredTrainers.some((t) => t.id === selectedId)
     ) {
       setSelectedId(filteredTrainers[0].id);
