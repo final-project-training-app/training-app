@@ -11,10 +11,6 @@
     "settings": "Inställningar",
     "logoAlt": "Ring så tränar vi"
   },
-  "common": {
-    "close": "Stäng",
-    "cancel": "Avbryt"
-  },
   "settings": {
     "title": "Inställningar",
     "subtitle": "Anpassa träningspasset efter dig",
@@ -31,5 +27,23 @@
     "fullNameDescription": "Namnet används av coachen under samtalet.",
     "nameFromProfile": "Namnet är hämtat från din profil.",
     "noNameFound": "Ingen namnuppgift hittades."
+  },
+  "trainerSelection": {
+    "notLoggedIn": "Du är inte inloggad.",
+    "title": "Välj tränare",
+    "description": "Välj en tränare i taget. Använd pilarna för att byta.",
+    "loading": "Hämtar tränare...",
+    "fetchError": "Kunde inte hämta tränare.",
+    "selectTrainer": "Välj tränare",
+    "noTrainers": "Inga tränare tillgängliga.",
+    "fetchError": "Kunde inte hämta tränare.",
+    "previousTrainer": "Föregående tränare",
+    "nextTrainer": "Nästa tränare",
+    "trainerCount": "Tränare {{current}} av {{total}}",
+    "loadingAudio": "Laddar ljud...",
+    "stopAudio": "Stoppa",
+    "listenAudio": "Lyssna",
+    "selectDescription": "Byt med pilarna tills du hittar en röst som känns tydlig och trygg.",
+    "noTrainers": "Inga tränare hittades."
   }
 }

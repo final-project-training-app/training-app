@@ -30,5 +30,12 @@
     "nofullNameFound": "No name found.",
     "close": "Close",
     "cancel": "Cancel"
+  },
+  "trainerSelection": {
+    "title": "Select your trainer",
+    "loading": "Loading trainers...",
+    "fetchError": "Could not fetch trainers.",
+    "selectTrainer": "Select trainer",
+    "noTrainers": "No trainers available."
   }
 }
