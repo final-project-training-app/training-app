@@ -89,5 +89,12 @@
     "controlbuttonLabelMyInfo": "My Info",
     "controlbuttonLabelInstructions": "Instructions",
     "controlbuttonLabelEndCall": "End Call"
+    ,
+    "suiteTitle": "Training suite",
+    "suiteSubtitle": "Your recent training history",
+    "instructionsTitle": "Instructions",
+    "myInfoTitle": "My info",
+    "myInfoSubtitle": "What the coach knows about you",
+    "notLoggedIn": "You are not logged in."
   }
 }

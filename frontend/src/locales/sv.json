@@ -87,6 +87,12 @@
     "controlbuttonLabelStreak": "Träningssvit",
     "controlbuttonLabelMyInfo": "Min info",
     "controlbuttonLabelInstructions": "Instruktioner",
-    "controlbuttonLabelEndCall": "Lägg på"
+    "controlbuttonLabelEndCall": "Lägg på",
+    "suiteTitle": "Träningssvit",
+    "suiteSubtitle": "Din senaste träningshistorik",
+    "instructionsTitle": "Instruktioner",
+    "myInfoTitle": "Min info",
+    "myInfoSubtitle": "Det coachen vet om dig",
+    "notLoggedIn": "Du är inte inloggad."
   }
 }
