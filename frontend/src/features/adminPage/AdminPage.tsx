@@ -130,7 +130,9 @@ export default function AdminPage() {
   if (!isLoaded || profileLoading) {
     return (
       <main className="flex h-dvh items-center justify-center bg-[#f5f0ff] text-[#100b2f]">
-        <p className="text-sm font-medium text-[#6f6a93]">{t("admin.checkingAccess")}</p>
+        <p className="text-sm font-medium text-[#6f6a93]">
+          {t("admin.checkingAccess")}
+        </p>
       </main>
     );
   }
@@ -142,7 +144,9 @@ export default function AdminPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#5836d6]">
             {t("admin.access")}
           </p>
-          <h1 className="mt-3 text-3xl font-extrabold">{t("admin.signInTitle")}</h1>
+          <h1 className="mt-3 text-3xl font-extrabold">
+            {t("admin.signInTitle")}
+          </h1>
           <p className="mt-3 text-sm leading-6 text-[#6f6a93]">
             {t("admin.signInDescription")}
           </p>
@@ -166,7 +170,9 @@ export default function AdminPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#5836d6]">
             {t("admin.access")}
           </p>
-          <h1 className="mt-3 text-3xl font-extrabold">{t("admin.notAdminTitle")}</h1>
+          <h1 className="mt-3 text-3xl font-extrabold">
+            {t("admin.notAdminTitle")}
+          </h1>
           <p className="mt-3 text-sm leading-6 text-[#6f6a93]">
             {t("admin.notAdminDescription")}
           </p>
@@ -207,7 +213,11 @@ export default function AdminPage() {
     );
   }
 
-  const navItems: { view: AdminView; label: string; Icon: () => ReactElement }[] = [
+  const navItems: {
+    view: AdminView;
+    label: string;
+    Icon: () => ReactElement;
+  }[] = [
     { view: "dashboard", label: t("admin.nav.dashboard"), Icon: IconDashboard },
     { view: "workouts", label: t("admin.nav.workouts"), Icon: IconWorkout },
     { view: "trainers", label: t("admin.nav.trainers"), Icon: IconTrainers },
@@ -256,7 +266,11 @@ export default function AdminPage() {
         {/* Logo */}
         <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#5836d6]">
-            <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="currentColor">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-6 w-6 text-white"
+              fill="currentColor"
+            >
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
             </svg>
           </div>
@@ -331,7 +345,6 @@ export default function AdminPage() {
             />
           </div>
 
-
           {/* User */}
           <div className="flex items-center gap-2">
             {userAvatar ? (
@@ -378,7 +391,9 @@ export default function AdminPage() {
               searchTerm={searchTerm}
             />
           )}
-          {activeView === "trainers" && <TrainerAdminPage searchTerm={searchTerm} />}
+          {activeView === "trainers" && (
+            <TrainerAdminPage searchTerm={searchTerm} />
+          )}
           {activeView === "feedback" && <FeedbackAdminPage />}
         </main>
       </div>
