@@ -4,6 +4,8 @@ import com.example.trainingapp.entity.Feedback;
 import com.example.trainingapp.entity.FeedbackDifficulty;
 import com.example.trainingapp.entity.Workout;
 import com.example.trainingapp.entity.UserWorkoutPreferenceType;
+import com.example.trainingapp.entity.ActivityLog;
+import com.example.trainingapp.repository.ActivityLogRepository;
 import com.example.trainingapp.repository.FeedbackRepository;
 import com.example.trainingapp.repository.WorkoutRepository;
 import org.springframework.stereotype.Service;
@@ -11,9 +13,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -24,19 +28,23 @@ public class FeedbackService {
     private final FeedbackRepository feedbackRepository;
     private final WorkoutRepository workoutRepository;
     private final UserWorkoutPreferenceService preferenceService;
+    private final ActivityLogRepository activityLogRepository;
 
     public FeedbackService(
             FeedbackRepository feedbackRepository,
             WorkoutRepository workoutRepository,
-            UserWorkoutPreferenceService preferenceService
+            UserWorkoutPreferenceService preferenceService,
+            ActivityLogRepository activityLogRepository
     ) {
         this.feedbackRepository = feedbackRepository;
         this.workoutRepository = workoutRepository;
         this.preferenceService = preferenceService;
+        this.activityLogRepository = activityLogRepository;
     }
 
     public Feedback saveFeedback(Feedback feedback) {
         validateFeedback(feedback);
+        attachActivityLog(feedback);
         feedback.setCreatedAt(LocalDateTime.now());
         Feedback savedFeedback = feedbackRepository.save(feedback);
 
@@ -75,6 +83,45 @@ public class FeedbackService {
                     "at least one of difficulty, liked, or rating must be provided"
             );
         }
+
+        Long activityLogId = feedback.getActivityLogId();
+        if (activityLogId != null) {
+            ActivityLog activityLog = activityLogRepository.findById(activityLogId)
+                    .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "activityLogId does not exist"));
+
+            if (!Objects.equals(activityLog.getUserId(), feedback.getUserId())
+                    || !Objects.equals(activityLog.getWorkoutId(), feedback.getWorkoutId())) {
+                throw new ResponseStatusException(BAD_REQUEST, "activityLogId must match userId and workoutId");
+            }
+        }
+    }
+
+    private void attachActivityLog(Feedback feedback) {
+        if (feedback.getActivityLogId() != null) {
+            return;
+        }
+
+        Long userId = feedback.getUserId();
+        Long workoutId = feedback.getWorkoutId();
+
+        Optional<Long> matchedActivityLogId = activityLogRepository
+                .findTopByUserIdAndWorkoutIdAndStatusOrderByCompletedAtDesc(userId, workoutId, "COMPLETED")
+                .or(() -> activityLogRepository.findTopByUserIdAndWorkoutIdOrderByCompletedAtDesc(userId, workoutId))
+                .map(ActivityLog::getId);
+
+        if (matchedActivityLogId.isPresent()) {
+            feedback.setActivityLogId(matchedActivityLogId.get());
+            return;
+        }
+
+        // Fallback: create a synthetic completed log so feedback is always traceable to a session row.
+        ActivityLog fallbackLog = new ActivityLog();
+        fallbackLog.setUserId(userId);
+        fallbackLog.setWorkoutId(workoutId);
+        fallbackLog.setStatus("COMPLETED");
+        fallbackLog.setCompletedAt(LocalDateTime.now());
+        ActivityLog savedLog = activityLogRepository.save(fallbackLog);
+        feedback.setActivityLogId(savedLog.getId());
     }
 
     public Optional<Feedback> getFeedbackById(Long id) {
@@ -152,6 +199,31 @@ public class FeedbackService {
         }
 
         return summary;
+    }
+
+    public List<Map<String, Object>> getRecentFeedbackEntries() {
+        List<Feedback> feedbacks = new ArrayList<>(feedbackRepository.findAll());
+        feedbacks.sort(Comparator.comparing(Feedback::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())));
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Feedback feedback : feedbacks) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", feedback.getId());
+            item.put("userId", feedback.getUserId());
+            item.put("workoutId", feedback.getWorkoutId());
+            item.put("activityLogId", feedback.getActivityLogId());
+            item.put("workoutName", workoutRepository.findById(feedback.getWorkoutId())
+                    .map(Workout::getName)
+                    .orElse("Unknown workout"));
+            item.put("difficulty", feedback.getDifficulty());
+            item.put("liked", feedback.getLiked());
+            item.put("rating", feedback.getRating());
+            item.put("comment", feedback.getComment());
+            item.put("createdAt", feedback.getCreatedAt());
+            result.add(item);
+        }
+
+        return result;
     }
 
     private String deriveStatus(int feedbackCount, double avgRating, double dislikeRate, double tooHardRate) {
