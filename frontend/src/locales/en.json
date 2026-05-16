@@ -1,5 +1,14 @@
 {
-  "welcome": "Welcome",
-  "login": "Login",
-  "logout": "Logout"
+  "auth": {
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "admin": {
+    "page": "Admin page"
+  },
+  "home": {
+    "callTrainer": "Call trainer",
+    "settings": "Settings",
+    "logoAlt": "Call and train"
+  }
 }

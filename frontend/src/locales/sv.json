@@ -1,5 +1,14 @@
 {
-  "welcome": "Välkommen",
-  "login": "Logga in",
-  "logout": "Logga ut"
+  "auth": {
+    "login": "Logga in",
+    "logout": "Logga ut"
+  },
+  "admin": {
+    "page": "Admin sida"
+  },
+  "home": {
+    "callTrainer": "Ring tränaren",
+    "settings": "Inställningar",
+    "logoAlt": "Ring så tränar vi"
+  }
 }
