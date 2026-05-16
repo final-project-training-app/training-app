@@ -6,6 +6,7 @@ import ContextModel from "./ContextModal";
 import TrainerSelectionModal from "./TrainerSelectionModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
+import { useTranslation } from "react-i18next";
 import {
   AppSheet,
   AppSheetCard,
