@@ -70,6 +70,7 @@ type SessionCallProps = {
   activePanel: SessionPanel;
   debugEvents?: CoachSessionDebugEvent[];
   getCurrentRms?: () => number;
+  showInstructionsVideo?: boolean;
   onSpeaker: () => void;
   onTrainingSuite: () => void;
   onInfo: () => void;
@@ -160,6 +161,7 @@ export function SessionCall({
   activePanel,
   debugEvents = [],
   getCurrentRms,
+  showInstructionsVideo = false,
   onSpeaker,
   onTrainingSuite,
   onInfo,
@@ -170,10 +172,22 @@ export function SessionCall({
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { t } = useTranslation();
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const trainerName = getTrainerName(session);
   const trainerImage = getTrainerImage(session);
   const displayWorkoutName = getWorkoutName(session, workoutName);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (showInstructionsVideo) {
+      video.currentTime = 0;
+      void video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [showInstructionsVideo]);
 
   return (
     <main className="relative h-full w-full overflow-hidden bg-[#fbf8ff] text-[#221447]">
@@ -199,17 +213,32 @@ export function SessionCall({
 
       <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-[var(--stage-inline-pad)] pb-[var(--stage-safe-bottom)] pt-[var(--stage-safe-top)]">
         <section className="flex shrink-0 flex-col items-center text-center">
-          <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] flex h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)] items-center justify-center rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
+          <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] relative flex h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)] items-center justify-center overflow-hidden rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
             {trainerImage ? (
               <img
                 src={trainerImage}
                 alt={trainerName}
-                className="h-[clamp(96px,17.8cqh,168px)] w-[clamp(96px,17.8cqh,168px)] rounded-full object-cover"
+                className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
+                style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
               />
             ) : (
-              <div className="flex h-[clamp(96px,17.8cqh,168px)] w-[clamp(96px,17.8cqh,168px)] items-center justify-center rounded-full bg-[#e8e1f8] text-[clamp(2rem,5.2cqh,3rem)] font-extrabold text-[#5b3fd6]">
+              <div
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-[#e8e1f8] text-[#5b3fd6] transition-opacity duration-1000"
+                style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
+              >
                 <UserRound size={56} strokeWidth={1.8} />
               </div>
+            )}
+            {session.instructionsVideo && (
+              <video
+                ref={videoRef}
+                src={session.instructionsVideo}
+                loop
+                playsInline
+                preload="auto"
+                className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
+                style={{ opacity: showInstructionsVideo ? 1 : 0 }}
+              />
             )}
           </div>
 

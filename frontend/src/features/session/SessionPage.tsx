@@ -70,7 +70,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     }
   }
 
-  const { step, error, debugEvents, endSession, getCurrentRms } =
+  const { step, error, debugEvents, endSession, getCurrentRms, showInstructionsVideo } =
     useCoachSession({
       session,
       trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
@@ -103,6 +103,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
       activePanel={activePanel}
       debugEvents={debugEvents}
       getCurrentRms={getCurrentRms}
+      showInstructionsVideo={showInstructionsVideo}
       onSpeaker={() => togglePanel("exercise")}
       onTrainingSuite={() => togglePanel("suite")}
       onInfo={() => togglePanel("info")}

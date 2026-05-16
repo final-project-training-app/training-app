@@ -41,6 +41,10 @@ export type CoachCallSession = {
   instructionsImage?: string | null;
   workoutImage?: string | null;
 
+  instructionsVideo?: string | null;
+  instructionsVideoStart?: number | null;
+  instructionsVideoStop?: number | null;
+
   kneeFriendly?: boolean;
   lowImpact?: boolean;
   seated?: boolean;

@@ -35,7 +35,7 @@ class WorkoutControllerTest {
         WorkoutController controller = new WorkoutController(workoutService, userService);
 
         WorkoutResponseDTO workout = new WorkoutResponseDTO(
-                1L, "Push Ups", null, null, null, null, null, null, null, null, null, null, null, null, null);
+                1L, "Push Ups", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         when(workoutService.getAllWorkouts()).thenReturn(List.of(workout));
 
@@ -66,7 +66,7 @@ class WorkoutControllerTest {
         when(userService.isAdmin("admin_1")).thenReturn(true);
 
         WorkoutResponseDTO workout = new WorkoutResponseDTO(
-                null, "Test Workout", null, null, null, null, null, null, null, null, null, null, null, null, null);
+                null, "Test Workout", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         when(workoutService.createWorkout(any())).thenReturn(workout);
 

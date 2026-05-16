@@ -76,11 +76,13 @@ export function useCoachSession(
   const [error, setError] = useState<string | null>(null);
   const [audioCapturing, setAudioCapturing] = useState(false);
   const [debugEvents, setDebugEvents] = useState<CoachSessionDebugEvent[]>([]);
+  const [showInstructionsVideo, setShowInstructionsVideo] = useState(false);
 
   const debugIdRef = useRef(0);
   const startedAtRef = useRef(0);
   const stepRef = useRef<CoachSessionStep>("idle");
   const hasStartedRef = useRef(false);
+  const videoTimersRef = useRef<number[]>([]);
 
   const aiTurnStateRef = useRef<AITurnState>({
     started: false,
@@ -382,12 +384,19 @@ export function useCoachSession(
   //──────────────────────
   // Play instructions
   //──────────────────────
+  const clearVideoTimers = useCallback(() => {
+    videoTimersRef.current.forEach((id) => window.clearTimeout(id));
+    videoTimersRef.current = [];
+  }, []);
+
   const playInstructions = useCallback(async () => {
     if (stepRef.current !== "waiting_instruction_approval") {
       addDebugEvent("skip instructions", `step=${stepRef.current}`);
       return;
     }
 
+    clearVideoTimers();
+    setShowInstructionsVideo(false);
     pauseLive();
     setSessionStep("playing_instructions");
 
@@ -407,6 +416,25 @@ export function useCoachSession(
           void askIfReadyForWorkout();
         },
       });
+
+      const videoUrl = session.instructionsVideo;
+      const videoStart = session.instructionsVideoStart;
+      const videoStop = session.instructionsVideoStop;
+
+      addDebugEvent("video-fields", `url=${String(videoUrl)} start=${String(videoStart)} stop=${String(videoStop)}`);
+
+      if (videoUrl && videoStart != null && videoStop != null) {
+        const t1 = window.setTimeout(() => {
+          addDebugEvent("instructions video show");
+          setShowInstructionsVideo(true);
+        }, videoStart * 1000);
+        const t2 = window.setTimeout(() => {
+          addDebugEvent("instructions video hide");
+          setShowInstructionsVideo(false);
+        }, videoStop * 1000);
+        videoTimersRef.current = [t1, t2];
+      }
+
       addDebugEvent("play-started", "instructions");
     } catch {
       addDebugEvent("instructions audio failed");
@@ -416,9 +444,13 @@ export function useCoachSession(
   }, [
     addDebugEvent,
     askIfReadyForWorkout,
+    clearVideoTimers,
     pauseLive,
     session.instructionsAudio,
     session.instructionsAudioUrl,
+    session.instructionsVideo,
+    session.instructionsVideoStart,
+    session.instructionsVideoStop,
     setSessionStep,
   ]);
 
@@ -667,6 +699,8 @@ export function useCoachSession(
   const endSession = useCallback(async () => {
     stopRingback();
     addDebugEvent("manual end");
+    clearVideoTimers();
+    setShowInstructionsVideo(false);
     stopSessionAudio();
     await waitForAIToFinishSpeaking(
       () => aiTurnStateRef.current,
@@ -676,7 +710,7 @@ export function useCoachSession(
     disconnectLive();
     hasStartedRef.current = false;
     setSessionStep("idle");
-  }, [addDebugEvent, disconnectLive, getAiPlaybackRemainingMs, setSessionStep]);
+  }, [addDebugEvent, clearVideoTimers, disconnectLive, getAiPlaybackRemainingMs, setSessionStep]);
 
   //──────────────────────
   // Cleanup on unmount
@@ -685,6 +719,8 @@ export function useCoachSession(
     return () => {
       stopSessionAudio();
       disconnectRef.current();
+      videoTimersRef.current.forEach((id) => window.clearTimeout(id));
+      videoTimersRef.current = [];
     };
   }, []);
 
@@ -729,6 +765,7 @@ export function useCoachSession(
     trainer,
     isTrainerLoading,
     trainerError,
+    showInstructionsVideo,
   };
 }
 
