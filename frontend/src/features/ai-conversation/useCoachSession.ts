@@ -234,12 +234,12 @@ export function useCoachSession(
       //──────────────────────
       // Finish session feedback
       //──────────────────────
-      if (name === "finish_session_feedback") {
+      if (name === "finish_session") {
         await sleep(100);
         const finished = await waitForAIToFinishSpeaking(
           () => aiTurnStateRef.current,
           () => getAiPlaybackRemainingMs(),
-          { timeoutMs: 5000 },
+          { timeoutMs: 10000 },
         );
         if (!finished) {
           addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");

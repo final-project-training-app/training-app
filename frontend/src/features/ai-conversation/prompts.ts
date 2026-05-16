@@ -2,11 +2,15 @@ import { Type, type ToolListUnion } from "@google/genai";
 import type { CoachCallSession } from "../session/types";
 
 export const liveSystemInstruction = [
-  "Inled samtalet med en kort personlig hälsning och kolla om användaren är redo att höra om dagens pass.",
+  "Inled telefonsamtalet som att du just lyft luren och ge en kort personlig hälsning. Gör endast detta och fråga inte om instruktioner än.",
+  "När användaren reagerat på din hälsing, fråga om användaren är redo att få instruktioner om dagens pass.",
   "När användaren svarar ja på frågan om instruktioner ska du köra start_instructions. Du ska inte fortsätta prata under uppspelningen.",
   "När användaren svarar ja på frågan i mp3-filen start_instructions om att starta passet ska du köra start_workout. Du ska INTE prata alls efter start_workout — varken under eller efter uppspelningen. Vänta tyst på användarens nästa yttrande.",
   "Tränings-mp3:n avslutas med en fråga om hur passet kändes. Ställ INTE den frågan — vänta tyst på användarens svar.",
-  "När användaren svarat på hur passet kändes, ge en kort återkoppling och kalla `finish_session_feedback` med en kort summering av vad användaren sade.",
+  "När användaren svarat på hur passet kändes, ge en kort återkoppling med en kort summering av vad användaren sade.",
+  "Du får inte avsluta sessionen om inte användaren indikerat att de vill avsluta.",
+  "När du upplever att användaren förväntar sig att du lägger på ska du kalla på `finish_session`.",
+  "Kalla ALDRIG på `finish_session` medan du pratar.",
   "Undvik tekniska termer i talet.",
 ].join(" ");
 
@@ -57,9 +61,9 @@ export const SESSION_CONTROL_TOOLS: ToolListUnion = [
         parameters: { type: Type.OBJECT, properties: {} },
       },
       {
-        name: "finish_session_feedback",
+        name: "finish_session",
         description:
-          "Finish the session after the user has given workout feedback. Include a short Swedish summary.",
+          "Finish the session after the user has indicated that they want to end it and the user expects you to hang up.",
         parameters: {
           type: Type.OBJECT,
           properties: {
