@@ -6,7 +6,7 @@ import ContextModel from "./ContextModal";
 import TrainerSelectionModal from "./TrainerSelectionModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
-import { useTranslation } from "react-i18next";
+
 import {
   AppSheet,
   AppSheetCard,
@@ -18,6 +18,7 @@ import {
   appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
 import LanguageSwitcher from "../../../components/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 type ProfileSettings = {
   name?: string | null;
@@ -56,10 +57,11 @@ function SettingsStatusSheet({
   setOpen: (v: boolean) => void;
   message: string;
 }) {
+  const { t } = useTranslation();
   return (
     <AppSheet
       open={open}
-      title="Inställningar"
+      title={t("settings.title")}
       subtitle=""
       icon={<Settings size={20} strokeWidth={2.4} />}
       onClose={() => setOpen(false)}
@@ -70,7 +72,7 @@ function SettingsStatusSheet({
             className={appSheetSecondaryButtonClass}
             onClick={() => setOpen(false)}
           >
-            Stäng
+            {t("settings.close")}
           </button>
         </section>
       }
@@ -87,6 +89,7 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const { isLoaded, isSignedIn } = useAuth();
   const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
 
@@ -99,7 +102,7 @@ export default function SettingsModalSheet({
       <SettingsStatusSheet
         open={open}
         setOpen={setOpen}
-        message="Du är inte inloggad."
+        message={t("settings.notLoggedIn")}
       />
     );
   }
@@ -109,7 +112,7 @@ export default function SettingsModalSheet({
       <SettingsStatusSheet
         open={open}
         setOpen={setOpen}
-        message="Hämtar inställningar..."
+        message={t("settings.loading")}
       />
     );
   }
@@ -120,9 +123,7 @@ export default function SettingsModalSheet({
         open={open}
         setOpen={setOpen}
         message={
-          error instanceof Error
-            ? error.message
-            : "Kunde inte hämta inställningar."
+          error instanceof Error ? error.message : t("settings.fetchError")
         }
       />
     );
@@ -140,6 +141,7 @@ function SettingsModalBody({
   setOpen: (v: boolean) => void;
   profile: ProfileSettings;
 }) {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState(profile.name?.trim() ?? "");
   const [intensityLevel, setIntensityLevel] = useState(() =>
     normalizeIntensityLevel(profile.intensityLevel),
@@ -178,7 +180,7 @@ function SettingsModalBody({
     setSaveFeedback(null);
 
     if (selectedTrainerId == null) {
-      showFeedback("Du måste välja en tränare först");
+      showFeedback(t("settings.selectTrainer"));
       return;
     }
 
@@ -190,18 +192,18 @@ function SettingsModalBody({
         trainerId: Number(selectedTrainerId),
       });
 
-      showFeedback("Inställningar sparade ✓");
+      showFeedback(t("settings.saveSuccess"));
     } catch (error) {
       console.error("[SettingsModalSheet] Save failed:", error);
-      showFeedback("Kunde inte spara ändringarna");
+      showFeedback(t("settings.saveError"));
     }
   };
 
   return (
     <AppSheet
       open={open}
-      title="Inställningar"
-      subtitle="Anpassa träningspasset efter dig"
+      title={t("settings.title")}
+      subtitle={t("settings.subtitle")}
       icon={<Settings size={20} strokeWidth={2.4} />}
       onClose={() => setOpen(false)}
       height="large"
@@ -212,7 +214,9 @@ function SettingsModalBody({
             disabled={updateProfile.isPending}
             onClick={handleSave}
           >
-            {updateProfile.isPending ? "Sparar..." : "Spara ändringar"}
+            {updateProfile.isPending
+              ? t("settings.saving")
+              : t("settings.saveChanges")}
           </button>
 
           {saveFeedback ? (
@@ -227,7 +231,7 @@ function SettingsModalBody({
             className={appSheetSecondaryButtonClass}
             onClick={() => setOpen(false)}
           >
-            Avbryt
+            {t("settings.cancel")}
           </button>
         </section>
       }
@@ -235,17 +239,21 @@ function SettingsModalBody({
       <div className="space-y-4 pb-2">
         <AppSheetCard>
           <div className="flex justify-between items-center">
-            <AppSheetSectionTitle>Språk</AppSheetSectionTitle>
+            <AppSheetSectionTitle>
+              {t("settings.language")}
+            </AppSheetSectionTitle>
             <LanguageSwitcher />
           </div>
         </AppSheetCard>
         <AppSheetCard>
           <label htmlFor="fullName" className="block">
-            <AppSheetSectionTitle>Namn</AppSheetSectionTitle>
+            <AppSheetSectionTitle>
+              {t("settings.fullName")}
+            </AppSheetSectionTitle>
           </label>
 
           <AppSheetSectionText>
-            Namnet används av coachen under samtalet.
+            {t("settings.fullNameDescription")}
           </AppSheetSectionText>
 
           <div className={`${appSheetFieldClass} mt-3 px-3 py-2.5`}>
@@ -260,8 +268,8 @@ function SettingsModalBody({
 
           <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
             {fullName.trim()
-              ? "Namnet är hämtat från din profil."
-              : "Ingen namnuppgift hittades."}
+              ? t("settings.fullNameFound")
+              : t("settings.fullNameNotFound")}
           </p>
         </AppSheetCard>
 
