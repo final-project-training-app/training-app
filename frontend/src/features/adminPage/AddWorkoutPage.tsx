@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@clerk/react";
 import { useCreateWorkout } from "../../hooks/useCreateWorkoutHook";
 import { fetchTrainersWithToken } from "../../api/trainers";
@@ -46,6 +47,7 @@ const isValidUrl = (url: string): boolean => {
 };
 
 export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
+  const { t } = useTranslation();
   const { getToken } = useAuth();
   const [form, setForm] = useState<WorkoutForm>({
     name: "",
@@ -206,7 +208,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
     <main className="flex min-h-dvh items-center justify-center bg-(--brand-page) p-6 text-(--brand-ink)">
       <div className="w-full max-w-4xl rounded-2xl border border-(--brand-border) bg-white p-8 shadow-lg">
         <div className="mb-8 flex items-center justify-between gap-3">
-          <h1 className="text-3xl font-bold">Add Workout</h1>
+          <h1 className="text-3xl font-bold">{t("workoutsAdmin.addWorkoutPageTitle")}</h1>
           <button
             type="button"
             onClick={() => {
@@ -215,7 +217,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
             }}
             className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
-            Back
+            {t("workoutsAdmin.back")}
           </button>
         </div>
 

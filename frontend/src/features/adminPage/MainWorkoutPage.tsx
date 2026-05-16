@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createWorkoutWithToken,
@@ -109,6 +110,7 @@ export default function MainWorkoutPage({
   onSwitchTab: _onSwitchTab,
   searchTerm = "",
 }: Props) {
+  const { t } = useTranslation();
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const { toast, showToast } = useToast();
@@ -739,26 +741,24 @@ export default function MainWorkoutPage({
 
           {(mode === "create" || mode === "edit") && (
             <form onSubmit={onSubmit} className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-[#100b2f]">
-                  {mode === "create" ? "New Workout" : "Edit Workout"}
-                </h3>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#100b2f]">{t("workoutsAdmin.title")}</h2>
+                  <p className="text-sm text-[#6f6a93]">{t("workoutsAdmin.subtitle")}</p>
+                </div>
                 <button
                   type="button"
                   onClick={() => {
-                    setMode("view");
-                    setErrors([]);
+                    setMode("create");
+                    setForm(emptyForm);
+                    setFieldErrors({});
+                    setSubmitError(null);
                   }}
-                  className="rounded-full border border-[#ece5ff] px-3 py-1 text-xs font-semibold text-[#6f6a93] transition hover:border-[#5836d6] hover:text-[#5836d6]"
+                  className="rounded-xl bg-[#5836d6] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4527b8] active:scale-95"
                 >
-                  ✕ Close
+                  {t("workoutsAdmin.addWorkout")}
                 </button>
               </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-[#6f6a93]">Name *</label>
-                <input
-                  name="name"
                   value={form.name}
                   onChange={onFormChange}
                   placeholder="e.g. Axellyft"
