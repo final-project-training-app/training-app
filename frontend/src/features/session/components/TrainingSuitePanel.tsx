@@ -1,4 +1,5 @@
 import { CalendarCheck, Flame, Trophy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { CompletedWorkout } from "../types";
 
 type TrainingSuitePanelProps = {
@@ -10,6 +11,8 @@ export function TrainingSuitePanel({
   streakDays,
   items,
 }: TrainingSuitePanelProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-4">
       <div className="rounded-3xl bg-[#f4efff] px-4 py-4">
@@ -20,11 +23,11 @@ export function TrainingSuitePanel({
 
           <div>
             <p className="text-sm font-extrabold uppercase tracking-wide text-[#6f6a93]">
-              Nuvarande svit
+              {t("trainingSuite.currentStreak")}
             </p>
 
             <p className="mt-1 text-3xl font-extrabold leading-none text-[#100b2f]">
-              {streakDays} dagar
+              {t("trainingSuite.days", { count: streakDays ?? 0 })}
             </p>
           </div>
         </div>
@@ -59,7 +62,7 @@ export function TrainingSuitePanel({
             </div>
 
             <p className="text-sm font-extrabold text-[#100b2f]">
-              Ingen träningshistorik hittades.
+              {t("trainingSuite.noHistory")}
             </p>
           </div>
         )}

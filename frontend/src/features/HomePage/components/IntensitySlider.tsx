@@ -1,4 +1,5 @@
 import { Settings } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   AppSheetCard,
   AppSheetSectionText,
@@ -14,12 +15,13 @@ const INTENSITY_MIN = 1;
 const INTENSITY_MAX = 5;
 
 const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
+  const { t } = useTranslation();
   const steps = [
-    "Mycket lätt",
-    "Lätt",
-    "Medium",
-    "Intensiv",
-    "Mycket intensiv",
+    t("intensitySlider.0"),
+    t("intensitySlider.1"),
+    t("intensitySlider.2"),
+    t("intensitySlider.3"),
+    t("intensitySlider.4"),
   ];
   const safeValue = Math.min(INTENSITY_MAX, Math.max(INTENSITY_MIN, value));
   const progress =
@@ -32,12 +34,13 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
           <Settings size={20} />
         </div>
 
-        <AppSheetSectionTitle>Intensitet</AppSheetSectionTitle>
+        <AppSheetSectionTitle>
+          {t("intensitySlider.title")}
+        </AppSheetSectionTitle>
       </div>
 
       <AppSheetSectionText>
-        Välj hur intensiv din träning eller stretching ska vara. Du kan alltid
-        ändra senare.
+        {t("intensitySlider.description")}
       </AppSheetSectionText>
 
       <div className="mt-5 px-1">
@@ -56,52 +59,54 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
             value={safeValue}
             onChange={(e) => onChange(parseInt(e.target.value, 10))}
             className="absolute inset-x-0 top-0 z-20 h-10 w-full cursor-pointer opacity-0"
-            aria-label="Välj intensitet"
+            aria-label={t("intensitySlider.title")}
           />
 
           <div className="relative z-30 flex items-center justify-between">
-            {steps.map((label, index) => (
+            {steps.map((label, index) =>
               (() => {
                 const stepValue = index + INTENSITY_MIN;
 
                 return (
-              <button
-                key={label}
-                type="button"
-                onClick={() => onChange(stepValue)}
-                className="-mx-2 px-2"
-                aria-label={`Välj ${label}`}
-              >
-                <span
-                  className={`block rounded-full transition-all duration-150 ${
-                    stepValue === safeValue
-                      ? "h-9 w-9 border-4 border-[#5b44c9] bg-[#5b44c9]"
-                      : "h-7 w-7 border-[3px] border-[#b6abd9] bg-[#f5f2fb]"
-                  }`}
-                />
-              </button>
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => onChange(stepValue)}
+                    className="-mx-2 px-2"
+                    aria-label={`${t("intensitySlider.choose")} ${label}`}
+                  >
+                    <span
+                      className={`block rounded-full transition-all duration-150 ${
+                        stepValue === safeValue
+                          ? "h-9 w-9 border-4 border-[#5b44c9] bg-[#5b44c9]"
+                          : "h-7 w-7 border-[3px] border-[#b6abd9] bg-[#f5f2fb]"
+                      }`}
+                    />
+                  </button>
                 );
-              })()
-            ))}
+              })(),
+            )}
           </div>
 
           <div className="mt-4 grid grid-cols-5 gap-1 text-center">
-            {steps.map((label, index) => (
+            {steps.map((label, index) =>
               (() => {
                 const stepValue = index + INTENSITY_MIN;
 
                 return (
-              <span
-                key={label}
-                className={`text-[11px] font-bold leading-tight transition ${
-                  stepValue === safeValue ? "text-[#2b2277]" : "text-[#6f6a93]"
-                }`}
-              >
-                {label}
-              </span>
+                  <span
+                    key={label}
+                    className={`text-[11px] font-bold leading-tight transition ${
+                      stepValue === safeValue
+                        ? "text-[#2b2277]"
+                        : "text-[#6f6a93]"
+                    }`}
+                  >
+                    {label}
+                  </span>
                 );
-              })()
-            ))}
+              })(),
+            )}
           </div>
         </div>
       </div>

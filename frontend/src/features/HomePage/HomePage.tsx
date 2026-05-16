@@ -11,6 +11,7 @@ import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
 import { getJson } from "../../lib/api/fetcher";
 import useCurrentWorkout from "../../hooks/useCurrentWorkout";
+import { useTranslation } from "react-i18next";
 import {
   DEFAULT_TRAINER_ID,
   getStoredTrainerId,
@@ -79,30 +80,34 @@ export default function HomePage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
   const { currentWorkout } = useCurrentWorkout();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (typeof profile?.trainerId !== "number") {
       return;
     }
+    // Avoid synchronous cascading renders by only updating state when it differs
+    if (profile.trainerId === cachedTrainerId) return;
 
-    setCachedTrainerId(profile.trainerId);
-    setStoredTrainerId(profile.trainerId);
-  }, [profile?.trainerId]);
+    queueMicrotask(() => {
+      setCachedTrainerId(profile.trainerId);
+      setStoredTrainerId(profile.trainerId);
+    });
+  }, [profile?.trainerId, cachedTrainerId]);
 
   const activeTrainerId = !isLoaded
-    ? cachedTrainerId ?? DEFAULT_TRAINER_ID
+    ? (cachedTrainerId ?? DEFAULT_TRAINER_ID)
     : isSignedIn
-      ? profile?.trainerId ?? cachedTrainerId ?? DEFAULT_TRAINER_ID
+      ? (profile?.trainerId ?? cachedTrainerId ?? DEFAULT_TRAINER_ID)
       : DEFAULT_TRAINER_ID;
   const selectedWorkoutId = isSignedIn
-    ? currentWorkout ?? "1"
-    : guestWorkoutId ?? "1";
+    ? (currentWorkout ?? "1")
+    : (guestWorkoutId ?? "1");
 
   const activeTrainer = getHomepageTrainer(activeTrainerId);
 
   useEffect(() => {
     if (!isLoaded || isSignedIn) {
-      setGuestWorkoutId(null);
       return;
     }
 
@@ -160,7 +165,10 @@ export default function HomePage() {
     void primeSessionAudio();
     void primeMicrophonePermission();
 
-    navigate({ to: "/session/$workoutId", params: { workoutId: selectedWorkoutId } });
+    navigate({
+      to: "/session/$workoutId",
+      params: { workoutId: selectedWorkoutId },
+    });
   }
 
   return (
@@ -178,20 +186,20 @@ export default function HomePage() {
                 }
                 className="rounded-full bg-(--brand-primary) px-4 py-2.5 text-sm font-bold text-(--brand-on-primary) shadow-sm transition active:scale-95"
               >
-                Admin page
+                {t("admin.page")}
               </button>
             )}
 
             <SignOutButton>
               <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2.5 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
-                Logga ut
+                {t("auth.logout")}
               </button>
             </SignOutButton>
           </div>
         ) : (
           <SignInButton>
             <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3.5 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
-              Logga in
+              {t("auth.login")}
             </button>
           </SignInButton>
         )}
@@ -211,7 +219,7 @@ export default function HomePage() {
       <div className="home-stage-logo pointer-events-none absolute left-1/2 z-[2] -translate-x-1/2">
         <img
           src={assets.logo}
-          alt="Ring så tränar vi"
+          alt={t("home.logoAlt")}
           className="h-auto w-full object-contain"
         />
       </div>
@@ -248,7 +256,7 @@ export default function HomePage() {
           className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition active:scale-[0.98]"
         >
           <Phone size={22} strokeWidth={2.5} />
-          Ring tränaren
+          {t("home.callTrainer")}
         </button>
 
         {isLoaded && isSignedIn ? (
@@ -258,7 +266,7 @@ export default function HomePage() {
             className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition active:scale-[0.98]"
           >
             <Settings size={16} strokeWidth={2.2} />
-            Inställningar
+            {t("home.settings")}
           </button>
         ) : null}
       </footer>

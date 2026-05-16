@@ -1,4 +1,5 @@
 import { Gauge, MessageSquareText, UserRound } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { CoachCallSession } from "../types";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import {
@@ -13,6 +14,7 @@ type UserInfoPanelProps = {
 
 export function UserInfoPanel({ session }: UserInfoPanelProps) {
   const { data: profile } = useMyProfile();
+  const { t } = useTranslation();
 
   const displayName = profile?.name ?? session.userName ?? "-";
   const displayIntensity =
@@ -30,7 +32,7 @@ export function UserInfoPanel({ session }: UserInfoPanelProps) {
           </div>
 
           <div className="min-w-0">
-            <AppSheetLabel>Namn</AppSheetLabel>
+            <AppSheetLabel>{t("userInfo.nameLabel")}</AppSheetLabel>
             <AppSheetValue>{displayName}</AppSheetValue>
           </div>
         </div>
@@ -43,10 +45,10 @@ export function UserInfoPanel({ session }: UserInfoPanelProps) {
           </div>
 
           <div className="min-w-0">
-            <AppSheetLabel>Intensitet</AppSheetLabel>
+            <AppSheetLabel>{t("userInfo.intensityLabel")}</AppSheetLabel>
             <AppSheetValue>
               {typeof displayIntensity === "number"
-                ? `Nivå ${displayIntensity}`
+                ? t("userInfo.level", { level: displayIntensity })
                 : "-"}
             </AppSheetValue>
           </div>
@@ -60,7 +62,7 @@ export function UserInfoPanel({ session }: UserInfoPanelProps) {
           </div>
 
           <div className="min-w-0">
-            <AppSheetLabel>Kontext</AppSheetLabel>
+            <AppSheetLabel>{t("userInfo.contextLabel")}</AppSheetLabel>
 
             <p className="mt-2 whitespace-pre-line text-[15px] font-semibold leading-relaxed text-[#33295e]">
               {displayContext}

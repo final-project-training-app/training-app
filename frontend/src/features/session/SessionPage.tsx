@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SessionCall } from "./components/SessionCall";
 import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
@@ -15,11 +16,12 @@ export function SessionPage() {
     isError,
     error,
   } = useCoachCallSession(workoutId);
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-lg font-bold text-[#5b3fd6]">
-        Laddar session...
+        {t("sessionPage.loading")}
       </div>
     );
   }
@@ -27,7 +29,7 @@ export function SessionPage() {
   if (isError) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-base font-semibold text-[#221447]">
-        {error instanceof Error ? error.message : "Något gick fel."}
+        {error instanceof Error ? error.message : t("sessionPage.genericError")}
       </div>
     );
   }
@@ -39,33 +41,34 @@ export function SessionPage() {
   return <ReadySessionPage session={session} />;
 }
 
-function getCoachStatusLabel(step: CoachSessionStep) {
-  switch (step) {
-    case "idle":
-      return "Ansluter till tränaren...";
-    case "live_intro":
-      return "Coach-samtalet är igång.";
-    case "waiting_instruction_approval":
-      return "Säg ja när du är redo för instruktionerna.";
-    case "playing_instructions":
-      return "Spelar instruktioner.";
-    case "asking_ready":
-      return "Säg ja när du är redo för workouten.";
-    case "playing_workout":
-      return "Workout pågår.";
-    case "collecting_feedback":
-      return "Tränaren sammanfattar och frågar hur det kändes.";
-    case "completed":
-      return "Sessionen är sparad.";
-    case "error":
-      return "Något gick fel.";
-  }
-}
-
 function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const { t } = useTranslation();
+
+  function getCoachStatusLabel(step: CoachSessionStep) {
+    switch (step) {
+      case "idle":
+        return t("sessionPage.status.idle");
+      case "live_intro":
+        return t("sessionPage.status.liveIntro");
+      case "waiting_instruction_approval":
+        return t("sessionPage.status.waitingInstructionApproval");
+      case "playing_instructions":
+        return t("sessionPage.status.playingInstructions");
+      case "asking_ready":
+        return t("sessionPage.status.askingReady");
+      case "playing_workout":
+        return t("sessionPage.status.playingWorkout");
+      case "collecting_feedback":
+        return t("sessionPage.status.collectingFeedback");
+      case "completed":
+        return t("sessionPage.status.completed");
+      case "error":
+        return t("sessionPage.status.error");
+    }
+  }
 
   const { step, error, debugEvents, endSession, getCurrentRms } =
     useCoachSession({

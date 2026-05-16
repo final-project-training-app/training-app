@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { fetchTrainersWithToken } from "../../../api/trainers";
 import { useVoicePlayer } from "../../../hooks/useVoicePlayer";
+import { useTranslation } from "react-i18next";
 import {
   AppSheetCard,
   appSheetFieldClass,
@@ -38,7 +39,7 @@ export default function TrainerSelectionModal({
 }) {
   const { getToken, isSignedIn } = useAuth();
   const { play, stop, loadingId, playingId } = useVoicePlayer();
-
+  const { t } = useTranslation();
   const {
     data: trainers = [],
     isLoading,
@@ -98,7 +99,7 @@ export default function TrainerSelectionModal({
   if (isSignedIn === false) {
     return (
       <section aria-labelledby="trainer-selection-title">
-        <AppSheetNotice>Du är inte inloggad.</AppSheetNotice>
+        <AppSheetNotice>{t("trainerSelection.notLoggedIn")}</AppSheetNotice>
       </section>
     );
   }
@@ -106,9 +107,11 @@ export default function TrainerSelectionModal({
   return (
     <section aria-labelledby="trainer-selection-title" className="space-y-4">
       {isLoading ? (
-        <AppSheetNotice>Hämtar tränare...</AppSheetNotice>
+        <AppSheetNotice>{t("trainerSelection.loading")}</AppSheetNotice>
       ) : isError ? (
-        <AppSheetNotice tone="danger">Kunde inte hämta tränare.</AppSheetNotice>
+        <AppSheetNotice tone="danger">
+          {t("trainerSelection.fetchError")}
+        </AppSheetNotice>
       ) : trainers.length > 0 ? (
         <AppSheetCard>
           <div className="flex items-start gap-3 text-[#4f3bb8]">
@@ -118,11 +121,13 @@ export default function TrainerSelectionModal({
 
             <div className="min-w-0">
               <div id="trainer-selection-title">
-                <AppSheetSectionTitle>Välj tränare</AppSheetSectionTitle>
+                <AppSheetSectionTitle>
+                  {t("trainerSelection.title")}
+                </AppSheetSectionTitle>
               </div>
 
               <AppSheetSectionText>
-                Välj en tränare i taget. Använd pilarna för att byta.
+                {t("trainerSelection.description")}
               </AppSheetSectionText>
             </div>
           </div>
@@ -133,23 +138,28 @@ export default function TrainerSelectionModal({
               onClick={() => moveSelection(-1)}
               disabled={trainers.length <= 1 || activeIndex <= 0}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#ddd2ff] bg-white text-[#5b3fd6] transition active:scale-95 disabled:opacity-40"
-              aria-label="Föregående tränare"
+              aria-label={t("trainerSelection.previousTrainer")}
             >
               <ChevronLeft size={22} strokeWidth={2.8} />
             </button>
 
             <div className="min-w-0 flex-1 text-center">
               <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#8c82b3]">
-                Tränare {activeIndex + 1} av {trainers.length}
+                {t("trainerSelection.trainerCount", {
+                  current: activeIndex + 1,
+                  total: trainers.length,
+                })}
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => moveSelection(1)}
-              disabled={trainers.length <= 1 || activeIndex >= trainers.length - 1}
+              disabled={
+                trainers.length <= 1 || activeIndex >= trainers.length - 1
+              }
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#ddd2ff] bg-white text-[#5b3fd6] transition active:scale-95 disabled:opacity-40"
-              aria-label="Nästa tränare"
+              aria-label={t("trainerSelection.nextTrainer")}
             >
               <ChevronRight size={22} strokeWidth={2.8} />
             </button>
@@ -206,17 +216,17 @@ export default function TrainerSelectionModal({
                   {loadingId === String(selectedTrainer.id) ? (
                     <>
                       <Loader size={16} className="animate-spin" />
-                      Laddar...
+                      {t("trainerSelection.loadingAudio")}
                     </>
                   ) : playingId === String(selectedTrainer.id) ? (
                     <>
                       <Square size={15} className="fill-current" />
-                      Stoppa
+                      {t("trainerSelection.stopAudio")}
                     </>
                   ) : (
                     <>
                       <Volume2 size={16} />
-                      Lyssna
+                      {t("trainerSelection.listenAudio")}
                     </>
                   )}
                 </button>
@@ -225,11 +235,11 @@ export default function TrainerSelectionModal({
           ) : null}
 
           <p className="mt-4 text-center text-[14px] font-semibold leading-relaxed text-[#5c567f]">
-            Byt med pilarna tills du hittar en röst som känns tydlig och trygg.
+            {t("trainerSelection.selectDescription")}
           </p>
         </AppSheetCard>
       ) : (
-        <AppSheetNotice>Inga tränare hittades.</AppSheetNotice>
+        <AppSheetNotice>{t("trainerSelection.noTrainers")}</AppSheetNotice>
       )}
     </section>
   );

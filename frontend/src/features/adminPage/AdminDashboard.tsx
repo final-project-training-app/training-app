@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchWorkouts } from "../../api/workouts";
 import { fetchWorkoutFeedbackSummaryWithToken } from "../../api/feedbacks";
 
@@ -194,6 +195,7 @@ export default function AdminDashboard({
   searchTerm = "",
 }: Props) {
   const { getToken } = useAuth();
+  const { t } = useTranslation();
 
   const { data: workouts = [] } = useQuery<Workout[]>({
     queryKey: ["workouts"],
@@ -215,15 +217,11 @@ export default function AdminDashboard({
 
   // ── Summary totals ──────────────────────────────────────────────────────
   const totals = useMemo(() => {
-    const goodCount = feedbackSummary.filter(
-      (f) => f.status === "GOOD",
-    ).length;
+    const goodCount = feedbackSummary.filter((f) => f.status === "GOOD").length;
     const nrCount = feedbackSummary.filter(
       (f) => f.status === "NEEDS_REVIEW",
     ).length;
-    const badCount = feedbackSummary.filter(
-      (f) => f.status === "BAD",
-    ).length;
+    const badCount = feedbackSummary.filter((f) => f.status === "BAD").length;
     const total = goodCount + nrCount + badCount;
     return { goodCount, nrCount, badCount, total };
   }, [feedbackSummary]);
@@ -236,7 +234,11 @@ export default function AdminDashboard({
   }, [feedbackSummary]);
 
   const totalDuration = useMemo(
-    () => workouts.reduce((sum, workout) => sum + (workout.durationSeconds ?? 0), 0),
+    () =>
+      workouts.reduce(
+        (sum, workout) => sum + (workout.durationSeconds ?? 0),
+        0,
+      ),
     [workouts],
   );
 
@@ -256,7 +258,6 @@ export default function AdminDashboard({
     });
   }, [normalizedSearch, recentFeedbacks]);
 
-
   const pct = (n: number) =>
     totals.total > 0 ? Math.round((n / totals.total) * 100) : 0;
 
@@ -268,18 +269,24 @@ export default function AdminDashboard({
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-start gap-3 p-3.5 pb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5836d6]/15">
-              <svg className="h-5 w-5 text-[#5836d6]" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
+              <svg
+                className="h-5 w-5 text-[#5836d6]"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
               </svg>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-[#5836d6]">
-                Total Workouts
+                {t("admin.totalWorkouts")}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {workouts.length}
               </p>
-              <p className="text-xs text-[#6f6a93]">All workouts in app</p>
+              <p className="text-xs text-[#6f6a93]">
+                {t("admin.allWorkoutsInApp")}
+              </p>
             </div>
           </div>
           <Sparkline color="#5836d6" points={SPARKLINES.purple} />
@@ -289,18 +296,24 @@ export default function AdminDashboard({
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-start gap-3 p-3.5 pb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100">
-              <svg className="h-5 w-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+              <svg
+                className="h-5 w-5 text-green-600"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z" />
               </svg>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-green-600">
-                Good Feedback
+                {t("admin.goodFeedback")}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.goodCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{pct(totals.goodCount)}% of total</p>
+              <p className="text-xs text-[#6f6a93]">
+                {t("admin.percentOfTotal", { percent: pct(totals.goodCount) })}
+              </p>
             </div>
           </div>
           <Sparkline color="#22c55e" points={SPARKLINES.green} />
@@ -310,18 +323,24 @@ export default function AdminDashboard({
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-start gap-3 p-3.5 pb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100">
-              <svg className="h-5 w-5 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+              <svg
+                className="h-5 w-5 text-orange-500"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
               </svg>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-orange-500">
-                Needs Review
+                {t("admin.needsReview")}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.nrCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{pct(totals.nrCount)}% of total</p>
+              <p className="text-xs text-[#6f6a93]">
+                {t("admin.percentOfTotal", { percent: pct(totals.nrCount) })}
+              </p>
             </div>
           </div>
           <Sparkline color="#f97316" points={SPARKLINES.orange} />
@@ -331,18 +350,24 @@ export default function AdminDashboard({
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-start gap-3 p-3.5 pb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
-              <svg className="h-5 w-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23 3v12c0 1.1-.9 2-2 2h-9c-.83 0-1.54-.5-1.84-1.22L7.14 8.73C7.05 8.5 7 8.26 7 8V6h-.17L3 2.86A1.99 1.99 0 0 0 1 5v2c0 .47.17.93.46 1.28L1 21h4V9h8.31l-.95-4.57-.03-.32c0-.41.17-.79.44-1.06L14.17 2l5 1zm-2 0h-6l2 7h4V3z"/>
+              <svg
+                className="h-5 w-5 text-red-500"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M23 3v12c0 1.1-.9 2-2 2h-9c-.83 0-1.54-.5-1.84-1.22L7.14 8.73C7.05 8.5 7 8.26 7 8V6h-.17L3 2.86A1.99 1.99 0 0 0 1 5v2c0 .47.17.93.46 1.28L1 21h4V9h8.31l-.95-4.57-.03-.32c0-.41.17-.79.44-1.06L14.17 2l5 1zm-2 0h-6l2 7h4V3z" />
               </svg>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-red-500">
-                Bad Feedback
+                {t("admin.badFeedback")}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.badCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{pct(totals.badCount)}% of total</p>
+              <p className="text-xs text-[#6f6a93]">
+                {t("admin.percentOfTotal", { percent: pct(totals.badCount) })}
+              </p>
             </div>
           </div>
           <Sparkline color="#ef4444" points={SPARKLINES.red} />
@@ -354,8 +379,10 @@ export default function AdminDashboard({
         {/* Donut Chart */}
         <div className="rounded-2xl bg-white p-3.5 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-widest text-[#5836d6]">
-            Feedback Summary{" "}
-            <span className="font-normal text-[#6f6a93]">(Last 30 days)</span>
+            {t("admin.feedbackSummary")}{" "}
+            <span className="font-normal text-[#6f6a93]">
+              {t("admin.last30Days")}
+            </span>
           </p>
           <div className="mt-3 flex items-center gap-5">
             <DonutChart
@@ -368,7 +395,9 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-green-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">GOOD</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">
+                    {t("admin.feedbackStatus.goodShort")}
+                  </p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.goodCount} ({pct(totals.goodCount)}%)
                   </p>
@@ -377,7 +406,9 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-orange-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">NEEDS REVIEW</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">
+                    {t("admin.feedbackStatus.needsReviewShort")}
+                  </p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.nrCount} ({pct(totals.nrCount)}%)
                   </p>
@@ -386,7 +417,9 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-red-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">BAD</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">
+                    {t("admin.feedbackStatus.badShort")}
+                  </p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.badCount} ({pct(totals.badCount)}%)
                   </p>
@@ -399,11 +432,13 @@ export default function AdminDashboard({
         {/* Recent Feedbacks */}
         <div className="rounded-2xl bg-white p-3.5 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-widest text-[#5836d6]">
-            Recent Feedbacks
+            {t("admin.recentFeedbacks")}
           </p>
           <div className="mt-2 space-y-2">
             {filteredRecentFeedbacks.length === 0 && (
-              <p className="text-sm text-[#6f6a93]">No feedback yet.</p>
+              <p className="text-sm text-[#6f6a93]">
+                {t("admin.noFeedbackYet")}
+              </p>
             )}
             {filteredRecentFeedbacks.map((fb) => {
               const workout = workouts.find((w) => w.id === fb.workoutId);
@@ -411,15 +446,12 @@ export default function AdminDashboard({
               const emoji = typeEmoji[type.toUpperCase()] ?? "🏋️";
               const statusMsg =
                 fb.status === "GOOD"
-                  ? "Positive feedback received."
+                  ? t("admin.feedbackMessages.good")
                   : fb.status === "NEEDS_REVIEW"
-                    ? "Needs attention."
-                    : "Negative feedback received.";
+                    ? t("admin.feedbackMessages.needsReview")
+                    : t("admin.feedbackMessages.bad");
               return (
-                <div
-                  key={fb.workoutId}
-                  className="flex items-start gap-3"
-                >
+                <div key={fb.workoutId} className="flex items-start gap-3">
                   <div
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ${workoutTypeColor(type)}`}
                   >
@@ -429,10 +461,12 @@ export default function AdminDashboard({
                     <p className="truncate text-sm font-semibold text-[#100b2f]">
                       {fb.workoutName}
                     </p>
-                    <p className="truncate text-xs text-[#6f6a93]">{statusMsg}</p>
+                    <p className="truncate text-xs text-[#6f6a93]">
+                      {statusMsg}
+                    </p>
                   </div>
                   <span className="shrink-0 text-xs text-[#6f6a93]">
-                    {fb.feedbackCount} sessions
+                    {t("admin.sessionsCount", { count: fb.feedbackCount })}
                   </span>
                 </div>
               );
@@ -444,7 +478,7 @@ export default function AdminDashboard({
               onClick={onOpenFeedbacks}
               className="mt-2 flex w-full items-center justify-between text-left text-xs font-semibold text-[#5836d6] hover:underline"
             >
-              View all feedbacks
+              {t("admin.viewAllFeedbacks")}
               <svg
                 className="h-4 w-4"
                 viewBox="0 0 24 24"
@@ -464,10 +498,10 @@ export default function AdminDashboard({
         <div className="flex flex-col gap-4 border-b border-gray-100 px-4 py-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-widest text-[#5836d6]">
-              Workouts Overview
+              {t("admin.workoutsOverview")}
             </p>
             <p className="mt-1 text-xs text-[#6f6a93]">
-              Manage workouts in the dedicated Workouts view — the dashboard only shows a quick snapshot.
+              {t("admin.workoutsOverviewDescription")}
             </p>
           </div>
 
@@ -476,14 +510,14 @@ export default function AdminDashboard({
             onClick={onOpenWorkouts}
             className="rounded-xl bg-[#5836d6] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4b2cc2]"
           >
-            Open workouts
+            {t("admin.openWorkouts")}
           </button>
         </div>
 
         <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-3">
           <div className="rounded-2xl border border-[#ece5ff] bg-[#f8f5ff] p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#6f6a93]">
-              Total workouts
+              {t("admin.totalWorkoutsSmall")}
             </p>
             <p className="mt-2 text-3xl font-extrabold text-[#100b2f]">
               {workouts.length}
@@ -492,7 +526,7 @@ export default function AdminDashboard({
 
           <div className="rounded-2xl border border-[#ece5ff] bg-[#f8f5ff] p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#6f6a93]">
-              With feedback
+              {t("admin.withFeedback")}
             </p>
             <p className="mt-2 text-3xl font-extrabold text-[#100b2f]">
               {feedbackSummary.length}
@@ -501,19 +535,20 @@ export default function AdminDashboard({
 
           <div className="rounded-2xl border border-[#ece5ff] bg-[#f8f5ff] p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#6f6a93]">
-              Avg duration
+              {t("admin.avgDuration")}
             </p>
             <p className="mt-2 text-3xl font-extrabold text-[#100b2f]">
-              {averageDuration > 0 ? `${averageDuration}s` : "—"}
+              {averageDuration > 0
+                ? t("admin.durationSeconds", { seconds: averageDuration })
+                : "—"}
             </p>
           </div>
         </div>
 
         <div className="border-t border-gray-100 px-4 py-3 text-xs text-[#6f6a93]">
-          Tip: Use the Workouts tab for full list editing and details.
+          {t("admin.workoutsTip")}
         </div>
       </div>
     </div>
   );
 }
-

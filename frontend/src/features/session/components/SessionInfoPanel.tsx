@@ -1,4 +1,5 @@
 import { CalendarDays, MessageSquareText, UserRound } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { CoachCallSession, SessionPanel } from "../types";
 import { ExercisePanel } from "./ExercisePanel";
 import { TrainingSuitePanel } from "./TrainingSuitePanel";
@@ -16,14 +17,15 @@ export function SessionInfoPanel({
   panel,
   onClose,
 }: SessionInfoPanelProps) {
+  const { t } = useTranslation();
   if (panel === "none") return null;
 
   if (panel === "suite") {
     return (
       <AppSheet
         open
-        title="Träningssvit"
-        subtitle="Din senaste träningshistorik"
+        title={t("sessionCall.suiteTitle")}
+        subtitle={t("sessionCall.suiteSubtitle")}
         icon={<CalendarDays size={20} strokeWidth={2.4} />}
         onClose={onClose}
         height="default"
@@ -34,7 +36,7 @@ export function SessionInfoPanel({
             items={session.completedWorkouts}
           />
         ) : (
-          <AppSheetNotice>Du är inte inloggad.</AppSheetNotice>
+          <AppSheetNotice>{t("sessionCall.notLoggedIn")}</AppSheetNotice>
         )}
       </AppSheet>
     );
@@ -44,7 +46,7 @@ export function SessionInfoPanel({
     return (
       <AppSheet
         open
-        title="Instruktioner"
+        title={t("sessionCall.instructionsTitle")}
         subtitle={session.workoutName ?? session.name}
         icon={<MessageSquareText size={20} strokeWidth={2.4} />}
         onClose={onClose}
@@ -58,8 +60,8 @@ export function SessionInfoPanel({
   return (
     <AppSheet
       open
-      title="Min info"
-      subtitle="Det coachen vet om dig"
+      title={t("sessionCall.myInfoTitle")}
+      subtitle={t("sessionCall.myInfoSubtitle")}
       icon={<UserRound size={20} strokeWidth={2.4} />}
       onClose={onClose}
       height="default"
@@ -67,7 +69,7 @@ export function SessionInfoPanel({
       {session.isAuthenticated ? (
         <UserInfoPanel session={session} />
       ) : (
-        <AppSheetNotice>Du är inte inloggad.</AppSheetNotice>
+        <AppSheetNotice>{t("sessionCall.notLoggedIn")}</AppSheetNotice>
       )}
     </AppSheet>
   );

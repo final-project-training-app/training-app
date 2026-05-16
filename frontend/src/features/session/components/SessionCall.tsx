@@ -12,6 +12,7 @@ import type { CoachCallSession, SessionPanel } from "../types";
 import { SessionInfoPanel } from "./SessionInfoPanel";
 import SettingsModalSheet from "../../HomePage/components/SettingsModalSheet";
 import type { CoachSessionDebugEvent } from "../../ai-conversation";
+import { useTranslation } from "react-i18next";
 
 const INTERRUPT_THRESHOLD = 0.25;
 const METER_MAX = 0.5;
@@ -34,11 +35,12 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
   }, [getCurrentRms]);
 
   const thresholdPct = (INTERRUPT_THRESHOLD / METER_MAX) * 100;
+  const { t } = useTranslation();
 
   return (
     <div className="mt-2">
       <div className="mb-0.5 flex justify-between font-sans text-[10px] text-white/60">
-        <span>mic rms</span>
+        <span>{t("sessionCall.micRms")}</span>
         <span ref={valRef}>0.000</span>
       </div>
       <div className="relative h-3 w-full overflow-hidden rounded bg-white/10">
@@ -50,11 +52,11 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
         <div
           className="absolute top-0 h-full w-px bg-red-400"
           style={{ left: `${thresholdPct}%` }}
-          title={`interrupt threshold (${INTERRUPT_THRESHOLD})`}
+          title={`${t("sessionCall.interruptThresholdTitle")} ${INTERRUPT_THRESHOLD}`}
         />
       </div>
       <div className="mt-0.5 font-sans text-[9px] text-white/40">
-        röd linje = interrupt threshold ({INTERRUPT_THRESHOLD})
+        {t("sessionCall.interruptThreshold")} {INTERRUPT_THRESHOLD}
       </div>
     </div>
   );
@@ -90,7 +92,7 @@ function formatTime(totalSeconds: number) {
 }
 
 function getTrainerName(session: CoachCallSession) {
-  return session.trainer?.name?.trim() || "Tränare saknas";
+  return session.trainer?.name?.trim() || "";
 }
 
 function getTrainerImage(session: CoachCallSession) {
@@ -103,7 +105,7 @@ function getTrainerImage(session: CoachCallSession) {
 }
 
 function getWorkoutName(session: CoachCallSession, workoutName?: string) {
-  return session.name ?? session.workoutName ?? workoutName ?? "Pass saknas";
+  return session.name ?? session.workoutName ?? workoutName ?? "";
 }
 
 function ControlButton({
@@ -167,6 +169,7 @@ export function SessionCall({
   const [isMuted, setIsMuted] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const { t } = useTranslation();
 
   const trainerName = getTrainerName(session);
   const trainerImage = getTrainerImage(session);
@@ -211,13 +214,15 @@ export function SessionCall({
           </div>
 
           <h1 className="text-[clamp(25px,3.45cqh,34px)] font-extrabold leading-none text-[#100b2f]">
-            {trainerName}
+            {trainerName || t("sessionCall.trainerMissing")}
           </h1>
 
-          <span className="sr-only">Samtalstid {formatTime(elapsedSeconds)}</span>
+          <span className="sr-only">
+            Samtalstid {formatTime(elapsedSeconds)}
+          </span>
 
           <p className="mt-[clamp(0.3rem,0.9cqh,0.7rem)] max-w-[320px] text-[clamp(11px,1.4cqh,14px)] font-bold leading-snug text-[#6f6a93]">
-            {displayWorkoutName}
+            {displayWorkoutName || t("sessionCall.workoutMissing")}
           </p>
 
           <p className="mt-1 max-w-[320px] text-[clamp(10px,1.25cqh,13px)] font-bold text-[#8a83aa]">
@@ -227,7 +232,9 @@ export function SessionCall({
 
         <section className="mx-auto mt-[clamp(0.85rem,3.3cqh,2.6rem)] grid w-full max-w-[var(--stage-control-max-width)] shrink-0 grid-cols-3 justify-items-center gap-x-[clamp(0.75rem,3.5cqw,1.35rem)] gap-y-[clamp(0.7rem,2.7cqh,2.05rem)]">
           <ControlButton
-            label={isMuted ? "Ljud av" : "Ljud på"}
+            label={
+              isMuted ? t("sessionCall.soundOff") : t("sessionCall.soundOn")
+            }
             active={isMuted}
             onClick={() => setIsMuted((current) => !current)}
           >
@@ -235,29 +242,38 @@ export function SessionCall({
           </ControlButton>
 
           <ControlButton
-            label="Inställningar"
+            label={t("sessionCall.controlbuttonLabelSettings")}
             onClick={() => setSettingsOpen(true)}
           >
             <Settings size={36} strokeWidth={1.5} />
           </ControlButton>
 
           <ControlButton
-            label="Högtalare"
+            label={t("sessionCall.controlbuttonLabelSpeaker")}
             active={isSpeakerOn}
             onClick={() => setIsSpeakerOn((current) => !current)}
           >
             <Volume2 size={36} strokeWidth={1.5} />
           </ControlButton>
 
-          <ControlButton label="Träningssvit" onClick={onTrainingSuite}>
+          <ControlButton
+            label={t("sessionCall.controlbuttonLabelStreak")}
+            onClick={onTrainingSuite}
+          >
             <CalendarDays size={36} strokeWidth={1.5} />
           </ControlButton>
 
-          <ControlButton label="Min info" onClick={onInfo}>
+          <ControlButton
+            label={t("sessionCall.controlbuttonLabelMyInfo")}
+            onClick={onInfo}
+          >
             <UserRound size={36} strokeWidth={1.5} />
           </ControlButton>
 
-          <ControlButton label="Instruktioner" onClick={onSpeaker}>
+          <ControlButton
+            label={t("sessionCall.controlbuttonLabelInstructions")}
+            onClick={onSpeaker}
+          >
             <MessageSquareText size={36} strokeWidth={1.5} />
           </ControlButton>
         </section>
@@ -272,7 +288,7 @@ export function SessionCall({
           </div>
 
           <span className="text-[clamp(13px,1.6cqh,16px)] font-extrabold text-[#221447]">
-            Lägg på
+            {t("sessionCall.controlbuttonLabelEndCall")}
           </span>
         </button>
       </div>

@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   createTrainerWithToken,
   deleteTrainerWithToken,
@@ -83,6 +84,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const { toast, showToast } = useToast();
+  const { t } = useTranslation();
 
   const [mode, setMode] = useState<"view" | "create" | "edit">("view");
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -125,13 +127,40 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
     [trainers, selectedId],
   );
 
+  const prevFilteredRef = useRef<typeof filteredTrainers>(filteredTrainers);
+
+  // Sync selected trainer when filter changes
   useEffect(() => {
-    if (filteredTrainers.length === 0) {
-      setSelectedId(null);
-      return;
+    // Check if filtered list changed
+    const listChanged =
+      filteredTrainers.length !== prevFilteredRef.current.length ||
+      filteredTrainers.some(
+        (t) => !prevFilteredRef.current.some((prev) => prev.id === t.id),
+      );
+
+    prevFilteredRef.current = filteredTrainers;
+
+    if (!listChanged) return;
+
+    // List changed, compute new selection
+    let newSelection: number | null = null;
+
+    if (filteredTrainers.length > 0) {
+      // If current selection is valid, keep it
+      if (
+        selectedId !== null &&
+        filteredTrainers.some((t) => t.id === selectedId)
+      ) {
+        newSelection = selectedId;
+      } else {
+        // Otherwise select first trainer
+        newSelection = filteredTrainers[0].id;
+      }
     }
-    if (selectedId == null || !filteredTrainers.some((t) => t.id === selectedId)) {
-      setSelectedId(filteredTrainers[0].id);
+
+    // Only update if selection actually changed
+    if (newSelection !== selectedId) {
+      setSelectedId(newSelection);
     }
   }, [filteredTrainers, selectedId]);
 
@@ -242,7 +271,9 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
       showToast("Trainer deleted.", { type: "success" });
     },
     onError: (err) => {
-      showToast((err as Error).message || "Failed to delete.", { type: "error" });
+      showToast((err as Error).message || "Failed to delete.", {
+        type: "error",
+      });
     },
   });
 
@@ -329,11 +360,11 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
       {confirmDelete && selectedTrainer != null && (
         <ConfirmModal
           open={true}
-          title="Delete trainer"
-          body={`Delete trainer "${selectedTrainer.name}"? This cannot be undone.`}
+          title={t("trainerAdmin.deleteTitle")}
+          body={t("trainerAdmin.deleteBody", { name: selectedTrainer.name })}
           requireTyping="DELETE"
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          confirmLabel={t("trainerAdmin.deleteConfirm")}
+          cancelLabel={t("trainerAdmin.cancel")}
           onConfirm={() => {
             setConfirmDelete(false);
             deleteMutation.mutate(selectedTrainer.id);
@@ -345,17 +376,17 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-[#100b2f]">Trainers</h2>
-          <p className="text-sm text-[#6f6a93]">
-            Manage AI trainer profiles and configurations.
-          </p>
+          <h2 className="text-2xl font-bold text-[#100b2f]">
+            {t("trainerAdmin.title")}
+          </h2>
+          <p className="text-sm text-[#6f6a93]">{t("trainerAdmin.subtitle")}</p>
         </div>
         <button
           type="button"
           onClick={openCreate}
           className="rounded-xl bg-[#5836d6] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4527b8] active:scale-95"
         >
-          + Add Trainer
+          {t("trainerAdmin.addTrainer")}
         </button>
       </div>
 
@@ -389,8 +420,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                       <div className="flex h-full w-full items-center justify-center text-xl">
                         🧑‍🏫
                       </div>
-                    )
-                    }
+                    )}
                     {selectedId === trainer.id && (
                       <div className="absolute inset-0 rounded-lg ring-2 ring-[#5836d6]" />
                     )}
@@ -398,7 +428,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
 
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-[#100b2f]">
-                      {trainer.name || "Unnamed trainer"}
+                      {trainer.name || t("trainerAdmin.unnamedTrainer")}
                     </p>
                     <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[#9b96b8]">
                       {trainer.language && (
@@ -406,7 +436,9 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                           {trainer.language}
                         </span>
                       )}
-                      <span>Voice: {trainer.voice || "-"}</span>
+                      <span>
+                        {t("trainerAdmin.voiceLabel")}: {trainer.voice || "-"}
+                      </span>
                     </div>
                   </div>
 
@@ -421,19 +453,20 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
                 <span className="text-3xl">🔍</span>
                 <p className="text-sm font-semibold text-[#100b2f]">
-                  No trainers found
+                  {t("trainerAdmin.noTrainersFound")}
                 </p>
                 <p className="text-xs text-[#9b96b8]">
-                  Try a different search term
+                  {t("trainerAdmin.tryDifferentSearch")}
                 </p>
               </div>
             )}
           </div>
 
           <p className="px-1 text-xs text-[#9b96b8]">
-            {filteredTrainers.length} trainer
-            {filteredTrainers.length !== 1 ? "s" : ""}
-            {normalizedSearch ? ` matching "${searchTerm.trim()}"` : ""}
+            {t("trainerAdmin.resultsCount", {
+              count: filteredTrainers.length,
+              search: normalizedSearch ? searchTerm.trim() : "",
+            })}
           </p>
         </div>
 
@@ -458,7 +491,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                   onClick={openEdit}
                   className="absolute right-3 top-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#5836d6] shadow-sm backdrop-blur-sm transition hover:bg-white"
                 >
-                  ✏️ Edit
+                  {t("trainerAdmin.edit")}
                 </button>
                 {selectedTrainer.language && (
                   <span className="absolute bottom-3 left-3 rounded-full bg-[#5836d6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
@@ -469,35 +502,60 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
 
               <div className="space-y-4 p-5">
                 <div>
-                  <h3 className="text-xl font-bold text-[#100b2f]">{selectedTrainer.name}</h3>
-                  <p className="mt-0.5 text-xs text-[#9b96b8]">Trainer #{selectedTrainer.id}</p>
+                  <h3 className="text-xl font-bold text-[#100b2f]">
+                    {selectedTrainer.name}
+                  </h3>
+                  <p className="mt-0.5 text-xs text-[#9b96b8]">
+                    Trainer #{selectedTrainer.id}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#9b96b8]">
+                    {t("trainerAdmin.trainerId", { id: selectedTrainer.id })}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-xl border border-[#ece5ff] bg-[#faf8ff] p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Language</p>
-                    <p className="mt-1 truncate text-sm font-bold text-[#100b2f]">{selectedTrainer.language || "—"}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">
+                      {t("trainerAdmin.language")}
+                    </p>
+                    <p className="mt-1 truncate text-sm font-bold text-[#100b2f]">
+                      {selectedTrainer.language || "—"}
+                    </p>
                   </div>
                   <div className="rounded-xl border border-[#ece5ff] bg-[#faf8ff] p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Voice</p>
-                    <p className="mt-1 truncate text-sm font-bold text-[#100b2f]">{selectedTrainer.voice || "—"}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">
+                      {t("trainerAdmin.voice")}
+                    </p>
+                    <p className="mt-1 truncate text-sm font-bold text-[#100b2f]">
+                      {selectedTrainer.voice || "—"}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 rounded-xl border border-[#ece5ff] bg-[#faf8ff] px-4 py-3">
-                  <span className="text-xl shrink-0">{selectedTrainer.intro ? "🎵" : "🔇"}</span>
+                  <span className="text-xl shrink-0">
+                    {selectedTrainer.intro ? "🎵" : "🔇"}
+                  </span>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Intro Audio</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">
+                      {t("trainerAdmin.introAudio")}
+                    </p>
                     <p className="mt-0.5 text-xs font-semibold text-[#100b2f]">
-                      {selectedTrainer.intro ? "Configured ✓" : "Not set"}
+                      {selectedTrainer.intro
+                        ? t("trainerAdmin.configured")
+                        : t("trainerAdmin.notSet")}
                     </p>
                   </div>
                 </div>
 
                 {selectedTrainer.prompt && (
                   <div>
-                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">System Prompt</p>
-                    <p className="line-clamp-3 text-xs leading-relaxed text-[#6f6a93]">{selectedTrainer.prompt}</p>
+                    <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">
+                      {t("trainerAdmin.systemPrompt")}
+                    </p>
+                    <p className="line-clamp-3 text-xs leading-relaxed text-[#6f6a93]">
+                      {selectedTrainer.prompt}
+                    </p>
                   </div>
                 )}
 
@@ -506,7 +564,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                   onClick={openEdit}
                   className="w-full rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4527b8] active:scale-[0.98]"
                 >
-                  Edit Trainer
+                  {t("trainerAdmin.editTrainer")}
                 </button>
               </div>
             </div>
@@ -517,7 +575,9 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
             <form onSubmit={onSubmit} className="space-y-4 p-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-[#100b2f]">
-                  {mode === "create" ? "New Trainer" : "Edit Trainer"}
+                  {mode === "create"
+                    ? t("trainerAdmin.newTrainer")
+                    : t("trainerAdmin.editTrainer")}
                 </h3>
                 <button
                   type="button"
@@ -528,44 +588,46 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                   }}
                   className="rounded-full border border-[#ece5ff] px-3 py-1 text-xs font-semibold text-[#6f6a93] transition hover:border-[#5836d6] hover:text-[#5836d6]"
                 >
-                  ✕ Close
+                  {t("trainerAdmin.close")}
                 </button>
               </div>
 
               {submitError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
-                  ⚠ {submitError}
+                  {t("trainerAdmin.warningPrefix")} {submitError}
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#6f6a93]">
-                    Name *
+                    {t("trainerAdmin.name")}
                   </label>
                   <input
                     name="name"
                     value={form.name}
                     onChange={onFormChange}
-                    placeholder="e.g. Eva"
+                    placeholder={t("trainerAdmin.namePlaceholder")}
                     className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20 ${
                       fieldErrors.name ? "border-red-400" : "border-[#ece5ff]"
                     }`}
                   />
                   {fieldErrors.name && (
-                    <p className="text-[10px] text-red-500">{fieldErrors.name}</p>
+                    <p className="text-[10px] text-red-500">
+                      {fieldErrors.name}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#6f6a93]">
-                    Language *
+                    {t("trainerAdmin.language")}
                   </label>
                   <input
                     name="language"
                     value={form.language}
                     onChange={onFormChange}
-                    placeholder="e.g. Swedish"
+                    placeholder={t("trainerAdmin.languagePlaceholder")}
                     className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] ${
                       fieldErrors.language
                         ? "border-red-400"
@@ -581,69 +643,75 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#6f6a93]">
-                    Voice *
+                    {t("trainerAdmin.voice")}
                   </label>
                   <input
                     name="voice"
                     value={form.voice}
                     onChange={onFormChange}
-                    placeholder="e.g. Aoede"
+                    placeholder={t("trainerAdmin.voicePlaceholder")}
                     className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] ${
                       fieldErrors.voice ? "border-red-400" : "border-[#ece5ff]"
                     }`}
                   />
                   {fieldErrors.voice && (
-                    <p className="text-[10px] text-red-500">{fieldErrors.voice}</p>
+                    <p className="text-[10px] text-red-500">
+                      {fieldErrors.voice}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#6f6a93]">
-                    Intro *
+                    {t("trainerAdmin.intro")}
                   </label>
                   <input
                     name="intro"
                     value={form.intro}
                     onChange={onFormChange}
-                    placeholder="Short intro text"
+                    placeholder={t("trainerAdmin.introPlaceholder")}
                     className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] ${
                       fieldErrors.intro ? "border-red-400" : "border-[#ece5ff]"
                     }`}
                   />
                   {fieldErrors.intro && (
-                    <p className="text-[10px] text-red-500">{fieldErrors.intro}</p>
+                    <p className="text-[10px] text-red-500">
+                      {fieldErrors.intro}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-[#6f6a93]">
-                  Prompt *
+                  {t("trainerAdmin.prompt")}
                 </label>
                 <textarea
                   name="prompt"
                   value={form.prompt}
                   onChange={onFormChange}
-                  placeholder="System prompt for this trainer..."
+                  placeholder={t("trainerAdmin.promptPlaceholder")}
                   className={`min-h-24 w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20 ${
                     fieldErrors.prompt ? "border-red-400" : "border-[#ece5ff]"
                   }`}
                 />
                 {fieldErrors.prompt && (
-                  <p className="text-[10px] text-red-500">{fieldErrors.prompt}</p>
+                  <p className="text-[10px] text-red-500">
+                    {fieldErrors.prompt}
+                  </p>
                 )}
               </div>
 
               <details className="rounded-xl border border-[#ece5ff]">
                 <summary className="cursor-pointer px-3 py-2.5 text-xs font-semibold text-[#5836d6]">
-                  Image URLs ▾
+                  {t("trainerAdmin.imageUrls")}
                 </summary>
                 <div className="space-y-3 px-3 pb-3">
                   {(
                     [
-                      ["imageSelect", "Image Select URL"],
-                      ["imageCall", "Image Call URL"],
-                      ["imageStart", "Image Start URL"],
+                      ["imageSelect", t("trainerAdmin.imageSelectUrl")],
+                      ["imageCall", t("trainerAdmin.imageCallUrl")],
+                      ["imageStart", t("trainerAdmin.imageStartUrl")],
                     ] as [TrainerField, string][]
                   ).map(([field, label]) => (
                     <div key={field} className="space-y-1">
@@ -654,7 +722,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                         name={field}
                         value={form[field] as string}
                         onChange={onFormChange}
-                        placeholder="https://..."
+                        placeholder={t("trainerAdmin.urlPlaceholder")}
                         className={`w-full rounded-xl border p-2.5 text-sm outline-none transition focus:border-[#5836d6] ${
                           fieldErrors[field]
                             ? "border-red-400"
@@ -678,7 +746,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                     onClick={() => setConfirmDelete(true)}
                     className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-500 transition hover:bg-red-100"
                   >
-                    Delete
+                    {t("trainerAdmin.delete")}
                   </button>
                 )}
                 <button
@@ -686,7 +754,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                   disabled={isSaving}
                   className="flex-1 rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] disabled:opacity-50 active:scale-95"
                 >
-                  {isSaving ? "Saving…" : "Save"}
+                  {isSaving ? t("trainerAdmin.saving") : t("trainerAdmin.save")}
                 </button>
               </div>
             </form>
@@ -696,10 +764,10 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
               <span className="text-4xl">👆</span>
               <p className="text-sm font-semibold text-[#100b2f]">
-                Select a trainer
+                {t("trainerAdmin.selectTrainer")}
               </p>
               <p className="text-xs text-[#9b96b8]">
-                Click any row to see details here
+                {t("trainerAdmin.clickRowHint")}
               </p>
             </div>
           )}
