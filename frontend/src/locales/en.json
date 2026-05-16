@@ -11,10 +11,7 @@
     "settings": "Settings",
     "logoAlt": "Call and train"
   },
-  "common": {
-    "close": "Close",
-    "cancel": "Cancel"
-  },
+
   "settings": {
     "title": "Settings",
     "subtitle": "Customize the workout to suit you",
@@ -24,12 +21,14 @@
     "saving": "Saving...",
     "saveChanges": "Save changes",
     "saveError": "Could not save changes",
-    "saved": "Settings saved ✓",
+    "saveSuccess": "Settings saved ✓",
     "selectTrainerFirst": "You must select a trainer first",
     "language": "Language",
     "fullName": "Name",
-    "nameDescription": "The name is used by the coach during the session.",
-    "nameFromProfile": "The name is taken from your profile.",
-    "noNameFound": "No name found."
+    "fullNameDescription": "The name is used by the coach during the session.",
+    "fullNameFound": "The name is taken from your profile.",
+    "nofullNameFound": "No name found.",
+    "close": "Close",
+    "cancel": "Cancel"
   }
 }

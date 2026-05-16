@@ -28,7 +28,7 @@
     "selectTrainerFirst": "Du måste välja en tränare först",
     "language": "Språk",
     "fullName": "Namn",
-    "nameDescription": "Namnet används av coachen under samtalet.",
+    "fullNameDescription": "Namnet används av coachen under samtalet.",
     "nameFromProfile": "Namnet är hämtat från din profil.",
     "noNameFound": "Ingen namnuppgift hittades."
   }
