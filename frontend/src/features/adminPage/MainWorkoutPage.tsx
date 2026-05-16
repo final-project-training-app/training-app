@@ -412,6 +412,30 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
     return <p className="text-sm text-red-500">{(error as Error).message}</p>;
   }
 
+  function setFieldErrors(arg0: {}) {
+    throw new Error("Function not implemented.");
+  }
+
+  function setFieldErrors(arg0: {}) {
+    throw new Error("Function not implemented.");
+  }
+
+  function setFieldErrors(arg0: {}) {
+    throw new Error("Function not implemented.");
+  }
+
+  function setFieldErrors(arg0: {}) {
+    throw new Error("Function not implemented.");
+  }
+
+  function setFieldErrors(arg0: {}) {
+    throw new Error("Function not implemented.");
+  }
+
+  function setFieldErrors(arg0: {}) {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <section className="space-y-4">
       {toast && (
@@ -790,12 +814,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode("create");
-                    setForm(emptyForm);
-                    setFieldErrors({});
-                    setSubmitError(null);
-                  }}
+                  onClick={openCreate}
                   className="rounded-xl bg-[#5836d6] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4527b8] active:scale-95"
                 >
                   {t("workoutsAdmin.addWorkout")}
