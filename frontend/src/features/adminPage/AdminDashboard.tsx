@@ -217,15 +217,11 @@ export default function AdminDashboard({
 
   // ── Summary totals ──────────────────────────────────────────────────────
   const totals = useMemo(() => {
-    const goodCount = feedbackSummary.filter(
-      (f) => f.status === "GOOD",
-    ).length;
+    const goodCount = feedbackSummary.filter((f) => f.status === "GOOD").length;
     const nrCount = feedbackSummary.filter(
       (f) => f.status === "NEEDS_REVIEW",
     ).length;
-    const badCount = feedbackSummary.filter(
-      (f) => f.status === "BAD",
-    ).length;
+    const badCount = feedbackSummary.filter((f) => f.status === "BAD").length;
     const total = goodCount + nrCount + badCount;
     return { goodCount, nrCount, badCount, total };
   }, [feedbackSummary]);
@@ -238,7 +234,11 @@ export default function AdminDashboard({
   }, [feedbackSummary]);
 
   const totalDuration = useMemo(
-    () => workouts.reduce((sum, workout) => sum + (workout.durationSeconds ?? 0), 0),
+    () =>
+      workouts.reduce(
+        (sum, workout) => sum + (workout.durationSeconds ?? 0),
+        0,
+      ),
     [workouts],
   );
 
@@ -269,8 +269,12 @@ export default function AdminDashboard({
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-start gap-3 p-3.5 pb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#5836d6]/15">
-              <svg className="h-5 w-5 text-[#5836d6]" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
+              <svg
+                className="h-5 w-5 text-[#5836d6]"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z" />
               </svg>
             </div>
             <div>
@@ -280,7 +284,9 @@ export default function AdminDashboard({
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {workouts.length}
               </p>
-              <p className="text-xs text-[#6f6a93]">{t("admin.allWorkoutsInApp")}</p>
+              <p className="text-xs text-[#6f6a93]">
+                {t("admin.allWorkoutsInApp")}
+              </p>
             </div>
           </div>
           <Sparkline color="#5836d6" points={SPARKLINES.purple} />
@@ -290,8 +296,12 @@ export default function AdminDashboard({
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-start gap-3 p-3.5 pb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100">
-              <svg className="h-5 w-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+              <svg
+                className="h-5 w-5 text-green-600"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z" />
               </svg>
             </div>
             <div>
@@ -301,7 +311,9 @@ export default function AdminDashboard({
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.goodCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{t("admin.percentOfTotal", { percent: pct(totals.goodCount) })}</p>
+              <p className="text-xs text-[#6f6a93]">
+                {t("admin.percentOfTotal", { percent: pct(totals.goodCount) })}
+              </p>
             </div>
           </div>
           <Sparkline color="#22c55e" points={SPARKLINES.green} />
@@ -311,8 +323,12 @@ export default function AdminDashboard({
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-start gap-3 p-3.5 pb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100">
-              <svg className="h-5 w-5 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+              <svg
+                className="h-5 w-5 text-orange-500"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
               </svg>
             </div>
             <div>
@@ -322,7 +338,9 @@ export default function AdminDashboard({
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.nrCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{t("admin.percentOfTotal", { percent: pct(totals.nrCount) })}</p>
+              <p className="text-xs text-[#6f6a93]">
+                {t("admin.percentOfTotal", { percent: pct(totals.nrCount) })}
+              </p>
             </div>
           </div>
           <Sparkline color="#f97316" points={SPARKLINES.orange} />
@@ -332,8 +350,12 @@ export default function AdminDashboard({
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="flex items-start gap-3 p-3.5 pb-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
-              <svg className="h-5 w-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M23 3v12c0 1.1-.9 2-2 2h-9c-.83 0-1.54-.5-1.84-1.22L7.14 8.73C7.05 8.5 7 8.26 7 8V6h-.17L3 2.86A1.99 1.99 0 0 0 1 5v2c0 .47.17.93.46 1.28L1 21h4V9h8.31l-.95-4.57-.03-.32c0-.41.17-.79.44-1.06L14.17 2l5 1zm-2 0h-6l2 7h4V3z"/>
+              <svg
+                className="h-5 w-5 text-red-500"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M23 3v12c0 1.1-.9 2-2 2h-9c-.83 0-1.54-.5-1.84-1.22L7.14 8.73C7.05 8.5 7 8.26 7 8V6h-.17L3 2.86A1.99 1.99 0 0 0 1 5v2c0 .47.17.93.46 1.28L1 21h4V9h8.31l-.95-4.57-.03-.32c0-.41.17-.79.44-1.06L14.17 2l5 1zm-2 0h-6l2 7h4V3z" />
               </svg>
             </div>
             <div>
@@ -343,7 +365,9 @@ export default function AdminDashboard({
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.badCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{t("admin.percentOfTotal", { percent: pct(totals.badCount) })}</p>
+              <p className="text-xs text-[#6f6a93]">
+                {t("admin.percentOfTotal", { percent: pct(totals.badCount) })}
+              </p>
             </div>
           </div>
           <Sparkline color="#ef4444" points={SPARKLINES.red} />
@@ -355,8 +379,10 @@ export default function AdminDashboard({
         {/* Donut Chart */}
         <div className="rounded-2xl bg-white p-3.5 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-widest text-[#5836d6]">
-            {t("admin.feedbackSummary")} {" "}
-            <span className="font-normal text-[#6f6a93]">{t("admin.last30Days")}</span>
+            {t("admin.feedbackSummary")}{" "}
+            <span className="font-normal text-[#6f6a93]">
+              {t("admin.last30Days")}
+            </span>
           </p>
           <div className="mt-3 flex items-center gap-5">
             <DonutChart
@@ -369,7 +395,9 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-green-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">{t("admin.feedbackStatus.goodShort")}</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">
+                    {t("admin.feedbackStatus.goodShort")}
+                  </p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.goodCount} ({pct(totals.goodCount)}%)
                   </p>
@@ -378,7 +406,9 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-orange-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">{t("admin.feedbackStatus.needsReviewShort")}</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">
+                    {t("admin.feedbackStatus.needsReviewShort")}
+                  </p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.nrCount} ({pct(totals.nrCount)}%)
                   </p>
@@ -387,7 +417,9 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-red-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">{t("admin.feedbackStatus.badShort")}</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">
+                    {t("admin.feedbackStatus.badShort")}
+                  </p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.badCount} ({pct(totals.badCount)}%)
                   </p>
@@ -404,7 +436,9 @@ export default function AdminDashboard({
           </p>
           <div className="mt-2 space-y-2">
             {filteredRecentFeedbacks.length === 0 && (
-              <p className="text-sm text-[#6f6a93]">{t("admin.noFeedbackYet")}</p>
+              <p className="text-sm text-[#6f6a93]">
+                {t("admin.noFeedbackYet")}
+              </p>
             )}
             {filteredRecentFeedbacks.map((fb) => {
               const workout = workouts.find((w) => w.id === fb.workoutId);
@@ -417,10 +451,7 @@ export default function AdminDashboard({
                     ? t("admin.feedbackMessages.needsReview")
                     : t("admin.feedbackMessages.bad");
               return (
-                <div
-                  key={fb.workoutId}
-                  className="flex items-start gap-3"
-                >
+                <div key={fb.workoutId} className="flex items-start gap-3">
                   <div
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ${workoutTypeColor(type)}`}
                   >
@@ -430,7 +461,9 @@ export default function AdminDashboard({
                     <p className="truncate text-sm font-semibold text-[#100b2f]">
                       {fb.workoutName}
                     </p>
-                    <p className="truncate text-xs text-[#6f6a93]">{statusMsg}</p>
+                    <p className="truncate text-xs text-[#6f6a93]">
+                      {statusMsg}
+                    </p>
                   </div>
                   <span className="shrink-0 text-xs text-[#6f6a93]">
                     {t("admin.sessionsCount", { count: fb.feedbackCount })}
@@ -445,7 +478,7 @@ export default function AdminDashboard({
               onClick={onOpenFeedbacks}
               className="mt-2 flex w-full items-center justify-between text-left text-xs font-semibold text-[#5836d6] hover:underline"
             >
-                {t("admin.viewAllFeedbacks")}
+              {t("admin.viewAllFeedbacks")}
               <svg
                 className="h-4 w-4"
                 viewBox="0 0 24 24"
@@ -505,7 +538,9 @@ export default function AdminDashboard({
               {t("admin.avgDuration")}
             </p>
             <p className="mt-2 text-3xl font-extrabold text-[#100b2f]">
-              {averageDuration > 0 ? t("admin.durationSeconds", { seconds: averageDuration }) : "—"}
+              {averageDuration > 0
+                ? t("admin.durationSeconds", { seconds: averageDuration })
+                : "—"}
             </p>
           </div>
         </div>
@@ -517,4 +552,3 @@ export default function AdminDashboard({
     </div>
   );
 }
-

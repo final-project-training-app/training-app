@@ -135,8 +135,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
     const listChanged =
       filteredTrainers.length !== prevFilteredRef.current.length ||
       filteredTrainers.some(
-        (t) =>
-          !prevFilteredRef.current.some((prev) => prev.id === t.id),
+        (t) => !prevFilteredRef.current.some((prev) => prev.id === t.id),
       );
 
     prevFilteredRef.current = filteredTrainers;
