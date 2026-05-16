@@ -107,9 +107,7 @@ function isValidUrl(value: string): boolean {
   }
 }
 
-export default function MainWorkoutPage({
-  searchTerm = "",
-}: Props) {
+export default function MainWorkoutPage({ searchTerm = "" }: Props) {
   const { t } = useTranslation();
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
@@ -215,7 +213,14 @@ export default function MainWorkoutPage({
 
   useEffect(() => {
     if (currentPage !== 1) setCurrentPage(1);
-  }, [normalizedSearch, sortBy, filterType, filterLevel, filterTrainerId, currentPage]);
+  }, [
+    normalizedSearch,
+    sortBy,
+    filterType,
+    filterLevel,
+    filterTrainerId,
+    currentPage,
+  ]);
 
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
@@ -236,7 +241,10 @@ export default function MainWorkoutPage({
       return;
     }
 
-    if (selectedId !== null && sortedWorkouts.some((item) => item.id === selectedId)) {
+    if (
+      selectedId !== null &&
+      sortedWorkouts.some((item) => item.id === selectedId)
+    ) {
       return;
     }
 
@@ -435,8 +443,12 @@ export default function MainWorkoutPage({
 
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-[#100b2f]">{t("workoutsAdmin.title")}</h2>
-          <p className="text-sm text-[#6f6a93]">{t("workoutsAdmin.subtitle")}</p>
+          <h2 className="text-2xl font-bold text-[#100b2f]">
+            {t("workoutsAdmin.title")}
+          </h2>
+          <p className="text-sm text-[#6f6a93]">
+            {t("workoutsAdmin.subtitle")}
+          </p>
         </div>
 
         <button
@@ -501,7 +513,7 @@ export default function MainWorkoutPage({
             ))}
           </select>
 
-            {(filterType || filterLevel || filterTrainerId) && (
+          {(filterType || filterLevel || filterTrainerId) && (
             <button
               type="button"
               onClick={() => {
@@ -511,7 +523,7 @@ export default function MainWorkoutPage({
               }}
               className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500 transition hover:bg-red-100"
             >
-                {t("workoutsAdmin.clearFilters")}
+              {t("workoutsAdmin.clearFilters")}
             </button>
           )}
         </div>
@@ -578,7 +590,8 @@ export default function MainWorkoutPage({
                       </span>
                       <span className="text-xs text-[#9b96b8]">·</span>
                       <span className="text-xs text-[#9b96b8]">
-                        {workout.durationSeconds ?? "-"} {t("workoutsAdmin.seconds")}
+                        {workout.durationSeconds ?? "-"}{" "}
+                        {t("workoutsAdmin.seconds")}
                       </span>
                     </div>
                   </div>
@@ -718,7 +731,8 @@ export default function MainWorkoutPage({
                       {t("workoutsAdmin.duration")}
                     </p>
                     <p className="mt-1 text-base font-bold text-[#100b2f]">
-                      {selectedWorkout.durationSeconds ?? "-"} {t("workoutsAdmin.seconds")}
+                      {selectedWorkout.durationSeconds ?? "-"}{" "}
+                      {t("workoutsAdmin.seconds")}
                     </p>
                   </div>
                   <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
