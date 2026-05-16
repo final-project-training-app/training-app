@@ -48,5 +48,16 @@
     "listenAudio": "Listen",
     "selectDescription": "Switch using the arrows until you find a voice that feels clear and confident.",
     "noTrainers": "No trainers found."
+  },
+  "intensitySlider": {
+    "0": "Very Easy",
+    "1": "Easy",
+    "2": "Medium",
+    "3": "Intense",
+    "4": "Very Intense",
+    "title": "Intensity",
+    "description": "Choose how intense your training or stretching should be. You can always change this later.",
+    "sliderTitle": "Select Intensity",
+    "choose": "Choose"
   }
 }
