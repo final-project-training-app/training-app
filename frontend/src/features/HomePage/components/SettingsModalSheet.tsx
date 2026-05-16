@@ -141,7 +141,7 @@ function SettingsModalBody({
   setOpen: (v: boolean) => void;
   profile: ProfileSettings;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [fullName, setFullName] = useState(profile.name?.trim() ?? "");
   const [intensityLevel, setIntensityLevel] = useState(() =>
     normalizeIntensityLevel(profile.intensityLevel),
@@ -242,7 +242,10 @@ function SettingsModalBody({
             <AppSheetSectionTitle>
               {t("settings.language")}
             </AppSheetSectionTitle>
-            <LanguageSwitcher />
+            <LanguageSwitcher
+              value={i18n.language}
+              onChange={(lng: string) => i18n.changeLanguage(lng)}
+            />
           </div>
         </AppSheetCard>
         <AppSheetCard>
