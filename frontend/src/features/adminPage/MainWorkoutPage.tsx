@@ -435,10 +435,8 @@ export default function MainWorkoutPage({
 
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-[#100b2f]">Workouts</h2>
-          <p className="text-sm text-[#6f6a93]">
-            Manage and organize all workouts in the app.
-          </p>
+          <h2 className="text-2xl font-bold text-[#100b2f]">{t("workoutsAdmin.title")}</h2>
+          <p className="text-sm text-[#6f6a93]">{t("workoutsAdmin.subtitle")}</p>
         </div>
 
         <button
@@ -461,7 +459,7 @@ export default function MainWorkoutPage({
                 : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
             }`}
           >
-            <option value="">All Categories</option>
+            <option value="">{t("workoutsAdmin.allCategories")}</option>
             {uniqueTypes.map((t) => (
               <option key={t} value={t}>
                 {t}
@@ -478,10 +476,10 @@ export default function MainWorkoutPage({
                 : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
             }`}
           >
-            <option value="">All Levels</option>
+            <option value="">{t("workoutsAdmin.allLevels")}</option>
             {uniqueLevels.map((l) => (
               <option key={l} value={String(l)}>
-                Level {l}
+                {t("workoutsAdmin.level")} {l}
               </option>
             ))}
           </select>
@@ -495,7 +493,7 @@ export default function MainWorkoutPage({
                 : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
             }`}
           >
-            <option value="">All Trainers</option>
+            <option value="">{t("workoutsAdmin.allTrainers")}</option>
             {trainers.map((tr) => (
               <option key={tr.id} value={String(tr.id)}>
                 {tr.name}
@@ -503,7 +501,7 @@ export default function MainWorkoutPage({
             ))}
           </select>
 
-          {(filterType || filterLevel || filterTrainerId) && (
+            {(filterType || filterLevel || filterTrainerId) && (
             <button
               type="button"
               onClick={() => {
@@ -513,7 +511,7 @@ export default function MainWorkoutPage({
               }}
               className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500 transition hover:bg-red-100"
             >
-              ✕ Clear filters
+                {t("workoutsAdmin.clearFilters")}
             </button>
           )}
         </div>
@@ -576,11 +574,11 @@ export default function MainWorkoutPage({
                         </span>
                       )}
                       <span className="text-xs text-[#9b96b8]">
-                        Level {workout.level ?? "-"}
+                        {t("workoutsAdmin.level")} {workout.level ?? "-"}
                       </span>
                       <span className="text-xs text-[#9b96b8]">·</span>
                       <span className="text-xs text-[#9b96b8]">
-                        {workout.durationSeconds ?? "-"} sec
+                        {workout.durationSeconds ?? "-"} {t("workoutsAdmin.seconds")}
                       </span>
                     </div>
                   </div>
@@ -596,10 +594,10 @@ export default function MainWorkoutPage({
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
                 <span className="text-3xl">🔍</span>
                 <p className="text-sm font-semibold text-[#100b2f]">
-                  No workouts found
+                  {t("workoutsAdmin.noWorkoutsFound")}
                 </p>
                 <p className="text-xs text-[#9b96b8]">
-                  Try adjusting your search or filters
+                  {t("workoutsAdmin.tryAdjustSearch")}
                 </p>
                 {(filterType || filterLevel || filterTrainerId) && (
                   <button
@@ -611,7 +609,7 @@ export default function MainWorkoutPage({
                     }}
                     className="mt-1 rounded-lg bg-[#f3eeff] px-3 py-1.5 text-xs font-semibold text-[#5836d6] hover:bg-[#ede9ff]"
                   >
-                    Clear filters
+                    {t("workoutsAdmin.clearFilters")}
                   </button>
                 )}
               </div>
@@ -717,15 +715,15 @@ export default function MainWorkoutPage({
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
-                      Duration
+                      {t("workoutsAdmin.duration")}
                     </p>
                     <p className="mt-1 text-base font-bold text-[#100b2f]">
-                      {selectedWorkout.durationSeconds ?? "-"}s
+                      {selectedWorkout.durationSeconds ?? "-"} {t("workoutsAdmin.seconds")}
                     </p>
                   </div>
                   <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
-                      Level
+                      {t("workoutsAdmin.level")}
                     </p>
                     <p className="mt-1 text-base font-bold text-[#100b2f]">
                       {selectedWorkout.level ?? "-"}
@@ -733,7 +731,7 @@ export default function MainWorkoutPage({
                   </div>
                   <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
-                      Type
+                      {t("workoutsAdmin.type")}
                     </p>
                     <p className="mt-1 truncate text-base font-bold text-[#100b2f]">
                       {selectedWorkout.type

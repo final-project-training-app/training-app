@@ -191,7 +191,12 @@
     "loadingTrainers": "Laddar tränare...",
     "chooseTrainer": "Välj en tränare",
     "level": "Nivå",
-    "duration": "Varaktighet (sekunder)"
+    "duration": "Varaktighet (sekunder)",
+    "allCategories": "Alla kategorier",
+    "allLevels": "Alla nivåer",
+    "allTrainers": "Alla tränare",
+    "seconds": "sek",
+    "noWorkoutsFound": "Inga pass hittades"
   },
   "intensitySlider": {
     "0": "Mycket Lätt",

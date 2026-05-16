@@ -192,7 +192,12 @@
     "loadingTrainers": "Loading trainers...",
     "chooseTrainer": "Choose a trainer",
     "level": "Level",
-    "duration": "Duration (seconds)"
+    "duration": "Duration (seconds)",
+    "allCategories": "All Categories",
+    "allLevels": "All Levels",
+    "allTrainers": "All Trainers",
+    "seconds": "sec",
+    "noWorkoutsFound": "No workouts found"
   },
   "intensitySlider": {
     "0": "Very Easy",
