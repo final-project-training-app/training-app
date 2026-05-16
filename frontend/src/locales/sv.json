@@ -79,12 +79,32 @@
     "saveSuccess": "Inställningar sparade ✓",
     "selectTrainerFirst": "Du måste välja en tränare först",
     "language": "Språk",
+    "getHelp": "Hjälp & support",
+    "getHelpButton": "Hjälp",
     "fullName": "Namn",
     "fullNameDescription": "Namnet används av coachen under samtalet.",
     "fullNameFound": "Namnet är hämtat från din profil.",
     "noFullNameFound": "Ingen namnuppgift hittades.",
     "close": "Stäng",
     "cancel": "Avbryt"
+  },
+
+  "support": {
+    "title": "Hjälp & support",
+    "subtitle": "Hitta svar eller kontakta support",
+    "faqTitle": "Hur använder jag appen",
+    "faqText": "Använd Inställningar för att anpassa din profil och träningsintensitet. Välj en tränare, ange kontext och intensitet, och starta sedan ditt pass. Om du behöver mer hjälp, kontakta support nedan.",
+    "contactUs": "Kontakta support",
+    "formTitle": "Skicka ett meddelande",
+    "formDescription": "Beskriv ditt problem så återkommer vi.",
+    "placeholder": "Beskriv problemet du stött på...",
+    "submit": "Skicka meddelande",
+    "sentSuccess": "Supportmeddelande öppnades i din e-postklient ✓",
+    "sentError": "Kunde inte öppna e-postklienten. Vänligen försök igen.",
+    "emailSubject": "Supportförfrågan: Training App",
+    "emailIntro": "Supportförfrågan från appen:",
+    "userEmail": "Användarens e-post",
+    "backToFAQ": "Tillbaka till hjälp"
   },
   "trainerSelection": {
     "notLoggedIn": "Du är inte inloggad.",

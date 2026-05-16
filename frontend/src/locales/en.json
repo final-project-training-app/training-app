@@ -79,12 +79,32 @@
     "saveSuccess": "Settings saved ✓",
     "selectTrainerFirst": "You must select a trainer first",
     "language": "Language",
+    "getHelp": "Get help & support",
+    "getHelpButton": "Get help",
     "fullName": "Name",
     "fullNameDescription": "The name is used by the coach during the session.",
     "fullNameFound": "The name is taken from your profile.",
     "noFullNameFound": "No name found.",
     "close": "Close",
     "cancel": "Cancel"
+  },
+
+  "support": {
+    "title": "Help & Support",
+    "subtitle": "Find answers or contact support",
+    "faqTitle": "How to use the app",
+    "faqText": "Use the Settings to customize your profile and training intensity. Choose a trainer, set context and intensity, then start your session. If you need more help, contact support below.",
+    "contactUs": "Contact support",
+    "formTitle": "Send us a message",
+    "formDescription": "Describe your issue and we'll get back to you.",
+    "placeholder": "Describe the problem you encountered...",
+    "submit": "Send message",
+    "sentSuccess": "Support message opened in your mail client ✓",
+    "sentError": "Could not open mail client. Please try again.",
+    "emailSubject": "Support request: Training App",
+    "emailIntro": "Support request from the app:",
+    "userEmail": "User email",
+    "backToFAQ": "Back to help"
   },
 
   "trainerSelection": {

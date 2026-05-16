@@ -318,6 +318,14 @@ export default function AdminPage() {
       <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
         {/* Top bar */}
         <header className="flex items-center gap-3 border-b border-gray-100 bg-white px-5 py-2.5 shadow-sm">
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/" })}
+            className="mr-2 rounded-md px-3 py-2 text-sm font-semibold text-[#5836d6] hover:bg-[#f5f0ff]"
+            aria-label="Back to home"
+          >
+            ← {t("admin.goBackHome")}
+          </button>
           {/* Search */}
           <div className="flex flex-1 items-center gap-2 rounded-xl border border-gray-200 bg-[#f5f0ff] px-4 py-2">
             <svg

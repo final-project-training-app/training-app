@@ -18,6 +18,7 @@ import {
   appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
 import LanguageSwitcher from "../../../components/LanguageSwitcher";
+import SupportSheet from "./SupportSheet";
 import { useTranslation } from "react-i18next";
 
 type ProfileSettings = {
@@ -59,7 +60,8 @@ function SettingsStatusSheet({
 }) {
   const { t } = useTranslation();
   return (
-    <AppSheet
+    <>
+      <AppSheet
       open={open}
       title={t("settings.title")}
       subtitle=""
@@ -78,7 +80,8 @@ function SettingsStatusSheet({
       }
     >
       <AppSheetNotice>{message}</AppSheetNotice>
-    </AppSheet>
+      </AppSheet>
+    </>
   );
 }
 
@@ -151,6 +154,7 @@ function SettingsModalBody({
     normalizeTrainerId(profile.trainerId),
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -200,7 +204,8 @@ function SettingsModalBody({
   };
 
   return (
-    <AppSheet
+    <>
+      <AppSheet
       open={open}
       title={t("settings.title")}
       subtitle={t("settings.subtitle")}
@@ -249,6 +254,17 @@ function SettingsModalBody({
           </div>
         </AppSheetCard>
         <AppSheetCard>
+          <div className="flex justify-between items-center">
+            <AppSheetSectionTitle>{t("settings.getHelp")}</AppSheetSectionTitle>
+            <button
+              className={appSheetPrimaryButtonClass}
+              onClick={() => setSupportOpen(true)}
+            >
+              {t("settings.getHelpButton")}
+            </button>
+          </div>
+        </AppSheetCard>
+        <AppSheetCard>
           <label htmlFor="fullName" className="block">
             <AppSheetSectionTitle>
               {t("settings.fullName")}
@@ -287,6 +303,8 @@ function SettingsModalBody({
 
         <ContextModel value={context} onChange={setContext} />
       </div>
-    </AppSheet>
+      </AppSheet>
+      <SupportSheet open={supportOpen} setOpen={setSupportOpen} />
+    </>
   );
 }
