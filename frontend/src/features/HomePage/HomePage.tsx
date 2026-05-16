@@ -84,25 +84,28 @@ export default function HomePage() {
     if (typeof profile?.trainerId !== "number") {
       return;
     }
+    // Avoid synchronous cascading renders by only updating state when it differs
+    if (profile.trainerId === cachedTrainerId) return;
 
-    setCachedTrainerId(profile.trainerId);
-    setStoredTrainerId(profile.trainerId);
-  }, [profile?.trainerId]);
+    queueMicrotask(() => {
+      setCachedTrainerId(profile.trainerId);
+      setStoredTrainerId(profile.trainerId);
+    });
+  }, [profile?.trainerId, cachedTrainerId]);
 
   const activeTrainerId = !isLoaded
-    ? cachedTrainerId ?? DEFAULT_TRAINER_ID
+    ? (cachedTrainerId ?? DEFAULT_TRAINER_ID)
     : isSignedIn
-      ? profile?.trainerId ?? cachedTrainerId ?? DEFAULT_TRAINER_ID
+      ? (profile?.trainerId ?? cachedTrainerId ?? DEFAULT_TRAINER_ID)
       : DEFAULT_TRAINER_ID;
   const selectedWorkoutId = isSignedIn
-    ? currentWorkout ?? "1"
-    : guestWorkoutId ?? "1";
+    ? (currentWorkout ?? "1")
+    : (guestWorkoutId ?? "1");
 
   const activeTrainer = getHomepageTrainer(activeTrainerId);
 
   useEffect(() => {
     if (!isLoaded || isSignedIn) {
-      setGuestWorkoutId(null);
       return;
     }
 
@@ -160,7 +163,10 @@ export default function HomePage() {
     void primeSessionAudio();
     void primeMicrophonePermission();
 
-    navigate({ to: "/session/$workoutId", params: { workoutId: selectedWorkoutId } });
+    navigate({
+      to: "/session/$workoutId",
+      params: { workoutId: selectedWorkoutId },
+    });
   }
 
   return (
