@@ -76,5 +76,17 @@
     "instructions": "Instruktioner",
     "time": "Tid",
     "seconds": "sekunder"
+  },
+  "sessionCall": {
+    "interruptThreshold": "Röd linje = interrupt threshold ",
+    "interruptThresholdTitle": "Interrupt Threshold",
+    "soundOff": "Ljud av",
+    "soundOn": "Ljud på",
+    "controlbuttonLabelSettings": "Inställningar",
+    "controlbuttonLabelSpeaker": "Högtalare",
+    "controlbuttonLabelStreak": "Träningssvit",
+    "controlbuttonLabelMyInfo": "Min info",
+    "controlbuttonLabelInstructions": "Instruktioner",
+    "controlbuttonLabelEndCall": "Lägg på"
   }
 }

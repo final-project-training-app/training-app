@@ -12,6 +12,7 @@ import type { CoachCallSession, SessionPanel } from "../types";
 import { SessionInfoPanel } from "./SessionInfoPanel";
 import SettingsModalSheet from "../../HomePage/components/SettingsModalSheet";
 import type { CoachSessionDebugEvent } from "../../ai-conversation";
+import { useTranslation } from "react-i18next";
 
 const INTERRUPT_THRESHOLD = 0.25;
 const METER_MAX = 0.5;
@@ -34,6 +35,7 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
   }, [getCurrentRms]);
 
   const thresholdPct = (INTERRUPT_THRESHOLD / METER_MAX) * 100;
+  const { t } = useTranslation();
 
   return (
     <div className="mt-2">
@@ -50,11 +52,11 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
         <div
           className="absolute top-0 h-full w-px bg-red-400"
           style={{ left: `${thresholdPct}%` }}
-          title={`interrupt threshold (${INTERRUPT_THRESHOLD})`}
+          title={`{t("sessionCall.interruptThresholdTitle")} ${INTERRUPT_THRESHOLD}`}
         />
       </div>
       <div className="mt-0.5 font-sans text-[9px] text-white/40">
-        röd linje = interrupt threshold ({INTERRUPT_THRESHOLD})
+        {t("sessionCall.interruptThreshold")} ${INTERRUPT_THRESHOLD}
       </div>
     </div>
   );
@@ -167,6 +169,7 @@ export function SessionCall({
   const [isMuted, setIsMuted] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const { t } = useTranslation();
 
   const trainerName = getTrainerName(session);
   const trainerImage = getTrainerImage(session);
@@ -214,7 +217,9 @@ export function SessionCall({
             {trainerName}
           </h1>
 
-          <span className="sr-only">Samtalstid {formatTime(elapsedSeconds)}</span>
+          <span className="sr-only">
+            Samtalstid {formatTime(elapsedSeconds)}
+          </span>
 
           <p className="mt-[clamp(0.3rem,0.9cqh,0.7rem)] max-w-[320px] text-[clamp(11px,1.4cqh,14px)] font-bold leading-snug text-[#6f6a93]">
             {displayWorkoutName}
@@ -227,7 +232,9 @@ export function SessionCall({
 
         <section className="mx-auto mt-[clamp(0.85rem,3.3cqh,2.6rem)] grid w-full max-w-[var(--stage-control-max-width)] shrink-0 grid-cols-3 justify-items-center gap-x-[clamp(0.75rem,3.5cqw,1.35rem)] gap-y-[clamp(0.7rem,2.7cqh,2.05rem)]">
           <ControlButton
-            label={isMuted ? "Ljud av" : "Ljud på"}
+            label={
+              isMuted ? t("sessionCall.soundOff") : t("sessionCall.soundOn")
+            }
             active={isMuted}
             onClick={() => setIsMuted((current) => !current)}
           >
@@ -235,29 +242,38 @@ export function SessionCall({
           </ControlButton>
 
           <ControlButton
-            label="Inställningar"
+            label={t("sessionCall.controlbuttonLabelSettings")}
             onClick={() => setSettingsOpen(true)}
           >
             <Settings size={36} strokeWidth={1.5} />
           </ControlButton>
 
           <ControlButton
-            label="Högtalare"
+            label={t("sessionCall.controlbuttonLabelSpeaker")}
             active={isSpeakerOn}
             onClick={() => setIsSpeakerOn((current) => !current)}
           >
             <Volume2 size={36} strokeWidth={1.5} />
           </ControlButton>
 
-          <ControlButton label="Träningssvit" onClick={onTrainingSuite}>
+          <ControlButton
+            label={t("sessionCall.controlbuttonLabelStreak")}
+            onClick={onTrainingSuite}
+          >
             <CalendarDays size={36} strokeWidth={1.5} />
           </ControlButton>
 
-          <ControlButton label="Min info" onClick={onInfo}>
+          <ControlButton
+            label={t("sessionCall.controlbuttonLabelMyInfo")}
+            onClick={onInfo}
+          >
             <UserRound size={36} strokeWidth={1.5} />
           </ControlButton>
 
-          <ControlButton label="Instruktioner" onClick={onSpeaker}>
+          <ControlButton
+            label={t("sessionCall.controlbuttonLabelInstructions")}
+            onClick={onSpeaker}
+          >
             <MessageSquareText size={36} strokeWidth={1.5} />
           </ControlButton>
         </section>
@@ -272,7 +288,7 @@ export function SessionCall({
           </div>
 
           <span className="text-[clamp(13px,1.6cqh,16px)] font-extrabold text-[#221447]">
-            Lägg på
+            {t("sessionCall.controlbuttonLabelEndCall")}
           </span>
         </button>
       </div>
