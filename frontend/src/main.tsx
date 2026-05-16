@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/react";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "./i18n";
 
 const router = createRouter({ routeTree });
 const queryClient = new QueryClient();
