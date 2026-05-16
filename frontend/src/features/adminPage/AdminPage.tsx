@@ -1,4 +1,4 @@
-import { SignInButton, useAuth, useUser } from "@clerk/react";
+import { SignInButton, SignOutButton, useAuth, useUser } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactElement, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -354,7 +354,7 @@ export default function AdminPage() {
           </div>
 
           {/* User */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {userAvatar ? (
               <img
                 src={userAvatar}
@@ -381,6 +381,15 @@ export default function AdminPage() {
             >
               <path d="M7 10l5 5 5-5z" />
             </svg>
+
+            <SignOutButton>
+              <button
+                type="button"
+                className="rounded-full border border-[#d8ccff] bg-white px-3 py-1.5 text-xs font-bold text-[#5836d6] transition hover:bg-[#f5f0ff] active:scale-95"
+              >
+                Logga ut
+              </button>
+            </SignOutButton>
           </div>
         </header>
 
