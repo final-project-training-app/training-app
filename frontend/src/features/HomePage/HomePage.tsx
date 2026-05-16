@@ -11,6 +11,7 @@ import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
 import { getJson } from "../../lib/api/fetcher";
 import useCurrentWorkout from "../../hooks/useCurrentWorkout";
+import { useTranslation } from "react-i18next";
 import {
   DEFAULT_TRAINER_ID,
   getStoredTrainerId,
@@ -79,6 +80,7 @@ export default function HomePage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
   const { currentWorkout } = useCurrentWorkout();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (typeof profile?.trainerId !== "number") {
