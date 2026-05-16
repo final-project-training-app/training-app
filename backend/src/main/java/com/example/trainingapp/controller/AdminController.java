@@ -67,4 +67,15 @@ public class AdminController {
         return ResponseEntity.ok(feedbackService.getWorkoutFeedbackSummary());
     }
 
+    @GetMapping("/feedbacks")
+    public ResponseEntity<List<Map<String, Object>>> getRecentFeedbackEntries(Authentication authentication) {
+        String clerkId = getClerkId(authentication);
+
+        if (!service.isAdmin(clerkId)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        return ResponseEntity.ok(feedbackService.getRecentFeedbackEntries());
+    }
+
 }
