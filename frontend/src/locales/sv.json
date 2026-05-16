@@ -170,6 +170,7 @@
   "workoutsAdmin": {
     "title": "Pass",
     "subtitle": "Hantera och organisera alla pass i appen.",
+    "description": "Beskrivning",
     "addWorkout": "+ Lägg till pass",
     "allWorkouts": "Alla pass",
     "addWorkoutPageTitle": "Lägg till pass",
@@ -196,6 +197,16 @@
     "allLevels": "Alla nivåer",
     "allTrainers": "Alla tränare",
     "seconds": "sek",
+    "namePlaceholder": "t.ex. Axellyft",
+    "descriptionPlaceholder": "Kort beskrivning av passet...",
+    "typePlaceholder": "STYRKA",
+    "workoutImage": "Bild-URL för passet",
+    "moreFields": "Fler fält ▾",
+    "instructionsImage": "Bild-URL för instruktioner",
+    "workoutAudio": "Ljud-URL för passet",
+    "instructionsAudio": "Instruktionsljud URL",
+    "saving": "Sparar…",
+    "save": "Spara",
     "noWorkoutsFound": "Inga pass hittades"
   },
   "intensitySlider": {

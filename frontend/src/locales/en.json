@@ -171,6 +171,7 @@
   "workoutsAdmin": {
     "title": "Workouts",
     "subtitle": "Manage and organize all workouts in the app.",
+    "description": "Description",
     "addWorkout": "+ Add Workout",
     "allWorkouts": "All Workouts",
     "addWorkoutPageTitle": "Add Workout",
@@ -197,6 +198,16 @@
     "allLevels": "All Levels",
     "allTrainers": "All Trainers",
     "seconds": "sec",
+    "namePlaceholder": "e.g. Axellyft",
+    "descriptionPlaceholder": "Short description of the workout...",
+    "typePlaceholder": "STRENGTH",
+    "workoutImage": "Workout image URL",
+    "moreFields": "More fields ▾",
+    "instructionsImage": "Instructions image URL",
+    "workoutAudio": "Workout audio URL",
+    "instructionsAudio": "Instructions audio URL",
+    "saving": "Saving…",
+    "save": "Save",
     "noWorkoutsFound": "No workouts found"
   },
   "intensitySlider": {

@@ -412,30 +412,6 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
     return <p className="text-sm text-red-500">{(error as Error).message}</p>;
   }
 
-  function setFieldErrors(arg0: {}) {
-    throw new Error("Function not implemented.");
-  }
-
-  function setFieldErrors(arg0: {}) {
-    throw new Error("Function not implemented.");
-  }
-
-  function setFieldErrors(arg0: {}) {
-    throw new Error("Function not implemented.");
-  }
-
-  function setFieldErrors(arg0: {}) {
-    throw new Error("Function not implemented.");
-  }
-
-  function setFieldErrors(arg0: {}) {
-    throw new Error("Function not implemented.");
-  }
-
-  function setFieldErrors(arg0: {}) {
-    throw new Error("Function not implemented.");
-  }
-
   return (
     <section className="space-y-4">
       {toast && (
@@ -456,10 +432,10 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
         <ConfirmModal
           open={true}
           title={t("workoutsAdmin.deleteTitle")}
-          body={`Delete workout "${selectedWorkout.name}"? This removes it immediately.`}
+          body={t("workoutsAdmin.deleteBody", { name: selectedWorkout.name })}
           requireTyping="DELETE"
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          confirmLabel={t("workoutsAdmin.deleteConfirm")}
+          cancelLabel={t("workoutsAdmin.cancel")}
           onConfirm={() => deleteMutation.mutate()}
           onCancel={() => setConfirmDelete(false)}
         />
@@ -480,7 +456,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
           onClick={openCreate}
           className="rounded-xl bg-[#5836d6] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4527b8] active:scale-95"
         >
-          + Add Workout
+          {t("workoutsAdmin.addWorkout")}
         </button>
       </div>
 
@@ -730,7 +706,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   onClick={openEdit}
                   className="absolute right-3 top-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#5836d6] shadow-sm backdrop-blur-sm transition hover:bg-white"
                 >
-                  ✏️ Edit
+                  ✏️ {t("workoutsAdmin.edit")}
                 </button>
                 {selectedWorkout.type && (
                   <span className="absolute bottom-3 left-3 rounded-full bg-[#5836d6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
@@ -795,7 +771,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   onClick={openEdit}
                   className="w-full rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] active:scale-95"
                 >
-                  Edit Workout
+                  {t("workoutsAdmin.editWorkout")}
                 </button>
               </div>
             </div>
@@ -822,26 +798,26 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-[#6f6a93]">
-                  Name
+                  {t("workoutsAdmin.name")}
                 </label>
                 <input
                   name="name"
                   value={form.name}
                   onChange={onFormChange}
-                  placeholder="e.g. Axellyft"
+                  placeholder={t("workoutsAdmin.namePlaceholder")}
                   className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-[#6f6a93]">
-                  Description
+                  {t("workoutsAdmin.description")}
                 </label>
                 <textarea
                   name="description"
                   value={form.description}
                   onChange={onFormChange}
-                  placeholder="Short description of the workout..."
+                  placeholder={t("workoutsAdmin.descriptionPlaceholder")}
                   className="min-h-20 w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
                 />
               </div>
@@ -849,19 +825,19 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#6f6a93]">
-                    Type
+                    {t("workoutsAdmin.type")}
                   </label>
                   <input
                     name="type"
                     value={form.type}
                     onChange={onFormChange}
-                    placeholder="STRENGTH"
+                    placeholder={t("workoutsAdmin.typePlaceholder")}
                     className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#6f6a93]">
-                    Level
+                    {t("workoutsAdmin.level")}
                   </label>
                   <input
                     type="number"
@@ -875,7 +851,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-[#6f6a93]">
-                    Seconds
+                    {t("workoutsAdmin.seconds")}
                   </label>
                   <input
                     type="text"
@@ -890,7 +866,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
 
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-[#6f6a93]">
-                  Workout image URL
+                  {t("workoutsAdmin.workoutImage")}
                 </label>
                 <input
                   name="workoutImage"
@@ -903,12 +879,12 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
 
               <details className="rounded-xl border border-[#ece5ff]">
                 <summary className="cursor-pointer px-3 py-2.5 text-xs font-semibold text-[#5836d6]">
-                  More fields ▾
+                  {t("workoutsAdmin.moreFields")}
                 </summary>
                 <div className="space-y-3 px-3 pb-3">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-[#6f6a93]">
-                      Instructions image URL
+                      {t("workoutsAdmin.instructionsImage")}
                     </label>
                     <input
                       name="instructionsImage"
@@ -920,7 +896,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-[#6f6a93]">
-                      Workout audio URL
+                      {t("workoutsAdmin.workoutAudio")}
                     </label>
                     <input
                       name="workoutAudio"
@@ -932,7 +908,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-[#6f6a93]">
-                      Instructions audio URL
+                      {t("workoutsAdmin.instructionsAudio")}
                     </label>
                     <input
                       name="instructionsAudio"
@@ -962,7 +938,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                     onClick={() => setConfirmDelete(true)}
                     className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-500 transition hover:bg-red-100"
                   >
-                    Delete
+                    {t("workoutsAdmin.delete")}
                   </button>
                 )}
                 <button
@@ -970,7 +946,9 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   disabled={saveMutation.isPending}
                   className="flex-1 rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] disabled:opacity-50 active:scale-95"
                 >
-                  {saveMutation.isPending ? "Saving…" : "Save"}
+                  {saveMutation.isPending
+                    ? t("workoutsAdmin.saving")
+                    : t("workoutsAdmin.save")}
                 </button>
               </div>
             </form>
