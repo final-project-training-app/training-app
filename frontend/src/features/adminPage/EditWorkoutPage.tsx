@@ -19,6 +19,9 @@ type WorkoutForm = {
   workoutAudio: string;
   instructionsImage: string;
   workoutImage: string;
+  instructionsVideo: string;
+  instructionsVideoStart: string;
+  instructionsVideoStop: string;
   kneeFriendly: boolean;
   lowImpact: boolean;
   seated: boolean;
@@ -37,6 +40,9 @@ type WorkoutResponse = {
   workoutAudio?: string;
   instructionsImage?: string;
   workoutImage?: string;
+  instructionsVideo?: string | null;
+  instructionsVideoStart?: number | null;
+  instructionsVideoStop?: number | null;
   kneeFriendly?: boolean;
   lowImpact?: boolean;
   seated?: boolean;
@@ -76,6 +82,9 @@ const emptyForm: WorkoutForm = {
   workoutAudio: "",
   instructionsImage: "",
   workoutImage: "",
+  instructionsVideo: "",
+  instructionsVideoStart: "",
+  instructionsVideoStop: "",
   kneeFriendly: false,
   lowImpact: false,
   seated: false,
@@ -127,6 +136,9 @@ export default function EditWorkoutPage({
           workoutAudio: workoutData.workoutAudio ?? "",
           instructionsImage: workoutData.instructionsImage ?? "",
           workoutImage: workoutData.workoutImage ?? "",
+          instructionsVideo: workoutData.instructionsVideo ?? "",
+          instructionsVideoStart: workoutData.instructionsVideoStart != null ? String(workoutData.instructionsVideoStart) : "",
+          instructionsVideoStop: workoutData.instructionsVideoStop != null ? String(workoutData.instructionsVideoStop) : "",
           kneeFriendly: workoutData.kneeFriendly ?? false,
           lowImpact: workoutData.lowImpact ?? false,
           seated: workoutData.seated ?? false,
@@ -197,6 +209,14 @@ export default function EditWorkoutPage({
       nextErrors.push("Workout Image must be a valid URL");
     }
 
+    if (form.instructionsVideo && !isValidUrl(form.instructionsVideo))
+      nextErrors.push("Instructions Video must be a valid URL");
+
+    const start = form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null;
+    const stop = form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null;
+    if (start !== null && stop !== null && start >= stop)
+      nextErrors.push("Instructions Video Start must be less than Stop");
+
     setErrors(nextErrors);
     return nextErrors.length === 0;
   };
@@ -227,6 +247,9 @@ export default function EditWorkoutPage({
           workoutAudio: form.workoutAudio,
           instructionsImage: form.instructionsImage,
           workoutImage: form.workoutImage,
+          instructionsVideo: form.instructionsVideo || null,
+          instructionsVideoStart: form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null,
+          instructionsVideoStop: form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null,
           kneeFriendly: form.kneeFriendly,
           lowImpact: form.lowImpact,
           seated: form.seated,
@@ -381,6 +404,43 @@ export default function EditWorkoutPage({
               <input
                 name="workoutImage"
                 value={form.workoutImage}
+                onChange={handleChange}
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 md:col-span-2">
+              <span className="text-sm opacity-80">Instructions Video (URL, optional)</span>
+              <input
+                name="instructionsVideo"
+                placeholder="https://example.com/video.mp4"
+                value={form.instructionsVideo}
+                onChange={handleChange}
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-sm opacity-80">Video Start (seconds after audio begins, optional)</span>
+              <input
+                name="instructionsVideoStart"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="e.g. 11"
+                value={form.instructionsVideoStart}
+                onChange={handleChange}
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-sm opacity-80">Video Stop (seconds after audio begins, optional)</span>
+              <input
+                name="instructionsVideoStop"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="e.g. 31"
+                value={form.instructionsVideoStop}
                 onChange={handleChange}
                 className="rounded-lg border border-(--brand-border) bg-white p-3"
               />

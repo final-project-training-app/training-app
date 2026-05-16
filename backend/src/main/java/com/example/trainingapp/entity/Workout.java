@@ -33,6 +33,9 @@ public class Workout {
     private String workoutAudio;
     private String instructionsImage;
     private String workoutImage;
+    private String instructionsVideo;
+    private Integer instructionsVideoStart;
+    private Integer instructionsVideoStop;
     private Boolean kneeFriendly;
     private Boolean lowImpact;
     private Boolean seated;

@@ -31,6 +31,9 @@ type Workout = {
   workoutAudio?: string;
   instructionsImage?: string;
   workoutImage?: string;
+  instructionsVideo?: string | null;
+  instructionsVideoStart?: number | null;
+  instructionsVideoStop?: number | null;
   kneeFriendly?: boolean;
   lowImpact?: boolean;
   seated?: boolean;
@@ -48,6 +51,9 @@ type WorkoutForm = {
   workoutAudio: string;
   instructionsImage: string;
   workoutImage: string;
+  instructionsVideo: string;
+  instructionsVideoStart: string;
+  instructionsVideoStop: string;
   kneeFriendly: boolean;
   lowImpact: boolean;
   seated: boolean;
@@ -71,6 +77,9 @@ const emptyForm: WorkoutForm = {
   workoutAudio: "",
   instructionsImage: "",
   workoutImage: "",
+  instructionsVideo: "",
+  instructionsVideoStart: "",
+  instructionsVideoStop: "",
   kneeFriendly: false,
   lowImpact: false,
   seated: false,
@@ -88,6 +97,9 @@ function toForm(workout: Workout): WorkoutForm {
     workoutAudio: workout.workoutAudio ?? "",
     instructionsImage: workout.instructionsImage ?? "",
     workoutImage: workout.workoutImage ?? "",
+    instructionsVideo: workout.instructionsVideo ?? "",
+    instructionsVideoStart: workout.instructionsVideoStart != null ? String(workout.instructionsVideoStart) : "",
+    instructionsVideoStop: workout.instructionsVideoStop != null ? String(workout.instructionsVideoStop) : "",
     kneeFriendly: workout.kneeFriendly ?? false,
     lowImpact: workout.lowImpact ?? false,
     seated: workout.seated ?? false,
@@ -282,6 +294,9 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
         workoutAudio: form.workoutAudio.trim(),
         instructionsImage: form.instructionsImage.trim(),
         workoutImage: form.workoutImage.trim(),
+        instructionsVideo: form.instructionsVideo.trim() || null,
+        instructionsVideoStart: form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null,
+        instructionsVideoStop: form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null,
         kneeFriendly: form.kneeFriendly,
         lowImpact: form.lowImpact,
         seated: form.seated,
@@ -356,6 +371,16 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
     }
     if (!isValidUrl(form.workoutImage)) {
       nextErrors.push("Workout image must be a valid URL");
+    }
+
+    if (form.instructionsVideo && !isValidUrl(form.instructionsVideo)) {
+      nextErrors.push("Instructions video must be a valid URL");
+    }
+
+    const vStart = form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null;
+    const vStop = form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null;
+    if (vStart !== null && vStop !== null && vStart >= vStop) {
+      nextErrors.push("Video Start must be less than Video Stop");
     }
 
     setErrors(nextErrors);
@@ -917,6 +942,42 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                       placeholder="https://..."
                       className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
                     />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-[#6f6a93]">Instructions video URL (optional)</label>
+                    <input
+                      name="instructionsVideo"
+                      value={form.instructionsVideo}
+                      onChange={onFormChange}
+                      placeholder="https://..."
+                      className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-[#6f6a93]">Video start (sec)</label>
+                      <input
+                        name="instructionsVideoStart"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={form.instructionsVideoStart}
+                        onChange={onFormChange}
+                        placeholder="e.g. 11"
+                        className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-[#6f6a93]">Video stop (sec)</label>
+                      <input
+                        name="instructionsVideoStop"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={form.instructionsVideoStop}
+                        onChange={onFormChange}
+                        placeholder="e.g. 31"
+                        className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                      />
+                    </div>
                   </div>
                 </div>
               </details>

@@ -13,6 +13,9 @@ type BackendWorkoutResponse = {
   workoutAudio?: string | null;
   instructionsImage?: string | null;
   workoutImage?: string | null;
+  instructionsVideo?: string | null;
+  instructionsVideoStart?: number | null;
+  instructionsVideoStop?: number | null;
 
   durationMinutes?: number | null;
   durationSeconds?: number | null;
@@ -112,6 +115,8 @@ export async function getCoachCallSession(
     `/api/workouts/${workoutId}`,
   );
 
+  console.log("[session/api] raw workout from backend:", JSON.stringify(workout));
+
   let user: BackendUserResponse | null = null;
   let progress: BackendProgressResponse | null = null;
 
@@ -180,6 +185,9 @@ export async function getCoachCallSession(
 
     instructionsImage: workout.instructionsImage,
     workoutImage: workout.workoutImage,
+    instructionsVideo: workout.instructionsVideo,
+    instructionsVideoStart: workout.instructionsVideoStart,
+    instructionsVideoStop: workout.instructionsVideoStop,
 
     kneeFriendly: workout.kneeFriendly,
     lowImpact: workout.lowImpact,
