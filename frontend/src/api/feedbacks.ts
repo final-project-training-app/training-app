@@ -18,3 +18,19 @@ export async function fetchWorkoutFeedbackSummaryWithToken(token: string) {
 
   return res.json();
 }
+
+export async function fetchRecentAdminFeedbacksWithToken(token: string) {
+  const res = await fetch(`${API_BASE}/api/admin/feedbacks`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Failed to load recent feedback entries.");
+  }
+
+  return res.json();
+}
+
