@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/react";
 import { useTranslation } from "react-i18next";
@@ -48,8 +49,8 @@ export default function SupportSheet({
 
   // when opened, set initial mode if provided
   useEffect(() => {
-    if (open && initialMode) setMode(initialMode);
-  }, [open, initialMode]);
+    if (open && initialMode && mode !== initialMode) setMode(initialMode);
+  }, [open, initialMode, mode]);
 
   return (
     <AppSheet

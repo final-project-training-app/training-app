@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/react";
 import { useTranslation } from "react-i18next";
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createWorkoutWithToken,
@@ -107,7 +108,6 @@ function isValidUrl(value: string): boolean {
 }
 
 export default function MainWorkoutPage({
-  onSwitchTab: _onSwitchTab,
   searchTerm = "",
 }: Props) {
   const { t } = useTranslation();
@@ -169,7 +169,10 @@ export default function MainWorkoutPage({
     return workouts.filter((item) => {
       if (filterType && item.type?.toUpperCase() !== filterType) return false;
       if (filterLevel && String(item.level) !== filterLevel) return false;
-      if (filterTrainerId && String(item.trainer?.id ?? "") !== filterTrainerId) {
+      if (
+        filterTrainerId &&
+        String(item.trainer?.id ?? "") !== filterTrainerId
+      ) {
         return false;
       }
 
@@ -211,30 +214,34 @@ export default function MainWorkoutPage({
   const totalPages = Math.max(1, Math.ceil(sortedWorkouts.length / pageSize));
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [normalizedSearch, sortBy, filterType, filterLevel, filterTrainerId]);
+    if (currentPage !== 1) setCurrentPage(1);
+  }, [normalizedSearch, sortBy, filterType, filterLevel, filterTrainerId, currentPage]);
 
   useEffect(() => {
-    setCurrentPage((prev) => Math.min(prev, totalPages));
-  }, [totalPages]);
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
 
   const pagedWorkouts = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return sortedWorkouts.slice(start, start + pageSize);
   }, [currentPage, sortedWorkouts]);
 
-  const pageStart = sortedWorkouts.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const pageStart =
+    sortedWorkouts.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const pageEnd = Math.min(currentPage * pageSize, sortedWorkouts.length);
 
   useEffect(() => {
     if (sortedWorkouts.length === 0) {
-      setSelectedId(null);
+      if (selectedId !== null) setSelectedId(null);
       return;
     }
 
-    if (selectedId == null || !sortedWorkouts.some((item) => item.id === selectedId)) {
-      setSelectedId(sortedWorkouts[0].id);
+    if (selectedId !== null && sortedWorkouts.some((item) => item.id === selectedId)) {
+      return;
     }
+
+    const firstId = sortedWorkouts[0].id;
+    if (firstId !== selectedId) setSelectedId(firstId);
   }, [selectedId, sortedWorkouts]);
 
   const selectedWorkout = useMemo(
@@ -244,10 +251,13 @@ export default function MainWorkoutPage({
 
   useEffect(() => {
     if (mode === "edit" && selectedWorkout != null) {
-      setForm(toForm(selectedWorkout));
-      setErrors([]);
+      const next = toForm(selectedWorkout);
+      if (form.name !== next.name || form.description !== next.description) {
+        setForm(next);
+        setErrors([]);
+      }
     }
-  }, [mode, selectedWorkout]);
+  }, [mode, selectedWorkout, form]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -413,7 +423,7 @@ export default function MainWorkoutPage({
       {confirmDelete && selectedWorkout != null && (
         <ConfirmModal
           open={true}
-          title="Delete workout"
+          title={t("workoutsAdmin.deleteTitle")}
           body={`Delete workout "${selectedWorkout.name}"? This removes it immediately.`}
           requireTyping="DELETE"
           confirmLabel="Delete"
@@ -539,7 +549,7 @@ export default function MainWorkoutPage({
               >
                 <div className="flex items-center gap-3">
                   <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-[#ece5ff]">
-                    {(workout.workoutImage || workout.instructionsImage) ? (
+                    {workout.workoutImage || workout.instructionsImage ? (
                       <img
                         src={workout.workoutImage || workout.instructionsImage}
                         alt={workout.name}
@@ -585,7 +595,9 @@ export default function MainWorkoutPage({
             {pagedWorkouts.length === 0 && (
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
                 <span className="text-3xl">🔍</span>
-                <p className="text-sm font-semibold text-[#100b2f]">No workouts found</p>
+                <p className="text-sm font-semibold text-[#100b2f]">
+                  No workouts found
+                </p>
                 <p className="text-xs text-[#9b96b8]">
                   Try adjusting your search or filters
                 </p>
@@ -617,31 +629,37 @@ export default function MainWorkoutPage({
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
                   disabled={currentPage === 1}
                   className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
                 >
                   ← Prev
                 </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    onClick={() => setCurrentPage(page)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                      currentPage === page
-                        ? "bg-[#5836d6] text-white shadow-sm"
-                        : "border border-[#ece5ff] bg-white text-[#5836d6] hover:bg-[#f3eeff]"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                        currentPage === page
+                          ? "bg-[#5836d6] text-white shadow-sm"
+                          : "border border-[#ece5ff] bg-white text-[#5836d6] hover:bg-[#f3eeff]"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
 
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
                 >
@@ -656,9 +674,13 @@ export default function MainWorkoutPage({
           {mode === "view" && selectedWorkout != null && (
             <div className="space-y-0">
               <div className="relative h-44 w-full overflow-hidden rounded-t-2xl bg-[#ece5ff]">
-                {(selectedWorkout.workoutImage || selectedWorkout.instructionsImage) ? (
+                {selectedWorkout.workoutImage ||
+                selectedWorkout.instructionsImage ? (
                   <img
-                    src={selectedWorkout.workoutImage || selectedWorkout.instructionsImage}
+                    src={
+                      selectedWorkout.workoutImage ||
+                      selectedWorkout.instructionsImage
+                    }
                     alt={selectedWorkout.name}
                     className="h-full w-full object-cover"
                   />
@@ -684,7 +706,9 @@ export default function MainWorkoutPage({
 
               <div className="p-4 space-y-4">
                 <div>
-                  <h3 className="text-lg font-bold text-[#100b2f]">{selectedWorkout.name}</h3>
+                  <h3 className="text-lg font-bold text-[#100b2f]">
+                    {selectedWorkout.name}
+                  </h3>
                   <p className="text-xs text-[#9b96b8]">
                     Level {selectedWorkout.level ?? "-"}
                   </p>
@@ -712,7 +736,9 @@ export default function MainWorkoutPage({
                       Type
                     </p>
                     <p className="mt-1 truncate text-base font-bold text-[#100b2f]">
-                      {selectedWorkout.type ? selectedWorkout.type.toUpperCase() : "-"}
+                      {selectedWorkout.type
+                        ? selectedWorkout.type.toUpperCase()
+                        : "-"}
                     </p>
                   </div>
                 </div>
@@ -743,8 +769,12 @@ export default function MainWorkoutPage({
             <form onSubmit={onSubmit} className="p-4 space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#100b2f]">{t("workoutsAdmin.title")}</h2>
-                  <p className="text-sm text-[#6f6a93]">{t("workoutsAdmin.subtitle")}</p>
+                  <h2 className="text-2xl font-bold text-[#100b2f]">
+                    {t("workoutsAdmin.title")}
+                  </h2>
+                  <p className="text-sm text-[#6f6a93]">
+                    {t("workoutsAdmin.subtitle")}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -759,6 +789,12 @@ export default function MainWorkoutPage({
                   {t("workoutsAdmin.addWorkout")}
                 </button>
               </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-[#6f6a93]">
+                  Name
+                </label>
+                <input
+                  name="name"
                   value={form.name}
                   onChange={onFormChange}
                   placeholder="e.g. Axellyft"
@@ -767,7 +803,9 @@ export default function MainWorkoutPage({
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-[#6f6a93]">Description</label>
+                <label className="text-xs font-semibold text-[#6f6a93]">
+                  Description
+                </label>
                 <textarea
                   name="description"
                   value={form.description}
@@ -779,7 +817,9 @@ export default function MainWorkoutPage({
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-[#6f6a93]">Type</label>
+                  <label className="text-xs font-semibold text-[#6f6a93]">
+                    Type
+                  </label>
                   <input
                     name="type"
                     value={form.type}
@@ -789,7 +829,9 @@ export default function MainWorkoutPage({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-[#6f6a93]">Level</label>
+                  <label className="text-xs font-semibold text-[#6f6a93]">
+                    Level
+                  </label>
                   <input
                     type="number"
                     name="level"
@@ -801,7 +843,9 @@ export default function MainWorkoutPage({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-[#6f6a93]">Seconds</label>
+                  <label className="text-xs font-semibold text-[#6f6a93]">
+                    Seconds
+                  </label>
                   <input
                     type="text"
                     name="durationSeconds"
@@ -814,7 +858,9 @@ export default function MainWorkoutPage({
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-[#6f6a93]">Workout image URL</label>
+                <label className="text-xs font-semibold text-[#6f6a93]">
+                  Workout image URL
+                </label>
                 <input
                   name="workoutImage"
                   value={form.workoutImage}
@@ -830,7 +876,9 @@ export default function MainWorkoutPage({
                 </summary>
                 <div className="space-y-3 px-3 pb-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-[#6f6a93]">Instructions image URL</label>
+                    <label className="text-xs font-semibold text-[#6f6a93]">
+                      Instructions image URL
+                    </label>
                     <input
                       name="instructionsImage"
                       value={form.instructionsImage}
@@ -840,7 +888,9 @@ export default function MainWorkoutPage({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-[#6f6a93]">Workout audio URL</label>
+                    <label className="text-xs font-semibold text-[#6f6a93]">
+                      Workout audio URL
+                    </label>
                     <input
                       name="workoutAudio"
                       value={form.workoutAudio}
@@ -850,7 +900,9 @@ export default function MainWorkoutPage({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-[#6f6a93]">Instructions audio URL</label>
+                    <label className="text-xs font-semibold text-[#6f6a93]">
+                      Instructions audio URL
+                    </label>
                     <input
                       name="instructionsAudio"
                       value={form.instructionsAudio}
@@ -896,13 +948,16 @@ export default function MainWorkoutPage({
           {mode === "view" && selectedWorkout == null && (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
               <span className="text-4xl">👆</span>
-              <p className="text-sm font-semibold text-[#100b2f]">Select a workout</p>
-              <p className="text-xs text-[#9b96b8]">Click any row to see details here</p>
+              <p className="text-sm font-semibold text-[#100b2f]">
+                Select a workout
+              </p>
+              <p className="text-xs text-[#9b96b8]">
+                Click any row to see details here
+              </p>
             </div>
           )}
         </aside>
       </div>
-
     </section>
   );
 }

@@ -115,7 +115,9 @@ export default function AllWorkoutsPage({
         <ConfirmModal
           open={true}
           title={t("workoutsAdmin.deleteTitle")}
-          body={t("workoutsAdmin.deleteBody", { name: confirmModal.workout.name })}
+          body={t("workoutsAdmin.deleteBody", {
+            name: confirmModal.workout.name,
+          })}
           requireTyping={"DELETE"}
           confirmLabel={t("workoutsAdmin.deleteConfirm")}
           cancelLabel={t("workoutsAdmin.cancel")}
@@ -155,14 +157,14 @@ export default function AllWorkoutsPage({
 
             {/* Actions */}
             <div className="flex gap-2">
-                    <button
+              <button
                 onClick={(event) => {
                   event.stopPropagation();
                   onEdit(workout.id);
                 }}
                 className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
               >
-                    {t("workoutsAdmin.edit")}
+                {t("workoutsAdmin.edit")}
               </button>
 
               <button
@@ -173,7 +175,9 @@ export default function AllWorkoutsPage({
                 disabled={deletingWorkoutId === workout.id}
                 className="rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
               >
-                {deletingWorkoutId === workout.id ? t("workoutsAdmin.deleting") : t("workoutsAdmin.delete")}
+                {deletingWorkoutId === workout.id
+                  ? t("workoutsAdmin.deleting")
+                  : t("workoutsAdmin.delete")}
               </button>
             </div>
           </div>

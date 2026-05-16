@@ -213,7 +213,9 @@ export default function FeedbackAdminPage() {
         <select
           value={filterStatus}
           onChange={(e) => {
-            setFilterStatus(e.target.value as any);
+            setFilterStatus(
+              e.target.value as "" | "GOOD" | "NEEDS_REVIEW" | "BAD",
+            );
             setCurrentPage(1);
           }}
           className={`rounded-lg border py-2 pl-3 pr-6 text-xs font-semibold outline-none transition ${filterStatus ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]" : "border-[#ece5ff] bg-white text-[#6f6a93] hover:border-[#c4b8f5]"}`}
@@ -229,7 +231,7 @@ export default function FeedbackAdminPage() {
         <select
           value={sortBy}
           onChange={(e) => {
-            setSortBy(e.target.value as any);
+            setSortBy(e.target.value as "rating" | "feedback" | "name");
             setCurrentPage(1);
           }}
           className="rounded-lg border border-[#ece5ff] bg-white py-2 pl-3 pr-6 text-xs font-semibold text-[#6f6a93] outline-none transition hover:border-[#c4b8f5]"

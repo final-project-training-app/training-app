@@ -208,7 +208,9 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
     <main className="flex min-h-dvh items-center justify-center bg-(--brand-page) p-6 text-(--brand-ink)">
       <div className="w-full max-w-4xl rounded-2xl border border-(--brand-border) bg-white p-8 shadow-lg">
         <div className="mb-8 flex items-center justify-between gap-3">
-          <h1 className="text-3xl font-bold">{t("workoutsAdmin.addWorkoutPageTitle")}</h1>
+          <h1 className="text-3xl font-bold">
+            {t("workoutsAdmin.addWorkoutPageTitle")}
+          </h1>
           <button
             type="button"
             onClick={() => {
