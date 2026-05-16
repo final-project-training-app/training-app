@@ -11,7 +11,6 @@
     "settings": "Settings",
     "logoAlt": "Call and train"
   },
-
   "settings": {
     "title": "Settings",
     "subtitle": "Customize the workout to suit you",
@@ -27,15 +26,27 @@
     "fullName": "Name",
     "fullNameDescription": "The name is used by the coach during the session.",
     "fullNameFound": "The name is taken from your profile.",
-    "nofullNameFound": "No name found.",
+    "noFullNameFound": "No name found.",
     "close": "Close",
     "cancel": "Cancel"
   },
+
   "trainerSelection": {
-    "title": "Select your trainer",
+    "notLoggedIn": "You are not logged in.",
+    "title": "Select trainer",
+    "description": "Switch using the arrows until you find a voice that feels clear and confident.",
     "loading": "Loading trainers...",
     "fetchError": "Could not fetch trainers.",
     "selectTrainer": "Select trainer",
-    "noTrainers": "No trainers available."
+    "noTrainers": "No trainers found.",
+    "fetchError": "Could not fetch trainers.",
+    "previousTrainer": "Previous trainer",
+    "nextTrainer": "Next trainer",
+    "trainerCount": "Trainer {{current}} of {{total}}",
+    "loadingAudio": "Loading audio...",
+    "stopAudio": "Stop",
+    "listenAudio": "Listen",
+    "selectDescription": "Switch using the arrows until you find a voice that feels clear and confident.",
+    "noTrainers": "No trainers found."
   }
 }

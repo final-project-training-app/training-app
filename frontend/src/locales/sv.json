@@ -20,13 +20,15 @@
     "saving": "Sparar...",
     "saveChanges": "Spara ändringar",
     "saveError": "Kunde inte spara ändringarna",
-    "saved": "Inställningar sparade ✓",
+    "saveSuccess": "Inställningar sparade ✓",
     "selectTrainerFirst": "Du måste välja en tränare först",
     "language": "Språk",
     "fullName": "Namn",
     "fullNameDescription": "Namnet används av coachen under samtalet.",
-    "nameFromProfile": "Namnet är hämtat från din profil.",
-    "noNameFound": "Ingen namnuppgift hittades."
+    "fullNameFound": "Namnet är hämtat från din profil.",
+    "noFullNameFound": "Ingen namnuppgift hittades.",
+    "close": "Stäng",
+    "cancel": "Avbryt"
   },
   "trainerSelection": {
     "notLoggedIn": "Du är inte inloggad.",
