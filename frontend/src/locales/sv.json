@@ -4,7 +4,63 @@
     "logout": "Logga ut"
   },
   "admin": {
-    "page": "Admin sida"
+    "page": "Admin sida",
+    "checkingAccess": "Kontrollerar åtkomst...",
+    "access": "Admin-åtkomst",
+    "signInTitle": "Logga in för att fortsätta",
+    "signInDescription": "Den här sidan är bara tillgänglig för inloggade admin-användare.",
+    "notAdminTitle": "Du är inte administratör",
+    "notAdminDescription": "Den här sidan är reserverad för admin-användare.",
+    "goBackHome": "Gå tillbaka hem",
+    "loading": "Laddar admindata...",
+    "loadErrorTitle": "Kunde inte ladda admindata",
+    "loadErrorDescription": "Försök igen om en stund.",
+    "brand": "Training App",
+    "console": "Admin-konsol",
+    "superadmin": "Superadmin",
+    "languageLabel": "Språk",
+    "searchPlaceholder": "Sök pass, tränare, feedback...",
+    "nav": {
+      "dashboard": "Översikt",
+      "workouts": "Pass",
+      "trainers": "Tränare",
+      "feedback": "Feedback"
+    },
+    "activeUsers": "Aktiva användare",
+    "activeUsersChange": "12% från igår",
+    "totalWorkouts": "Totala pass",
+    "allWorkoutsInApp": "Alla pass i appen",
+    "goodFeedback": "Bra feedback",
+    "needsReview": "Behöver granskas",
+    "badFeedback": "Dålig feedback",
+    "percentOfTotal": "{{percent}}% av totalt",
+    "feedbackSummary": "Feedbacköversikt",
+    "last30Days": "(Senaste 30 dagarna)",
+    "feedbackStatus": {
+      "good": "Bra",
+      "needsReview": "Behöver granskas",
+      "bad": "Dåligt",
+      "goodShort": "BRA",
+      "needsReviewShort": "BEHÖVER GRANSKAS",
+      "badShort": "DÅLIGT"
+    },
+    "recentFeedbacks": "Senaste feedback",
+    "noFeedbackYet": "Ingen feedback ännu.",
+    "feedbackMessages": {
+      "good": "Positiv feedback mottagen.",
+      "needsReview": "Behöver uppmärksamhet.",
+      "bad": "Negativ feedback mottagen."
+    },
+    "sessionsCount": "{{count}} pass",
+    "viewAllFeedbacks": "Visa all feedback",
+    "workoutsOverview": "Passöversikt",
+    "workoutsOverviewDescription": "Hantera passen i fliken Pass — översikten visar bara en snabb bild.",
+    "openWorkouts": "Öppna pass",
+    "totalWorkoutsSmall": "Totala pass",
+    "withFeedback": "Med feedback",
+    "avgDuration": "Snittlängd",
+    "durationSeconds": "{{seconds}}s",
+    "workoutsTip": "Tips: Använd fliken Pass för att redigera hela listan och se detaljer."
   },
   "home": {
     "callTrainer": "Ring tränaren",
@@ -38,15 +94,13 @@
     "fetchError": "Kunde inte hämta tränare.",
     "selectTrainer": "Välj tränare",
     "noTrainers": "Inga tränare tillgängliga.",
-    "fetchError": "Kunde inte hämta tränare.",
     "previousTrainer": "Föregående tränare",
     "nextTrainer": "Nästa tränare",
     "trainerCount": "Tränare {{current}} av {{total}}",
     "loadingAudio": "Laddar ljud...",
     "stopAudio": "Stoppa",
     "listenAudio": "Lyssna",
-    "selectDescription": "Byt med pilarna tills du hittar en röst som känns tydlig och trygg.",
-    "noTrainers": "Inga tränare hittades."
+    "selectDescription": "Byt med pilarna tills du hittar en röst som känns tydlig och trygg."
   },
   "intensitySlider": {
     "0": "Mycket Lätt",
@@ -71,15 +125,54 @@
     "beginnerFriendly": "Nybörjarvänlig",
     "kneeFriendly": "Knävänlig",
     "workoutTitle": "Träningspass",
+    "unnamedWorkout": "Namnlöst pass",
     "passMissing": "Pass saknas",
     "type": "Typ",
     "instructions": "Instruktioner",
     "time": "Tid",
     "seconds": "sekunder"
   },
+  "trainingSuite": {
+    "currentStreak": "Nuvarande svit",
+    "days": "{{count}} dagar",
+    "noHistory": "Ingen träningshistorik hittades."
+  },
+  "userInfo": {
+    "nameLabel": "Namn",
+    "intensityLabel": "Intensitet",
+    "level": "Nivå {{level}}",
+    "contextLabel": "Kontext"
+  },
+  "feedbackAdmin": {
+    "title": "Feedback",
+    "subtitle": "Granska feedback och betyg för passen.",
+    "goodWorkouts": "Bra pass",
+    "needsReview": "Behöver granskas",
+    "badWorkouts": "Dåliga pass",
+    "percent": "{{percent}}%",
+    "percentZero": "0%",
+    "searchPlaceholder": "Sök pass...",
+    "allStatus": "Alla statusar",
+    "good": "Bra",
+    "needsReviewSingle": "Behöver granskas",
+    "bad": "Dålig",
+    "highestRating": "Högst betyg",
+    "mostFeedback": "Mest feedback",
+    "alphaSort": "A → Ö",
+    "clear": "✕ Rensa",
+    "noWorkoutsFound": "Inga pass hittades",
+    "tryAdjustSearch": "Testa att ändra sökningen eller filtren",
+    "clearFilters": "Rensa filter",
+    "workoutSummary": "Pass #{{workoutId}} • {{count}} feedback",
+    "rating": "Betyg",
+    "dislike": "Ogillande",
+    "tooHard": "För svårt",
+    "showing": "Visar {{start}}–{{end}} av {{total}} pass{{plural}}"
+  },
   "sessionCall": {
-    "interruptThreshold": "Röd linje = interrupt threshold ",
+    "interruptThreshold": "Röd linje = interrupt threshold",
     "interruptThresholdTitle": "Interrupt Threshold",
+    "micRms": "mic rms",
     "soundOff": "Ljud av",
     "soundOn": "Ljud på",
     "controlbuttonLabelSettings": "Inställningar",
@@ -88,11 +181,28 @@
     "controlbuttonLabelMyInfo": "Min info",
     "controlbuttonLabelInstructions": "Instruktioner",
     "controlbuttonLabelEndCall": "Lägg på",
+    "trainerMissing": "Tränare saknas",
+    "workoutMissing": "Pass saknas",
     "suiteTitle": "Träningssvit",
     "suiteSubtitle": "Din senaste träningshistorik",
     "instructionsTitle": "Instruktioner",
     "myInfoTitle": "Min info",
     "myInfoSubtitle": "Det coachen vet om dig",
     "notLoggedIn": "Du är inte inloggad."
+  },
+  "sessionPage": {
+    "loading": "Laddar session...",
+    "genericError": "Något gick fel.",
+    "status": {
+      "idle": "Ansluter till tränaren...",
+      "liveIntro": "Coach-samtalet är igång.",
+      "waitingInstructionApproval": "Säg ja när du är redo för instruktionerna.",
+      "playingInstructions": "Spelar instruktioner.",
+      "askingReady": "Säg ja när du är redo för workouten.",
+      "playingWorkout": "Workout pågår.",
+      "collectingFeedback": "Tränaren sammanfattar och frågar hur det kändes.",
+      "completed": "Sessionen är sparad.",
+      "error": "Något gick fel."
+    }
   }
 }

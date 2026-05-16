@@ -40,7 +40,7 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
   return (
     <div className="mt-2">
       <div className="mb-0.5 flex justify-between font-sans text-[10px] text-white/60">
-        <span>mic rms</span>
+        <span>{t("sessionCall.micRms")}</span>
         <span ref={valRef}>0.000</span>
       </div>
       <div className="relative h-3 w-full overflow-hidden rounded bg-white/10">
@@ -52,11 +52,11 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
         <div
           className="absolute top-0 h-full w-px bg-red-400"
           style={{ left: `${thresholdPct}%` }}
-          title={`{t("sessionCall.interruptThresholdTitle")} ${INTERRUPT_THRESHOLD}`}
+          title={`${t("sessionCall.interruptThresholdTitle")} ${INTERRUPT_THRESHOLD}`}
         />
       </div>
       <div className="mt-0.5 font-sans text-[9px] text-white/40">
-        {t("sessionCall.interruptThreshold")} ${INTERRUPT_THRESHOLD}
+        {t("sessionCall.interruptThreshold")} {INTERRUPT_THRESHOLD}
       </div>
     </div>
   );
@@ -92,7 +92,7 @@ function formatTime(totalSeconds: number) {
 }
 
 function getTrainerName(session: CoachCallSession) {
-  return session.trainer?.name?.trim() || "Tränare saknas";
+  return session.trainer?.name?.trim() || "";
 }
 
 function getTrainerImage(session: CoachCallSession) {
@@ -105,7 +105,7 @@ function getTrainerImage(session: CoachCallSession) {
 }
 
 function getWorkoutName(session: CoachCallSession, workoutName?: string) {
-  return session.name ?? session.workoutName ?? workoutName ?? "Pass saknas";
+  return session.name ?? session.workoutName ?? workoutName ?? "";
 }
 
 function ControlButton({
@@ -214,7 +214,7 @@ export function SessionCall({
           </div>
 
           <h1 className="text-[clamp(25px,3.45cqh,34px)] font-extrabold leading-none text-[#100b2f]">
-            {trainerName}
+            {trainerName || t("sessionCall.trainerMissing")}
           </h1>
 
           <span className="sr-only">
@@ -222,7 +222,7 @@ export function SessionCall({
           </span>
 
           <p className="mt-[clamp(0.3rem,0.9cqh,0.7rem)] max-w-[320px] text-[clamp(11px,1.4cqh,14px)] font-bold leading-snug text-[#6f6a93]">
-            {displayWorkoutName}
+            {displayWorkoutName || t("sessionCall.workoutMissing")}
           </p>
 
           <p className="mt-1 max-w-[320px] text-[clamp(10px,1.25cqh,13px)] font-bold text-[#8a83aa]">

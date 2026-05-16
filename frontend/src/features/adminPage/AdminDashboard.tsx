@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchWorkouts } from "../../api/workouts";
 import { fetchWorkoutFeedbackSummaryWithToken } from "../../api/feedbacks";
 
@@ -194,6 +195,7 @@ export default function AdminDashboard({
   searchTerm = "",
 }: Props) {
   const { getToken } = useAuth();
+  const { t } = useTranslation();
 
   const { data: workouts = [] } = useQuery<Workout[]>({
     queryKey: ["workouts"],
@@ -256,7 +258,6 @@ export default function AdminDashboard({
     });
   }, [normalizedSearch, recentFeedbacks]);
 
-
   const pct = (n: number) =>
     totals.total > 0 ? Math.round((n / totals.total) * 100) : 0;
 
@@ -274,12 +275,12 @@ export default function AdminDashboard({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-[#5836d6]">
-                Total Workouts
+                {t("admin.totalWorkouts")}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {workouts.length}
               </p>
-              <p className="text-xs text-[#6f6a93]">All workouts in app</p>
+              <p className="text-xs text-[#6f6a93]">{t("admin.allWorkoutsInApp")}</p>
             </div>
           </div>
           <Sparkline color="#5836d6" points={SPARKLINES.purple} />
@@ -295,12 +296,12 @@ export default function AdminDashboard({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-green-600">
-                Good Feedback
+                {t("admin.goodFeedback")}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.goodCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{pct(totals.goodCount)}% of total</p>
+              <p className="text-xs text-[#6f6a93]">{t("admin.percentOfTotal", { percent: pct(totals.goodCount) })}</p>
             </div>
           </div>
           <Sparkline color="#22c55e" points={SPARKLINES.green} />
@@ -316,12 +317,12 @@ export default function AdminDashboard({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-orange-500">
-                Needs Review
+                {t("admin.needsReview")}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.nrCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{pct(totals.nrCount)}% of total</p>
+              <p className="text-xs text-[#6f6a93]">{t("admin.percentOfTotal", { percent: pct(totals.nrCount) })}</p>
             </div>
           </div>
           <Sparkline color="#f97316" points={SPARKLINES.orange} />
@@ -337,12 +338,12 @@ export default function AdminDashboard({
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-red-500">
-                Bad Feedback
+                {t("admin.badFeedback")}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold text-[#100b2f]">
                 {totals.badCount}
               </p>
-              <p className="text-xs text-[#6f6a93]">{pct(totals.badCount)}% of total</p>
+              <p className="text-xs text-[#6f6a93]">{t("admin.percentOfTotal", { percent: pct(totals.badCount) })}</p>
             </div>
           </div>
           <Sparkline color="#ef4444" points={SPARKLINES.red} />
@@ -354,8 +355,8 @@ export default function AdminDashboard({
         {/* Donut Chart */}
         <div className="rounded-2xl bg-white p-3.5 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-widest text-[#5836d6]">
-            Feedback Summary{" "}
-            <span className="font-normal text-[#6f6a93]">(Last 30 days)</span>
+            {t("admin.feedbackSummary")} {" "}
+            <span className="font-normal text-[#6f6a93]">{t("admin.last30Days")}</span>
           </p>
           <div className="mt-3 flex items-center gap-5">
             <DonutChart
@@ -368,7 +369,7 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-green-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">GOOD</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">{t("admin.feedbackStatus.goodShort")}</p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.goodCount} ({pct(totals.goodCount)}%)
                   </p>
@@ -377,7 +378,7 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-orange-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">NEEDS REVIEW</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">{t("admin.feedbackStatus.needsReviewShort")}</p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.nrCount} ({pct(totals.nrCount)}%)
                   </p>
@@ -386,7 +387,7 @@ export default function AdminDashboard({
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-sm bg-red-500" />
                 <div>
-                  <p className="text-xs font-semibold text-[#100b2f]">BAD</p>
+                  <p className="text-xs font-semibold text-[#100b2f]">{t("admin.feedbackStatus.badShort")}</p>
                   <p className="text-xs text-[#6f6a93]">
                     {totals.badCount} ({pct(totals.badCount)}%)
                   </p>
@@ -399,40 +400,21 @@ export default function AdminDashboard({
         {/* Recent Feedbacks */}
         <div className="rounded-2xl bg-white p-3.5 shadow-sm">
           <p className="text-sm font-bold uppercase tracking-widest text-[#5836d6]">
-            Recent Feedbacks
+            {t("admin.recentFeedbacks")}
           </p>
           <div className="mt-2 space-y-2">
             {filteredRecentFeedbacks.length === 0 && (
-              <p className="text-sm text-[#6f6a93]">No feedback yet.</p>
+              <p className="text-sm text-[#6f6a93]">{t("admin.noFeedbackYet")}</p>
             )}
             {filteredRecentFeedbacks.map((fb) => {
               const workout = workouts.find((w) => w.id === fb.workoutId);
               const type = workout?.type ?? "STRENGTH";
               const emoji = typeEmoji[type.toUpperCase()] ?? "🏋️";
-              const statusMsg =
-                fb.status === "GOOD"
-                  ? "Positive feedback received."
-                  : fb.status === "NEEDS_REVIEW"
-                    ? "Needs attention."
-                    : "Negative feedback received.";
-              return (
-                <div
-                  key={fb.workoutId}
-                  className="flex items-start gap-3"
-                >
-                  <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ${workoutTypeColor(type)}`}
-                  >
-                    {emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#100b2f]">
-                      {fb.workoutName}
                     </p>
                     <p className="truncate text-xs text-[#6f6a93]">{statusMsg}</p>
                   </div>
                   <span className="shrink-0 text-xs text-[#6f6a93]">
-                    {fb.feedbackCount} sessions
+                    {t("admin.sessionsCount", { count: fb.feedbackCount })}
                   </span>
                 </div>
               );
@@ -444,7 +426,7 @@ export default function AdminDashboard({
               onClick={onOpenFeedbacks}
               className="mt-2 flex w-full items-center justify-between text-left text-xs font-semibold text-[#5836d6] hover:underline"
             >
-              View all feedbacks
+                {t("admin.viewAllFeedbacks")}
               <svg
                 className="h-4 w-4"
                 viewBox="0 0 24 24"
@@ -464,10 +446,10 @@ export default function AdminDashboard({
         <div className="flex flex-col gap-4 border-b border-gray-100 px-4 py-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-widest text-[#5836d6]">
-              Workouts Overview
+              {t("admin.workoutsOverview")}
             </p>
             <p className="mt-1 text-xs text-[#6f6a93]">
-              Manage workouts in the dedicated Workouts view — the dashboard only shows a quick snapshot.
+              {t("admin.workoutsOverviewDescription")}
             </p>
           </div>
 
@@ -476,14 +458,14 @@ export default function AdminDashboard({
             onClick={onOpenWorkouts}
             className="rounded-xl bg-[#5836d6] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4b2cc2]"
           >
-            Open workouts
+            {t("admin.openWorkouts")}
           </button>
         </div>
 
         <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-3">
           <div className="rounded-2xl border border-[#ece5ff] bg-[#f8f5ff] p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#6f6a93]">
-              Total workouts
+              {t("admin.totalWorkoutsSmall")}
             </p>
             <p className="mt-2 text-3xl font-extrabold text-[#100b2f]">
               {workouts.length}
@@ -492,7 +474,7 @@ export default function AdminDashboard({
 
           <div className="rounded-2xl border border-[#ece5ff] bg-[#f8f5ff] p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#6f6a93]">
-              With feedback
+              {t("admin.withFeedback")}
             </p>
             <p className="mt-2 text-3xl font-extrabold text-[#100b2f]">
               {feedbackSummary.length}
@@ -501,16 +483,16 @@ export default function AdminDashboard({
 
           <div className="rounded-2xl border border-[#ece5ff] bg-[#f8f5ff] p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#6f6a93]">
-              Avg duration
+              {t("admin.avgDuration")}
             </p>
             <p className="mt-2 text-3xl font-extrabold text-[#100b2f]">
-              {averageDuration > 0 ? `${averageDuration}s` : "—"}
+              {averageDuration > 0 ? t("admin.durationSeconds", { seconds: averageDuration }) : "—"}
             </p>
           </div>
         </div>
 
         <div className="border-t border-gray-100 px-4 py-3 text-xs text-[#6f6a93]">
-          Tip: Use the Workouts tab for full list editing and details.
+          {t("admin.workoutsTip")}
         </div>
       </div>
     </div>

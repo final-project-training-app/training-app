@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchWorkoutFeedbackSummaryWithToken } from "../../api/feedbacks";
 
 type FeedbackSummaryRow = {
@@ -11,12 +12,6 @@ type FeedbackSummaryRow = {
   dislikeRate: number;
   tooHardRate: number;
   status: "GOOD" | "NEEDS_REVIEW" | "BAD";
-};
-
-const statusConfig: Record<FeedbackSummaryRow["status"], { label: string; icon: string; color: string; bgColor: string }> = {
-  GOOD: { label: "Good", icon: "✓", color: "text-emerald-600", bgColor: "bg-emerald-50 border-emerald-200" },
-  NEEDS_REVIEW: { label: "Needs Review", icon: "!", color: "text-amber-600", bgColor: "bg-amber-50 border-amber-200" },
-  BAD: { label: "Bad", icon: "✕", color: "text-red-600", bgColor: "bg-red-50 border-red-200" },
 };
 
 const barWidth = (value: number) => `${Math.max(0, Math.min(100, value))}%`;
@@ -39,6 +34,7 @@ function SkeletonRow() {
 
 export default function FeedbackAdminPage() {
   const { getToken } = useAuth();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"" | "GOOD" | "NEEDS_REVIEW" | "BAD">("");
   const [sortBy, setSortBy] = useState<"rating" | "feedback" | "name">("rating");
@@ -84,6 +80,30 @@ export default function FeedbackAdminPage() {
   const reviewCount = rows.filter((r) => r.status === "NEEDS_REVIEW").length;
   const badCount = rows.filter((r) => r.status === "BAD").length;
 
+  const statusConfig: Record<
+    FeedbackSummaryRow["status"],
+    { label: string; icon: string; color: string; bgColor: string }
+  > = {
+    GOOD: {
+      label: t("admin.feedbackStatus.good"),
+      icon: "✓",
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50 border-emerald-200",
+    },
+    NEEDS_REVIEW: {
+      label: t("admin.feedbackStatus.needsReview"),
+      icon: "!",
+      color: "text-amber-600",
+      bgColor: "bg-amber-50 border-amber-200",
+    },
+    BAD: {
+      label: t("admin.feedbackStatus.bad"),
+      icon: "✕",
+      color: "text-red-600",
+      bgColor: "bg-red-50 border-red-200",
+    },
+  };
+
   if (isError) return <p className="text-sm text-red-500">{(error as Error).message}</p>;
 
   return (
@@ -91,27 +111,27 @@ export default function FeedbackAdminPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-[#100b2f]">Feedback</h2>
-          <p className="mt-0.5 text-sm text-[#6f6a93]">Review workout feedback and ratings.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-[#100b2f]">{t("feedbackAdmin.title")}</h2>
+          <p className="mt-0.5 text-sm text-[#6f6a93]">{t("feedbackAdmin.subtitle")}</p>
         </div>
       </div>
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-[#ece5ff] bg-white p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Good Workouts</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">{t("feedbackAdmin.goodWorkouts")}</p>
           <p className="mt-2 text-3xl font-bold text-emerald-600">{goodCount}</p>
-          <p className="mt-1 text-xs text-[#9b96b8]">{totalFeedbacks > 0 ? `${((goodCount / rows.length) * 100).toFixed(0)}%` : "0%"}</p>
+          <p className="mt-1 text-xs text-[#9b96b8]">{totalFeedbacks > 0 ? t("feedbackAdmin.percent", { percent: ((goodCount / rows.length) * 100).toFixed(0) }) : t("feedbackAdmin.percentZero")}</p>
         </div>
         <div className="rounded-2xl border border-[#ece5ff] bg-white p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Needs Review</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">{t("feedbackAdmin.needsReview")}</p>
           <p className="mt-2 text-3xl font-bold text-amber-600">{reviewCount}</p>
-          <p className="mt-1 text-xs text-[#9b96b8]">{totalFeedbacks > 0 ? `${((reviewCount / rows.length) * 100).toFixed(0)}%` : "0%"}</p>
+          <p className="mt-1 text-xs text-[#9b96b8]">{totalFeedbacks > 0 ? t("feedbackAdmin.percent", { percent: ((reviewCount / rows.length) * 100).toFixed(0) }) : t("feedbackAdmin.percentZero")}</p>
         </div>
         <div className="rounded-2xl border border-[#ece5ff] bg-white p-4 shadow-sm">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Bad Workouts</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">{t("feedbackAdmin.badWorkouts")}</p>
           <p className="mt-2 text-3xl font-bold text-red-600">{badCount}</p>
-          <p className="mt-1 text-xs text-[#9b96b8]">{totalFeedbacks > 0 ? `${((badCount / rows.length) * 100).toFixed(0)}%` : "0%"}</p>
+          <p className="mt-1 text-xs text-[#9b96b8]">{totalFeedbacks > 0 ? t("feedbackAdmin.percent", { percent: ((badCount / rows.length) * 100).toFixed(0) }) : t("feedbackAdmin.percentZero")}</p>
         </div>
       </div>
 
@@ -123,7 +143,7 @@ export default function FeedbackAdminPage() {
           </svg>
           <input
             type="text"
-            placeholder="Search workouts..."
+            placeholder={t("feedbackAdmin.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             className="w-full rounded-lg border border-[#ece5ff] bg-[#faf8ff] py-2 pl-8 pr-3 text-sm text-[#100b2f] outline-none transition placeholder:text-[#c0bada] focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
@@ -135,10 +155,10 @@ export default function FeedbackAdminPage() {
           onChange={(e) => { setFilterStatus(e.target.value as any); setCurrentPage(1); }}
           className={`rounded-lg border py-2 pl-3 pr-6 text-xs font-semibold outline-none transition ${filterStatus ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]" : "border-[#ece5ff] bg-white text-[#6f6a93] hover:border-[#c4b8f5]"}`}
         >
-          <option value="">All Status</option>
-          <option value="GOOD">Good</option>
-          <option value="NEEDS_REVIEW">Needs Review</option>
-          <option value="BAD">Bad</option>
+          <option value="">{t("feedbackAdmin.allStatus")}</option>
+          <option value="GOOD">{t("feedbackAdmin.good")}</option>
+          <option value="NEEDS_REVIEW">{t("feedbackAdmin.needsReviewSingle")}</option>
+          <option value="BAD">{t("feedbackAdmin.bad")}</option>
         </select>
 
         <select
@@ -146,9 +166,9 @@ export default function FeedbackAdminPage() {
           onChange={(e) => { setSortBy(e.target.value as any); setCurrentPage(1); }}
           className="rounded-lg border border-[#ece5ff] bg-white py-2 pl-3 pr-6 text-xs font-semibold text-[#6f6a93] outline-none transition hover:border-[#c4b8f5]"
         >
-          <option value="rating">Highest Rating</option>
-          <option value="feedback">Most Feedback</option>
-          <option value="name">A → Z</option>
+          <option value="rating">{t("feedbackAdmin.highestRating")}</option>
+          <option value="feedback">{t("feedbackAdmin.mostFeedback")}</option>
+          <option value="name">{t("feedbackAdmin.alphaSort")}</option>
         </select>
 
         {(searchTerm || filterStatus) && (
@@ -157,7 +177,7 @@ export default function FeedbackAdminPage() {
             onClick={() => { setSearchTerm(""); setFilterStatus(""); setCurrentPage(1); }}
             className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-500 transition hover:bg-red-100"
           >
-            ✕ Clear
+            {t("feedbackAdmin.clear")}
           </button>
         )}
       </div>
@@ -171,8 +191,8 @@ export default function FeedbackAdminPage() {
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-[#ece5ff] bg-white py-16">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0ebff] text-2xl">🔍</div>
           <div className="text-center">
-            <p className="text-sm font-semibold text-[#100b2f]">No workouts found</p>
-            <p className="mt-0.5 text-xs text-[#9b96b8]">Try adjusting your search or filters</p>
+            <p className="text-sm font-semibold text-[#100b2f]">{t("feedbackAdmin.noWorkoutsFound")}</p>
+            <p className="mt-0.5 text-xs text-[#9b96b8]">{t("feedbackAdmin.tryAdjustSearch")}</p>
           </div>
           {(searchTerm || filterStatus) && (
             <button
@@ -180,7 +200,7 @@ export default function FeedbackAdminPage() {
               onClick={() => { setSearchTerm(""); setFilterStatus(""); setCurrentPage(1); }}
               className="rounded-lg bg-[#f0ebff] px-3 py-1.5 text-xs font-semibold text-[#5836d6] hover:bg-[#ede9ff]"
             >
-              Clear filters
+              {t("feedbackAdmin.clearFilters")}
             </button>
           )}
         </div>
@@ -197,7 +217,7 @@ export default function FeedbackAdminPage() {
                   <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                     <div className="flex-1 min-w-0">
                       <p className="truncate text-sm font-bold text-[#100b2f]">{row.workoutName}</p>
-                      <p className="mt-0.5 text-xs text-[#9b96b8]">Workout #{row.workoutId} • {row.feedbackCount} feedback</p>
+                      <p className="mt-0.5 text-xs text-[#9b96b8]">{t("feedbackAdmin.workoutSummary", { workoutId: row.workoutId, count: row.feedbackCount })}</p>
                     </div>
                     <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-full border ${cfg.bgColor} px-3 py-1.5 text-xs font-semibold ${cfg.color}`}>
                       <span>{cfg.icon}</span> {cfg.label}
@@ -207,7 +227,7 @@ export default function FeedbackAdminPage() {
                   <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Rating</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">{t("feedbackAdmin.rating")}</span>
                         <span className="text-xs font-bold text-[#100b2f]">{row.avgRating.toFixed(1)} ⭐</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-[#ede9ff] overflow-hidden">
@@ -217,7 +237,7 @@ export default function FeedbackAdminPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Dislike</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">{t("feedbackAdmin.dislike")}</span>
                         <span className="text-xs font-bold text-[#100b2f]">{row.dislikeRate.toFixed(0)}%</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-red-100 overflow-hidden">
@@ -227,7 +247,7 @@ export default function FeedbackAdminPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">Too Hard</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#b0a8d0]">{t("feedbackAdmin.tooHard")}</span>
                         <span className="text-xs font-bold text-[#100b2f]">{row.tooHardRate.toFixed(0)}%</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-amber-100 overflow-hidden">
@@ -244,7 +264,7 @@ export default function FeedbackAdminPage() {
           {filtered.length > PAGE_SIZE && (
             <div className="flex items-center justify-between gap-3 px-1">
               <p className="text-xs text-[#9b96b8]">
-                Showing {pageStart}–{pageEnd} of {filtered.length} workout{filtered.length !== 1 ? "s" : ""}
+                {t("feedbackAdmin.showing", { start: pageStart, end: pageEnd, total: filtered.length, plural: filtered.length !== 1 ? "s" : "" })}
               </p>
               <div className="flex items-center gap-1">
                 <button

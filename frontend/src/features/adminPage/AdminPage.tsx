@@ -1,12 +1,14 @@
 import { SignInButton, useAuth, useUser } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactElement, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import FeedbackAdminPage from "./FeedbackAdminPage";
 import MainWorkoutPage from "./MainWorkoutPage";
 import TrainerAdminPage from "./TrainerAdminPage";
 import AdminDashboard from "./AdminDashboard";
 import { useAdminPage } from "../../hooks/useAdminPage";
 import { useMyProfile } from "../../hooks/useMyProfile";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 type AdminView = "dashboard" | "workouts" | "trainers" | "feedback";
 
@@ -65,10 +67,12 @@ function SidebarSparkline() {
 }
 
 function SidebarActiveUsersCard() {
+  const { t } = useTranslation();
+
   return (
     <div className="m-3 rounded-2xl bg-[#f5f0ff] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
       <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6f6a93]">
-        Active Users
+        {t("admin.activeUsers")}
       </p>
       <div className="mt-3 flex items-start justify-between gap-3">
         <div>
@@ -85,7 +89,7 @@ function SidebarActiveUsersCard() {
             </p>
           </div>
           <p className="mt-1 text-xs font-medium text-[#5836d6]">
-            12% from yesterday
+            {t("admin.activeUsersChange")}
           </p>
         </div>
 
@@ -107,6 +111,7 @@ export default function AdminPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const { data: profile, isLoading: profileLoading } = useMyProfile();
+  const { t } = useTranslation();
   const isAdmin = profile?.isAdmin === true;
   const { isLoading, error } = useAdminPage(isAdmin);
 
@@ -125,7 +130,7 @@ export default function AdminPage() {
   if (!isLoaded || profileLoading) {
     return (
       <main className="flex h-dvh items-center justify-center bg-[#f5f0ff] text-[#100b2f]">
-        <p className="text-sm font-medium text-[#6f6a93]">Checking access...</p>
+        <p className="text-sm font-medium text-[#6f6a93]">{t("admin.checkingAccess")}</p>
       </main>
     );
   }
@@ -135,18 +140,18 @@ export default function AdminPage() {
       <main className="flex h-dvh items-center justify-center bg-[#f5f0ff] px-6 text-[#100b2f]">
         <section className="max-w-md rounded-3xl border border-[#d8ccff] bg-white/70 px-6 py-8 text-center shadow-lg backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#5836d6]">
-            Admin access
+            {t("admin.access")}
           </p>
-          <h1 className="mt-3 text-3xl font-extrabold">Sign in to continue</h1>
+          <h1 className="mt-3 text-3xl font-extrabold">{t("admin.signInTitle")}</h1>
           <p className="mt-3 text-sm leading-6 text-[#6f6a93]">
-            This page is only available to signed-in admin users.
+            {t("admin.signInDescription")}
           </p>
           <SignInButton>
             <button
               type="button"
               className="mt-6 rounded-full bg-[#5836d6] px-5 py-2.5 text-sm font-bold text-white transition active:scale-95"
             >
-              Log in
+              {t("auth.login")}
             </button>
           </SignInButton>
         </section>
@@ -159,18 +164,18 @@ export default function AdminPage() {
       <main className="flex h-dvh items-center justify-center bg-[#f5f0ff] px-6 text-[#100b2f]">
         <section className="max-w-md rounded-3xl border border-[#d8ccff] bg-white/70 px-6 py-8 text-center shadow-lg backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#5836d6]">
-            Admin access
+            {t("admin.access")}
           </p>
-          <h1 className="mt-3 text-3xl font-extrabold">You are not an admin</h1>
+          <h1 className="mt-3 text-3xl font-extrabold">{t("admin.notAdminTitle")}</h1>
           <p className="mt-3 text-sm leading-6 text-[#6f6a93]">
-            This page is reserved for admin users.
+            {t("admin.notAdminDescription")}
           </p>
           <button
             type="button"
             onClick={() => navigate({ to: "/" })}
             className="mt-6 rounded-full bg-[#5836d6] px-5 py-2.5 text-sm font-bold text-white transition active:scale-95"
           >
-            Go back home
+            {t("admin.goBackHome")}
           </button>
         </section>
       </main>
@@ -181,7 +186,7 @@ export default function AdminPage() {
     return (
       <main className="flex h-dvh items-center justify-center bg-[#f5f0ff] text-[#100b2f]">
         <p className="text-sm font-medium text-[#6f6a93]">
-          Loading admin data...
+          {t("admin.loading")}
         </p>
       </main>
     );
@@ -192,10 +197,10 @@ export default function AdminPage() {
       <main className="flex h-dvh items-center justify-center bg-[#f5f0ff] px-6 text-[#100b2f]">
         <section className="max-w-md rounded-3xl border border-[#d8ccff] bg-white/70 px-6 py-8 text-center shadow-lg backdrop-blur-sm">
           <h1 className="mt-3 text-3xl font-extrabold">
-            Could not load admin data
+            {t("admin.loadErrorTitle")}
           </h1>
           <p className="mt-3 text-sm leading-6 text-[#6f6a93]">
-            Please try again in a moment.
+            {t("admin.loadErrorDescription")}
           </p>
         </section>
       </main>
@@ -203,10 +208,10 @@ export default function AdminPage() {
   }
 
   const navItems: { view: AdminView; label: string; Icon: () => ReactElement }[] = [
-    { view: "dashboard", label: "Dashboard", Icon: IconDashboard },
-    { view: "workouts", label: "Workouts", Icon: IconWorkout },
-    { view: "trainers", label: "Trainers", Icon: IconTrainers },
-    { view: "feedback", label: "Feedback", Icon: IconFeedback },
+    { view: "dashboard", label: t("admin.nav.dashboard"), Icon: IconDashboard },
+    { view: "workouts", label: t("admin.nav.workouts"), Icon: IconWorkout },
+    { view: "trainers", label: t("admin.nav.trainers"), Icon: IconTrainers },
+    { view: "feedback", label: t("admin.nav.feedback"), Icon: IconFeedback },
   ];
 
   const switchView = (view: AdminView) => {
@@ -257,10 +262,10 @@ export default function AdminPage() {
           </div>
           <div>
             <p className="text-xs font-extrabold uppercase tracking-widest text-[#100b2f] leading-none">
-              Training App
+              {t("admin.brand")}
             </p>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6f6a93] leading-tight">
-              Admin Console
+              {t("admin.console")}
             </p>
           </div>
         </div>
@@ -286,6 +291,13 @@ export default function AdminPage() {
         <div className="mt-4">
           <SidebarActiveUsersCard />
         </div>
+
+        <div className="mt-auto border-t border-gray-100 px-3 py-4">
+          <p className="px-1 pb-2 text-[10px] font-semibold uppercase tracking-widest text-[#6f6a93]">
+            {t("admin.languageLabel")}
+          </p>
+          <LanguageSwitcher />
+        </div>
       </aside>
 
       {/* ──────── MAIN AREA ─────────────────────────────────────────────── */}
@@ -306,7 +318,7 @@ export default function AdminPage() {
             </svg>
             <input
               type="text"
-              placeholder="Search workouts, trainers, feedback..."
+              placeholder={t("admin.searchPlaceholder")}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               onKeyDown={(event) => {
@@ -338,7 +350,7 @@ export default function AdminPage() {
                 {userName}
               </p>
               <p className="text-xs leading-tight text-[#6f6a93]">
-                Superadmin
+                {t("admin.superadmin")}
               </p>
             </div>
             <svg
