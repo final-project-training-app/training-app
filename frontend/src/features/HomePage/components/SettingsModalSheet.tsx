@@ -155,7 +155,9 @@ function SettingsModalBody({
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [supportOpen, setSupportOpen] = useState(false);
-  const [supportInitialMode, setSupportInitialMode] = useState<"faq" | "form">("faq");
+  const [supportInitialMode, setSupportInitialMode] = useState<"faq" | "form">(
+    "faq",
+  );
 
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -259,17 +261,16 @@ function SettingsModalBody({
               <AppSheetSectionTitle>
                 {t("settings.getHelp")}
               </AppSheetSectionTitle>
-                <button
-                  className="rounded px-3 py-1 text-sm font-extrabold bg-[#5b3fd6] text-white hover:opacity-95"
-                  onClick={() => {
-                    // open support directly in form mode; close settings to avoid stacking
-                    setSupportInitialMode("form");
-                    setOpen(false);
-                    setSupportOpen(true);
-                  }}
-                >
-                  {t("settings.getHelpButton")}
-                </button>
+              <button
+                className="rounded px-3 py-1 text-sm font-extrabold bg-[#5b3fd6] text-white hover:opacity-95"
+                onClick={() => {
+                  // open support directly in form mode, stacked on top of Settings
+                  setSupportInitialMode("form");
+                  setSupportOpen(true);
+                }}
+              >
+                {t("settings.getHelpButton")}
+              </button>
             </div>
           </AppSheetCard>
           <AppSheetCard>
@@ -318,10 +319,6 @@ function SettingsModalBody({
       <SupportSheet
         open={supportOpen}
         setOpen={setSupportOpen}
-        onBack={() => {
-          setSupportOpen(false);
-          setOpen(true);
-        }}
         initialMode={supportInitialMode}
       />
     </>

@@ -37,7 +37,7 @@ export default function SupportSheet({
         `${t("support.emailIntro")}\n\n${message}\n\n${t("support.userEmail")} : ${userEmail}`,
       );
       // Open user's mail client with prefilled message (free, client-side)
-      window.location.href = `mailto:email@email.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:abc.123@gmail.com?subject=${subject}&body=${body}`;
       setFeedback(t("support.sentSuccess"));
       setMessage("");
     } catch (err) {
@@ -94,8 +94,12 @@ export default function SupportSheet({
         <AppSheetCard>
           <div className="flex items-start justify-between">
             <div className="pr-4">
-              <AppSheetSectionTitle>{t("support.faqTitle")}</AppSheetSectionTitle>
-              <AppSheetSectionText>{t("support.faqTextShort")}</AppSheetSectionText>
+              <AppSheetSectionTitle>
+                {t("support.faqTitle")}
+              </AppSheetSectionTitle>
+              <AppSheetSectionText>
+                {t("support.faqTextShort")}
+              </AppSheetSectionText>
             </div>
             <div>
               <button
@@ -110,8 +114,12 @@ export default function SupportSheet({
 
         {mode === "form" && (
           <AppSheetCard>
-            <AppSheetSectionTitle>{t("support.formTitle")}</AppSheetSectionTitle>
-            <AppSheetSectionText>{t("support.formDescription")}</AppSheetSectionText>
+            <AppSheetSectionTitle>
+              {t("support.formTitle")}
+            </AppSheetSectionTitle>
+            <AppSheetSectionText>
+              {t("support.formDescription")}
+            </AppSheetSectionText>
 
             <div className="mt-3 px-3 py-2.5">
               <textarea
@@ -123,7 +131,9 @@ export default function SupportSheet({
             </div>
 
             {feedback ? (
-              <AppSheetNotice tone={feedback.includes("✓") ? "success" : "danger"}>
+              <AppSheetNotice
+                tone={feedback.includes("✓") ? "success" : "danger"}
+              >
                 {feedback}
               </AppSheetNotice>
             ) : null}
