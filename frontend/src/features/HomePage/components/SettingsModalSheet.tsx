@@ -16,6 +16,7 @@ import {
   appSheetPrimaryButtonClass,
   appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
+import LanguageSwitcher from "../../../components/LanguageSwitcher";
 
 type ProfileSettings = {
   name?: string | null;
@@ -85,12 +86,12 @@ export default function SettingsModalSheet({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
+
   if (!open) {
     return null;
   }
-
-  const { isLoaded, isSignedIn } = useAuth();
-  const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
 
   if (isLoaded && !isSignedIn) {
     return (
@@ -126,13 +127,7 @@ export default function SettingsModalSheet({
     );
   }
 
-  return (
-    <SettingsModalBody
-      open={open}
-      setOpen={setOpen}
-      profile={user}
-    />
-  );
+  return <SettingsModalBody open={open} setOpen={setOpen} profile={user} />;
 }
 
 function SettingsModalBody({
@@ -237,6 +232,12 @@ function SettingsModalBody({
       }
     >
       <div className="space-y-4 pb-2">
+        <AppSheetCard>
+          <div className="flex justify-between items-center">
+            <AppSheetSectionTitle>Språk</AppSheetSectionTitle>
+            <LanguageSwitcher />
+          </div>
+        </AppSheetCard>
         <AppSheetCard>
           <label htmlFor="fullName" className="block">
             <AppSheetSectionTitle>Namn</AppSheetSectionTitle>
