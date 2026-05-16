@@ -14,9 +14,11 @@ import {
 export default function SupportSheet({
   open,
   setOpen,
+  onBack,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
+  onBack?: () => void;
 }) {
   const { t } = useTranslation();
   const { user } = useUser();
@@ -29,7 +31,9 @@ export default function SupportSheet({
   const submitIssue = () => {
     try {
       const subject = encodeURIComponent(t("support.emailSubject"));
-      const body = encodeURIComponent(`${t("support.emailIntro")}\n\n${message}\n\n${t("support.userEmail")} : ${userEmail}`);
+      const body = encodeURIComponent(
+        `${t("support.emailIntro")}\n\n${message}\n\n${t("support.userEmail")} : ${userEmail}`,
+      );
       // Open user's mail client with prefilled message (free, client-side)
       window.location.href = `mailto:email@email.com?subject=${subject}&body=${body}`;
       setFeedback(t("support.sentSuccess"));
@@ -60,7 +64,10 @@ export default function SupportSheet({
               </button>
               <button
                 className={appSheetSecondaryButtonClass}
-                onClick={() => setMode("faq")}
+                onClick={() => {
+                  setMode("faq");
+                  if (onBack) onBack();
+                }}
               >
                 {t("support.backToFAQ")}
               </button>
@@ -81,11 +88,11 @@ export default function SupportSheet({
           <div className="flex items-start justify-between">
             <div className="pr-4">
               <AppSheetSectionTitle>{t("support.faqTitle")}</AppSheetSectionTitle>
-              <AppSheetSectionText>{t("support.faqText")}</AppSheetSectionText>
+              <AppSheetSectionText>{t("support.faqTextShort")}</AppSheetSectionText>
             </div>
             <div>
               <button
-                className={appSheetPrimaryButtonClass}
+                className="rounded px-3 py-1 text-sm font-semibold text-[#5b3fd6] hover:bg-[#f5f0ff]"
                 onClick={() => setMode("form")}
               >
                 {t("support.contactUs")}

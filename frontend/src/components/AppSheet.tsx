@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useRef, useState } from "react";
 
 export const appSheetFieldClass =
   "rounded-2xl border border-[#ddd2ff] bg-[#f5f2fb]";
@@ -41,6 +41,8 @@ export function AppSheet({
   height = "default",
 }: AppSheetProps) {
   const scrollBodyRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef<number | null>(null);
+  const [dragY, setDragY] = useState(0);
 
   function handleWheel(event: React.WheelEvent<HTMLElement>) {
     const scrollBody = scrollBodyRef.current;
@@ -72,6 +74,31 @@ export function AppSheet({
     scrollBody.scrollBy({ top: event.deltaY, behavior: "auto" });
   }
 
+  function onTouchStart(e: React.TouchEvent) {
+    if (!open) return;
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (touchStartY.current == null) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    // Only track downward swipes
+    if (delta > 0) {
+      setDragY(Math.min(delta, 400));
+    }
+  }
+
+  function onTouchEnd() {
+    if (touchStartY.current == null) return;
+    const dragged = dragY;
+    touchStartY.current = null;
+    setDragY(0);
+    // Close if swiped down sufficiently
+    if (dragged > 120) {
+      onClose();
+    }
+  }
+
   return (
     <>
       <div
@@ -87,6 +114,9 @@ export function AppSheet({
 
       <section
         onWheel={handleWheel}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
         className={[
           "absolute inset-x-0 bottom-0 z-50 flex w-full flex-col",
           "app-sheet-surface overflow-hidden rounded-t-4xl",
@@ -97,6 +127,7 @@ export function AppSheet({
             ? "opacity-100 motion-safe:animate-[app-sheet-in_320ms_cubic-bezier(0.22,1,0.36,1)_both]"
             : "pointer-events-none translate-y-full opacity-0",
         ].join(" ")}
+        style={{ transform: open ? `translateY(${dragY}px)` : undefined }}
       >
         <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-[#c8bfeb]" />
 

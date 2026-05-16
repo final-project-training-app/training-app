@@ -62,24 +62,24 @@ function SettingsStatusSheet({
   return (
     <>
       <AppSheet
-      open={open}
-      title={t("settings.title")}
-      subtitle=""
-      icon={<Settings size={20} strokeWidth={2.4} />}
-      onClose={() => setOpen(false)}
-      height="compact"
-      footer={
-        <section className="space-y-2.5 pb-1">
-          <button
-            className={appSheetSecondaryButtonClass}
-            onClick={() => setOpen(false)}
-          >
-            {t("settings.close")}
-          </button>
-        </section>
-      }
-    >
-      <AppSheetNotice>{message}</AppSheetNotice>
+        open={open}
+        title={t("settings.title")}
+        subtitle=""
+        icon={<Settings size={20} strokeWidth={2.4} />}
+        onClose={() => setOpen(false)}
+        height="compact"
+        footer={
+          <section className="space-y-2.5 pb-1">
+            <button
+              className={appSheetSecondaryButtonClass}
+              onClick={() => setOpen(false)}
+            >
+              {t("settings.close")}
+            </button>
+          </section>
+        }
+      >
+        <AppSheetNotice>{message}</AppSheetNotice>
       </AppSheet>
     </>
   );
@@ -206,105 +206,120 @@ function SettingsModalBody({
   return (
     <>
       <AppSheet
-      open={open}
-      title={t("settings.title")}
-      subtitle={t("settings.subtitle")}
-      icon={<Settings size={20} strokeWidth={2.4} />}
-      onClose={() => setOpen(false)}
-      height="large"
-      footer={
-        <section className="space-y-2.5 pb-1">
-          <button
-            className={appSheetPrimaryButtonClass}
-            disabled={updateProfile.isPending}
-            onClick={handleSave}
-          >
-            {updateProfile.isPending
-              ? t("settings.saving")
-              : t("settings.saveChanges")}
-          </button>
-
-          {saveFeedback ? (
-            <AppSheetNotice
-              tone={saveFeedback.includes("✓") ? "success" : "danger"}
-            >
-              {saveFeedback}
-            </AppSheetNotice>
-          ) : null}
-
-          <button
-            className={appSheetSecondaryButtonClass}
-            onClick={() => setOpen(false)}
-          >
-            {t("settings.cancel")}
-          </button>
-        </section>
-      }
-    >
-      <div className="space-y-4 pb-2">
-        <AppSheetCard>
-          <div className="flex justify-between items-center">
-            <AppSheetSectionTitle>
-              {t("settings.language")}
-            </AppSheetSectionTitle>
-            <LanguageSwitcher
-              value={i18n.language}
-              onChange={(lng: string) => i18n.changeLanguage(lng)}
-            />
-          </div>
-        </AppSheetCard>
-        <AppSheetCard>
-          <div className="flex justify-between items-center">
-            <AppSheetSectionTitle>{t("settings.getHelp")}</AppSheetSectionTitle>
+        open={open}
+        title={t("settings.title")}
+        subtitle={t("settings.subtitle")}
+        icon={<Settings size={20} strokeWidth={2.4} />}
+        onClose={() => setOpen(false)}
+        height="large"
+        footer={
+          <section className="space-y-2.5 pb-1">
             <button
               className={appSheetPrimaryButtonClass}
-              onClick={() => setSupportOpen(true)}
+              disabled={updateProfile.isPending}
+              onClick={handleSave}
             >
-              {t("settings.getHelpButton")}
+              {updateProfile.isPending
+                ? t("settings.saving")
+                : t("settings.saveChanges")}
             </button>
-          </div>
-        </AppSheetCard>
-        <AppSheetCard>
-          <label htmlFor="fullName" className="block">
-            <AppSheetSectionTitle>
-              {t("settings.fullName")}
-            </AppSheetSectionTitle>
-          </label>
 
-          <AppSheetSectionText>
-            {t("settings.fullNameDescription")}
-          </AppSheetSectionText>
+            {saveFeedback ? (
+              <AppSheetNotice
+                tone={saveFeedback.includes("✓") ? "success" : "danger"}
+              >
+                {saveFeedback}
+              </AppSheetNotice>
+            ) : null}
 
-          <div className={`${appSheetFieldClass} mt-3 px-3 py-2.5`}>
-            <input
-              id="fullName"
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full border-none bg-transparent px-1 py-1 text-[16px] font-semibold text-[#221447] outline-none placeholder:text-[#8f89b3]"
+            <button
+              className={appSheetSecondaryButtonClass}
+              onClick={() => setOpen(false)}
+            >
+              {t("settings.cancel")}
+            </button>
+          </section>
+        }
+      >
+        <div className="space-y-4 pb-2">
+          <AppSheetCard>
+            <div className="flex justify-between items-center">
+              <AppSheetSectionTitle>
+                {t("settings.language")}
+              </AppSheetSectionTitle>
+              <LanguageSwitcher
+                value={i18n.language}
+                onChange={(lng: string) => i18n.changeLanguage(lng)}
+              />
+            </div>
+          </AppSheetCard>
+          <AppSheetCard>
+            <div className="flex justify-between items-center">
+              <AppSheetSectionTitle>
+                {t("settings.getHelp")}
+              </AppSheetSectionTitle>
+                <button
+                  className="rounded px-3 py-1 text-sm font-semibold text-[#5b3fd6] hover:bg-[#f5f0ff]"
+                  onClick={() => {
+                    setOpen(false);
+                    setSupportOpen(true);
+                  }}
+                >
+                  {t("settings.getHelpButton")}
+                </button>
+            </div>
+          </AppSheetCard>
+          <AppSheetCard>
+            <label htmlFor="fullName" className="block">
+              <AppSheetSectionTitle>
+                {t("settings.fullName")}
+              </AppSheetSectionTitle>
+            </label>
+
+            <AppSheetSectionText>
+              {t("settings.fullNameDescription")}
+            </AppSheetSectionText>
+
+            <div className={`${appSheetFieldClass} mt-3 px-3 py-2.5`}>
+              <input
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full border-none bg-transparent px-1 py-1 text-[16px] font-semibold text-[#221447] outline-none placeholder:text-[#8f89b3]"
+              />
+            </div>
+
+            <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
+              {fullName.trim()
+                ? t("settings.fullNameFound")
+                : t("settings.fullNameNotFound")}
+            </p>
+          </AppSheetCard>
+
+          <section>
+            <TrainerSelectionModal
+              selectedTrainerId={selectedTrainerId}
+              onTrainerSelect={setSelectedTrainerId}
             />
-          </div>
+          </section>
 
-          <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
-            {fullName.trim()
-              ? t("settings.fullNameFound")
-              : t("settings.fullNameNotFound")}
-          </p>
-        </AppSheetCard>
-
-        <section>
-          <TrainerSelectionModal
-            selectedTrainerId={selectedTrainerId}
-            onTrainerSelect={setSelectedTrainerId}
+          <IntensitySlider
+            value={intensityLevel}
+            onChange={setIntensityLevel}
           />
-        </section>
 
-        <IntensitySlider value={intensityLevel} onChange={setIntensityLevel} />
-
-        <ContextModel value={context} onChange={setContext} />
-      </div>
+          <ContextModel value={context} onChange={setContext} />
+        </div>
       </AppSheet>
-      <SupportSheet open={supportOpen} setOpen={setSupportOpen} />
+      <SupportSheet
+        open={supportOpen}
+        setOpen={setSupportOpen}
+        onBack={() => {
+          setSupportOpen(false);
+          setOpen(true);
+        }}
+      />
     </>
   );
 }
