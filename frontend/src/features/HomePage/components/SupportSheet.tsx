@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/react";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,10 +15,12 @@ export default function SupportSheet({
   open,
   setOpen,
   onBack,
+  initialMode,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
   onBack?: () => void;
+  initialMode?: "faq" | "form";
 }) {
   const { t } = useTranslation();
   const { user } = useUser();
@@ -43,6 +45,11 @@ export default function SupportSheet({
       setFeedback(t("support.sentError"));
     }
   };
+
+  // when opened, set initial mode if provided
+  useEffect(() => {
+    if (open && initialMode) setMode(initialMode);
+  }, [open, initialMode]);
 
   return (
     <AppSheet
