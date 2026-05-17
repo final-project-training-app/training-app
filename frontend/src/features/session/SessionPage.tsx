@@ -7,8 +7,11 @@ import type { CoachCallSession, SessionPanel } from "./types";
 import { useCoachSession } from "../ai-conversation";
 import type { CoachSessionStep } from "../ai-conversation";
 
+const LOADING_SESSION: CoachCallSession = { id: "", isAuthenticated: false, durationSeconds: 0 };
+
 export function SessionPage() {
   const { workoutId } = useParams({ from: "/session/$workoutId" });
+  const navigate = useNavigate();
 
   const {
     data: session,
@@ -18,14 +21,6 @@ export function SessionPage() {
   } = useCoachCallSession(workoutId);
   const { t } = useTranslation();
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-lg font-bold text-[#5b3fd6]">
-        {t("sessionPage.loading")}
-      </div>
-    );
-  }
-
   if (isError) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-base font-semibold text-[#221447]">
@@ -34,8 +29,22 @@ export function SessionPage() {
     );
   }
 
-  if (!session) {
-    return null;
+  if (isLoading || !session) {
+    return (
+      <SessionCall
+        session={LOADING_SESSION}
+        coachStatusLabel={t("sessionPage.calling")}
+        elapsedSeconds={0}
+        activePanel="none"
+        isLoading={true}
+        isAiSpeaking={true}
+        onSpeaker={() => {}}
+        onTrainingSuite={() => {}}
+        onInfo={() => {}}
+        onClosePanel={() => {}}
+        onEnd={() => void navigate({ to: "/" })}
+      />
+    );
   }
 
   return <ReadySessionPage session={session} />;

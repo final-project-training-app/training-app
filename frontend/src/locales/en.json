@@ -304,6 +304,7 @@
   },
   "sessionPage": {
     "loading": "Loading session...",
+    "calling": "Calling trainer...",
     "genericError": "Something went wrong.",
     "status": {
       "idle": "Connecting to the trainer...",
