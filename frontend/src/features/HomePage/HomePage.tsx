@@ -176,7 +176,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="home-stage relative h-full w-full overflow-hidden bg-[#f7f2ff] text-[#221447]">
+    <div className="home-stage relative h-full w-full overflow-hidden bg-(--brand-page-start) text-(--brand-ink)">
       {/* Background inside phone stage */}
       <img
         src={assets.background}
@@ -216,7 +216,7 @@ export default function HomePage() {
               onClick={() => {
                 void handleStartCall();
               }}
-              className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition hover:bg-[#4e35c0] active:scale-[0.98]"
+              className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-full bg-(--brand-primary) px-6 py-4 text-lg font-extrabold text-white shadow-[0_4px_20px_rgba(80,64,200,0.30)] transition hover:bg-(--brand-primary-strong) active:scale-[0.98]"
             >
               <Phone size={22} strokeWidth={2.5} />
               {t("home.callTrainer")}
@@ -227,7 +227,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => setOpen(true)}
-                  className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition hover:bg-[#e3d9ff] active:scale-[0.98]"
+                  className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-(--brand-muted) transition hover:text-(--brand-primary) active:scale-[0.98]"
                 >
                   <Settings size={16} strokeWidth={2.2} />
                   {t("home.settings")}
@@ -236,7 +236,7 @@ export default function HomePage() {
                 <SignInButton>
                   <button
                     type="button"
-                    className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition hover:bg-[#e3d9ff] active:scale-[0.98]"
+                    className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-(--brand-muted) transition hover:text-(--brand-primary) active:scale-[0.98]"
                   >
                     <LogIn size={16} strokeWidth={2.2} />
                     {t("auth.login")}

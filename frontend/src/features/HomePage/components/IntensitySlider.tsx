@@ -1,7 +1,6 @@
 import { Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
-  AppSheetCard,
   AppSheetSectionText,
   AppSheetSectionTitle,
 } from "../../../components/AppSheet";
@@ -28,9 +27,9 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
     ((safeValue - INTENSITY_MIN) / (INTENSITY_MAX - INTENSITY_MIN)) * 100;
 
   return (
-    <AppSheetCard>
-      <div className="mb-2 flex items-center gap-2 text-[#4f3bb8]">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-(--brand-primary)">
+    <div>
+      <div className="mb-2 flex items-center gap-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
           <Settings size={20} />
         </div>
 
@@ -45,10 +44,10 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
 
       <div className="mt-5 px-1">
         <div className="relative">
-          <div className="pointer-events-none absolute left-2 right-2 top-4 h-1 rounded-full bg-[#c7bfe8]" />
+          <div className="pointer-events-none absolute left-2 right-2 top-4 h-1 rounded-full bg-(--brand-border)" />
 
           <div
-            className="pointer-events-none absolute left-2 top-4 h-1 rounded-full bg-[#5b44c9] transition-all duration-150"
+            className="pointer-events-none absolute left-2 top-4 h-1 rounded-full bg-(--brand-primary) transition-all duration-150"
             style={{ width: `calc(${progress}% - 4px)` }}
           />
 
@@ -78,8 +77,8 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
                     <span
                       className={`block rounded-full transition-all duration-150 ${
                         stepValue === safeValue
-                          ? "h-9 w-9 border-4 border-[#5b44c9] bg-[#5b44c9]"
-                          : "h-7 w-7 border-[3px] border-[#b6abd9] bg-[#f5f2fb]"
+                          ? "h-9 w-9 border-4 border-(--brand-primary) bg-(--brand-primary)"
+                          : "h-7 w-7 border-[3px] border-(--brand-border-strong)/60 bg-(--brand-card-bg)"
                       }`}
                     />
                   </button>
@@ -88,29 +87,12 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-5 gap-1 text-center">
-            {steps.map((label, index) =>
-              (() => {
-                const stepValue = index + INTENSITY_MIN;
-
-                return (
-                  <span
-                    key={label}
-                    className={`text-[11px] font-bold leading-tight transition ${
-                      stepValue === safeValue
-                        ? "text-[#2b2277]"
-                        : "text-[#6f6a93]"
-                    }`}
-                  >
-                    {label}
-                  </span>
-                );
-              })(),
-            )}
-          </div>
+          <p className="mt-4 text-center text-[length:var(--text-lg)] font-extrabold text-(--brand-title-ink)">
+            {steps[safeValue - INTENSITY_MIN]}
+          </p>
         </div>
       </div>
-    </AppSheetCard>
+    </div>
   );
 };
 

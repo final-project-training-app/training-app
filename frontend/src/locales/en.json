@@ -83,8 +83,10 @@
     "getHelpButton": "Get help",
     "fullName": "Name",
     "fullNameDescription": "The name is used by the coach during the session.",
+    "fullNamePlaceholder": "Your first name",
     "fullNameFound": "The name is taken from your profile.",
     "noFullNameFound": "No name found.",
+    "saveAndClose": "Save and close",
     "close": "Close",
     "cancel": "Cancel"
   },
@@ -92,9 +94,7 @@
   "support": {
     "title": "Help & Support",
     "subtitle": "Find answers or contact support",
-    "faqTitle": "How to use the app",
-    "faqText": "Use Settings to customize your profile and intensity. For more help, contact support.",
-    "faqTextShort": "Adjust name, trainer and intensity in Settings. Contact support if needed.",
+    "faqTitle": "How the app works",
     "contactUs": "Contact support",
     "formTitle": "Send us a message",
     "formDescription": "Describe your issue and we'll get back to you.",
@@ -105,7 +105,17 @@
     "emailSubject": "Support request: Training App",
     "emailIntro": "Support request from the app:",
     "userEmail": "User email",
-    "backToFAQ": "Back to help"
+    "backToFAQ": "Back to help",
+    "help0Title": "Start a workout",
+    "help0Text": "Tap \"Call trainer\" on the home screen. The trainer will call you and guide you verbally through the entire session — just like a real phone call.",
+    "help1Title": "Talk freely with your trainer",
+    "help1Text": "You can interrupt, ask questions, or ask for a break at any time. Say something like \"can we slow down\" or \"what do I do now?\" and the trainer will respond straight away.",
+    "help2Title": "Choose your trainer",
+    "help2Text": "In Settings you'll find all available trainers. Try listening to a short preview and choose the voice and personality that suits you best.",
+    "help3Title": "Adjust intensity",
+    "help3Text": "Set how intense you want to train in Settings — from Very easy to Very intense. The trainer adapts the exercises to your level.",
+    "help4Title": "Add your name",
+    "help4Text": "Enter your first name in Settings so the trainer can address you personally during the session."
   },
 
   "trainerAdmin": {
@@ -152,6 +162,13 @@
     "selectTrainer": "Select a trainer",
     "clickRowHint": "Click a row to view details"
   },
+  "languages": {
+    "english": "English",
+    "swedish": "Swedish",
+    "somali": "Somali",
+    "tamil": "Tamil",
+    "urdu": "Urdu"
+  },
   "trainerSelection": {
     "notLoggedIn": "You are not logged in.",
     "title": "Select trainer",
@@ -161,6 +178,8 @@
     "selectTrainer": "Select trainer",
     "noTrainers": "No trainers found.",
     "noTrainersForFilter": "No trainers match the selected language.",
+    "allLanguages": "All languages",
+    "changeFilter": "Change",
     "previousTrainer": "Previous trainer",
     "nextTrainer": "Next trainer",
     "trainerCount": "Trainer {{current}} of {{total}}",

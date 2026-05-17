@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader,
-  SlidersHorizontal,
   Square,
   UserRound,
   Volume2,
@@ -15,7 +14,6 @@ import { fetchTrainersWithToken } from "../../../api/trainers";
 import { useVoicePlayer } from "../../../hooks/useVoicePlayer";
 import { useTranslation } from "react-i18next";
 import {
-  AppSheetCard,
   appSheetFieldClass,
   AppSheetNotice,
   AppSheetSectionText,
@@ -69,6 +67,7 @@ export default function TrainerSelectionModal({
     () => getStoredLanguageFilter() ?? [],
   );
   const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   // Carousel state
   const [centerIndex, setCenterIndex] = useState(0);
@@ -84,7 +83,6 @@ export default function TrainerSelectionModal({
   const isHorizontalSwipe = useRef<boolean | null>(null);
   const isSnappingBack = useRef(false);
   const hasInitialisedFilter = useRef(false);
-  const filterRef = useRef<HTMLDivElement>(null);
 
   const allLanguages = useMemo(() => {
     const langs = (trainers as Trainer[])
@@ -254,10 +252,10 @@ export default function TrainerSelectionModal({
           {t("trainerSelection.fetchError")}
         </AppSheetNotice>
       ) : trainers.length > 0 ? (
-        <AppSheetCard>
+        <div>
           {/* Header */}
-          <div className="flex items-start gap-3 text-[#4f3bb8]">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-(--brand-primary)">
+          <div className="flex items-start gap-3 text-(--brand-primary-deep)">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary)">
               <UserRound size={22} />
             </div>
             <div className="min-w-0 flex-1">
@@ -272,44 +270,46 @@ export default function TrainerSelectionModal({
             </div>
           </div>
 
-          {/* Discreet language filter */}
+          {/* Language filter — summary + popover */}
           {allLanguages.length > 1 && (
-            <div ref={filterRef} className="relative mt-1.5 ml-[52px]">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-medium text-[#a89fc8]">
-                  {activeLanguages.join(" · ")}
+            <div ref={filterRef} className="relative mt-2 ml-[52px]">
+              <div className="flex items-center gap-2">
+                <span className="text-[length:var(--text-xs)] font-semibold text-(--brand-body-ink)">
+                  {activeLanguages.length > 0
+                    ? activeLanguages.map((l) => t(`languages.${l}`, { defaultValue: l })).join(", ")
+                    : t("trainerSelection.allLanguages")}
                 </span>
                 <button
                   type="button"
                   onClick={() => setFilterOpen((prev) => !prev)}
-                  aria-expanded={filterOpen}
-                  className="text-[#a89fc8] transition hover:text-[#5b3fd6] active:scale-95"
+                  className="rounded-lg px-2.5 py-1 text-[length:var(--text-xs)] font-extrabold text-(--brand-primary) border border-(--brand-border-field) bg-(--brand-surface) hover:bg-(--brand-soft) transition active:scale-95"
                 >
-                  <SlidersHorizontal size={12} strokeWidth={2} />
+                  {t("trainerSelection.changeFilter")}
                 </button>
               </div>
+
               {filterOpen && (
-                <div className="absolute left-0 top-full z-10 mt-1.5 min-w-[160px] space-y-0.5 rounded-2xl border border-[#ddd2ff] bg-white p-2 shadow-lg">
+                <div className="absolute left-0 top-full z-10 mt-2 min-w-[180px] space-y-1 rounded-2xl border border-(--brand-border-field) bg-(--brand-surface) p-3 shadow-lg">
                   {allLanguages.map((lang) => (
                     <button
                       key={lang}
                       type="button"
                       onClick={() => toggleLanguage(lang)}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition hover:bg-[#f1ecff] active:scale-[0.98]"
+                      className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition hover:bg-(--brand-soft) active:scale-[0.98]"
                     >
                       <div
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] border-2 transition ${
                           activeLanguages.includes(lang)
-                            ? "border-[#5b3fd6] bg-[#5b3fd6]"
-                            : "border-[#ddd2ff] bg-white"
+                            ? "border-(--brand-primary) bg-(--brand-primary)"
+                            : "border-(--brand-border-field) bg-(--brand-surface)"
                         }`}
                       >
                         {activeLanguages.includes(lang) && (
                           <Check size={11} strokeWidth={3} className="text-white" />
                         )}
                       </div>
-                      <span className="text-[14px] font-semibold text-[#281d7a]">
-                        {lang}
+                      <span className="text-[length:var(--text-sm)] font-semibold text-(--brand-title-ink)">
+                        {t(`languages.${lang}`, { defaultValue: lang })}
                       </span>
                     </button>
                   ))}
@@ -332,7 +332,7 @@ export default function TrainerSelectionModal({
             <div className="relative mt-4">
               {/* 3-item sliding window — overflow hides prev and next */}
               <div
-                className="overflow-hidden rounded-3xl"
+                className="overflow-hidden rounded-3xl border border-(--brand-border)"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -360,7 +360,7 @@ export default function TrainerSelectionModal({
                           t={t}
                         />
                       ) : (
-                        <div className="aspect-[8/9] bg-[#efe7ff]" />
+                        <div className="aspect-[8/9] bg-(--brand-soft)" />
                       )}
                     </div>
                   ))}
@@ -372,7 +372,7 @@ export default function TrainerSelectionModal({
                 type="button"
                 onClick={() => navigate(-1)}
                 disabled={n <= 1}
-                className="absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#5b3fd6] bg-white/20 text-[#5b3fd6] shadow-[0_1px_8px_rgba(0,0,0,0.18)] backdrop-blur-[2px] transition active:scale-95 disabled:opacity-30"
+                className="absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-(--brand-primary) bg-white/20 text-(--brand-primary) shadow-[0_1px_8px_rgba(0,0,0,0.18)] backdrop-blur-[2px] transition active:scale-95 disabled:opacity-30"
                 aria-label={t("trainerSelection.previousTrainer")}
               >
                 <ChevronLeft size={20} strokeWidth={2.2} />
@@ -383,14 +383,14 @@ export default function TrainerSelectionModal({
                 type="button"
                 onClick={() => navigate(1)}
                 disabled={n <= 1}
-                className="absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#5b3fd6] bg-white/20 text-[#5b3fd6] shadow-[0_1px_8px_rgba(0,0,0,0.18)] backdrop-blur-[2px] transition active:scale-95 disabled:opacity-30"
+                className="absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-(--brand-primary) bg-white/20 text-(--brand-primary) shadow-[0_1px_8px_rgba(0,0,0,0.18)] backdrop-blur-[2px] transition active:scale-95 disabled:opacity-30"
                 aria-label={t("trainerSelection.nextTrainer")}
               >
                 <ChevronRight size={20} strokeWidth={2.2} />
               </button>
             </div>
           )}
-        </AppSheetCard>
+        </div>
       ) : (
         <AppSheetNotice>{t("trainerSelection.noTrainers")}</AppSheetNotice>
       )}
@@ -423,7 +423,7 @@ function TrainerCard({
   const isLoading = loadingId === id;
 
   return (
-    <div className="relative aspect-[8/9] overflow-hidden bg-[#efe7ff]">
+    <div className="relative aspect-[8/9] overflow-hidden bg-(--brand-soft)">
       {/* Image — left half, full height */}
       {trainer.imageSelect ? (
         <img
@@ -434,27 +434,27 @@ function TrainerCard({
           className="absolute bottom-0 left-0 h-full w-1/2 select-none object-contain object-bottom"
         />
       ) : (
-        <div className="absolute bottom-0 left-0 flex h-full w-1/2 items-end justify-center pb-4 text-[#7a68be]">
+        <div className="absolute bottom-0 left-0 flex h-full w-1/2 items-end justify-center pb-4 text-(--brand-muted)">
           <UserRound size={80} strokeWidth={1.2} />
         </div>
       )}
 
       {/* Top-right: name, title, language, selected indicator */}
       <div className="absolute right-0 top-0 w-1/2 px-4 pt-4 text-right">
-        <h3 className="text-[17px] font-extrabold leading-tight text-[#281d7a]">
+        <h3 className="text-[17px] font-extrabold leading-tight text-(--brand-title-ink)">
           {trainer.name}
         </h3>
-        <p className="text-[12px] font-semibold text-[#5c567f]">
+        <p className="text-[12px] font-semibold text-(--brand-body-ink)">
           {t("trainerSelection.trainerTitle")}
         </p>
         {trainer.language && (
-          <p className="text-[12px] font-semibold text-[#7a68be]">
-            {trainer.language}
+          <p className="text-[12px] font-semibold text-(--brand-muted)">
+            {t(`languages.${trainer.language}`)}
           </p>
         )}
         {isSelected && (
           <div className="mt-2 flex justify-end">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#5c35c4] text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-(--brand-primary-deep) text-white">
               <Check size={18} strokeWidth={3} />
             </div>
           </div>
@@ -471,7 +471,7 @@ function TrainerCard({
           className={`flex w-full items-center justify-center gap-1.5 ${appSheetFieldClass} px-2 py-2 text-[13px] font-extrabold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
             isPlaying
               ? "border-rose-300 bg-rose-50 text-rose-800"
-              : "text-[#3f2a7a]"
+              : "text-(--brand-title-ink)"
           }`}
         >
           {isLoading ? (
@@ -494,7 +494,7 @@ function TrainerCard({
 
         {/* Select / selected */}
         {isSelected ? (
-          <p className="flex w-full items-center justify-center gap-1 py-2 text-center text-[13px] font-extrabold text-[#5c35c4]">
+          <p className="flex w-full items-center justify-center gap-1 py-2 text-center text-[13px] font-extrabold text-(--brand-primary-deep)">
             <Check size={14} strokeWidth={3} />
             {t("trainerSelection.selected")}
           </p>
@@ -502,7 +502,7 @@ function TrainerCard({
           <button
             type="button"
             onClick={onSelect}
-            className="flex w-full items-center justify-center rounded-2xl bg-[#5b3fd6] px-2 py-2 text-[13px] font-extrabold text-white transition active:scale-95"
+            className="flex w-full items-center justify-center rounded-2xl bg-(--brand-primary) px-2 py-2.5 text-[length:var(--text-sm)] font-extrabold text-white transition active:scale-95"
           >
             {t("trainerSelection.selectButton")}
           </button>

@@ -1,33 +1,25 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from "@clerk/react";
 import { useTranslation } from "react-i18next";
 import {
   AppSheet,
-  AppSheetCard,
   AppSheetNotice,
   AppSheetSectionText,
   AppSheetSectionTitle,
   appSheetPrimaryButtonClass,
-  appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
 
 export default function SupportSheet({
   open,
   setOpen,
-  onBack,
-  initialMode,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
-  onBack?: () => void;
-  initialMode?: "faq" | "form";
 }) {
   const { t } = useTranslation();
   const { user } = useUser();
   const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
 
-  const [mode, setMode] = useState<"faq" | "form">("faq");
   const [message, setMessage] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -37,7 +29,6 @@ export default function SupportSheet({
       const body = encodeURIComponent(
         `${t("support.emailIntro")}\n\n${message}\n\n${t("support.userEmail")} : ${userEmail}`,
       );
-      // Open user's mail client with prefilled message (free, client-side)
       window.location.href = `mailto:abc.123@gmail.com?subject=${subject}&body=${body}`;
       setFeedback(t("support.sentSuccess"));
       setMessage("");
@@ -47,11 +38,6 @@ export default function SupportSheet({
     }
   };
 
-  // when opened, set initial mode if provided
-  useEffect(() => {
-    if (open && initialMode && mode !== initialMode) setMode(initialMode);
-  }, [open, initialMode, mode]);
-
   return (
     <AppSheet
       open={open}
@@ -60,86 +46,54 @@ export default function SupportSheet({
       onClose={() => setOpen(false)}
       height="large"
       footer={
-        <section className="space-y-2.5 pb-1">
-          {mode === "form" ? (
-            <>
-              <button
-                className={appSheetPrimaryButtonClass}
-                onClick={submitIssue}
-                disabled={!message.trim()}
-              >
-                {t("support.submit")}
-              </button>
-              <button
-                className={appSheetSecondaryButtonClass}
-                onClick={() => {
-                  setMode("faq");
-                  if (onBack) onBack();
-                }}
-              >
-                {t("support.backToFAQ")}
-              </button>
-            </>
-          ) : (
-            <button
-              className={appSheetSecondaryButtonClass}
-              onClick={() => setOpen(false)}
-            >
-              {t("settings.close")}
-            </button>
-          )}
+        <section className="pb-1">
+          <button
+            className={appSheetPrimaryButtonClass}
+            onClick={submitIssue}
+            disabled={!message.trim()}
+          >
+            {t("support.submit")}
+          </button>
         </section>
       }
     >
-      <div className="space-y-4 pb-2">
-        <AppSheetCard>
-          <div className="flex items-start justify-between">
-            <div className="pr-4">
-              <AppSheetSectionTitle>
-                {t("support.faqTitle")}
-              </AppSheetSectionTitle>
-              <AppSheetSectionText>
-                {t("support.faqTextShort")}
-              </AppSheetSectionText>
-            </div>
-            <div>
-              <button
-                className="rounded px-3 py-1 text-sm font-semibold text-[#5b3fd6] hover:bg-[#f5f0ff]"
-                onClick={() => setMode("form")}
-              >
-                {t("support.contactUs")}
-              </button>
-            </div>
+      <div className="divide-y divide-(--brand-border)/60 pb-2">
+        <section className="pb-3 pt-1">
+          <AppSheetSectionTitle>{t("support.faqTitle")}</AppSheetSectionTitle>
+        </section>
+
+        {([0, 1, 2, 3, 4] as const).map((i) => (
+          <section key={i} className="py-4">
+            <h4 className="text-[length:var(--text-base)] font-extrabold text-(--brand-title-ink)">
+              {t(`support.help${i}Title`)}
+            </h4>
+            <p className="mt-1 text-[length:var(--text-sm)] font-semibold leading-relaxed text-(--brand-body-ink)">
+              {t(`support.help${i}Text`)}
+            </p>
+          </section>
+        ))}
+
+        <section className="py-5">
+          <AppSheetSectionTitle>{t("support.formTitle")}</AppSheetSectionTitle>
+          <AppSheetSectionText>{t("support.formDescription")}</AppSheetSectionText>
+
+          <div className="mt-3">
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={t("support.placeholder") || ""}
+              className="w-full min-h-[120px] resize-vertical rounded-2xl border border-(--brand-border-field) bg-(--brand-field-bg) px-4 py-3 text-[length:var(--text-base)] text-(--brand-ink) outline-none placeholder:text-(--brand-muted) focus:border-(--brand-border-strong) transition"
+            />
           </div>
-        </AppSheetCard>
 
-        {mode === "form" && (
-          <AppSheetCard>
-            <AppSheetSectionTitle>
-              {t("support.formTitle")}
-            </AppSheetSectionTitle>
-            <AppSheetSectionText>
-              {t("support.formDescription")}
-            </AppSheetSectionText>
-
-            <div className="mt-3 px-3 py-2.5">
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder={t("support.placeholder") || ""}
-                className="w-full min-h-[120px] resize-vertical rounded-md border px-3 py-2 text-sm bg-transparent text-[var(--brand-ink)] outline-none"
-              />
-            </div>
-
-            {feedback ? (
-              <AppSheetNotice
-                tone={feedback.includes("✓") ? "success" : "danger"}
-              >
+          {feedback ? (
+            <div className="mt-3">
+              <AppSheetNotice tone={feedback.includes("✓") ? "success" : "danger"}>
                 {feedback}
               </AppSheetNotice>
-            ) : null}
-          </AppSheetCard>
-        )}
+            </div>
+          ) : null}
+        </section>
       </div>
     </AppSheet>
   );

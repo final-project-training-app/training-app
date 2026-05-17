@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SignOutButton, useAuth } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
-import { Settings } from "lucide-react";
+import { CircleHelp, Globe, Settings, User } from "lucide-react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import TrainerSelectionModal from "./TrainerSelectionModal";
@@ -12,11 +12,9 @@ const SHEET_CLOSE_DURATION_MS = 350;
 
 import {
   AppSheet,
-  AppSheetCard,
   AppSheetNotice,
   AppSheetSectionText,
   AppSheetSectionTitle,
-  appSheetFieldClass,
   appSheetPrimaryButtonClass,
   appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
@@ -170,9 +168,6 @@ function SettingsModalBody({
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [supportOpen, setSupportOpen] = useState(false);
-  const [supportInitialMode, setSupportInitialMode] = useState<"faq" | "form">(
-    "faq",
-  );
 
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
@@ -229,7 +224,7 @@ function SettingsModalBody({
         trainerId: Number(selectedTrainerId),
       });
 
-      showFeedback(t("settings.saveSuccess"));
+      setOpen(false);
     } catch (error) {
       console.error("[SettingsModalSheet] Save failed:", error);
       showFeedback(t("settings.saveError"));
@@ -247,6 +242,9 @@ function SettingsModalBody({
         height="large"
         footer={
           <section className="space-y-2.5 pb-1">
+            {saveFeedback ? (
+              <AppSheetNotice tone="danger">{saveFeedback}</AppSheetNotice>
+            ) : null}
             <button
               className={appSheetPrimaryButtonClass}
               disabled={updateProfile.isPending}
@@ -254,124 +252,119 @@ function SettingsModalBody({
             >
               {updateProfile.isPending
                 ? t("settings.saving")
-                : t("settings.saveChanges")}
-            </button>
-
-            {saveFeedback ? (
-              <AppSheetNotice
-                tone={saveFeedback.includes("✓") ? "success" : "danger"}
-              >
-                {saveFeedback}
-              </AppSheetNotice>
-            ) : null}
-
-            <button
-              className={appSheetSecondaryButtonClass}
-              onClick={() => setOpen(false)}
-            >
-              {t("settings.cancel")}
+                : t("settings.saveAndClose")}
             </button>
           </section>
         }
       >
-        <div className="space-y-4 pb-2">
-          <AppSheetCard>
-            <div className="flex justify-between items-center">
-              <AppSheetSectionTitle>
-                {t("settings.language")}
-              </AppSheetSectionTitle>
-              <LanguageSwitcher
-                value={i18n.language}
-                onChange={(lng: string) => i18n.changeLanguage(lng)}
-              />
+        <div className="divide-y divide-(--brand-border)/60 pb-2">
+          <section className="py-6">
+            <div className="mb-2 flex items-center gap-2">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
+                <User size={20} />
+              </div>
+              <label htmlFor="fullName">
+                <AppSheetSectionTitle>
+                  {t("settings.fullName")}
+                </AppSheetSectionTitle>
+              </label>
             </div>
-          </AppSheetCard>
-          <AppSheetCard>
-            <div className="flex justify-between items-center">
-              <AppSheetSectionTitle>
-                {t("settings.getHelp")}
-              </AppSheetSectionTitle>
-              <button
-                className="rounded px-3 py-1 text-sm font-extrabold bg-[#5b3fd6] text-white hover:opacity-95"
-                onClick={() => {
-                  // open support directly in form mode, stacked on top of Settings
-                  setSupportInitialMode("form");
-                  setSupportOpen(true);
-                }}
-              >
-                {t("settings.getHelpButton")}
-              </button>
-            </div>
-          </AppSheetCard>
-          <AppSheetCard>
-            <label htmlFor="fullName" className="block">
-              <AppSheetSectionTitle>
-                {t("settings.fullName")}
-              </AppSheetSectionTitle>
-            </label>
 
             <AppSheetSectionText>
               {t("settings.fullNameDescription")}
             </AppSheetSectionText>
 
-            <div className={`${appSheetFieldClass} mt-3 px-3 py-2.5`}>
-              <input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full border-none bg-transparent px-1 py-1 text-[16px] font-semibold text-[#221447] outline-none placeholder:text-[#8f89b3]"
-              />
-            </div>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder={t("settings.fullNamePlaceholder")}
+              className="mt-3 w-full rounded-2xl border border-(--brand-border-field) bg-(--brand-control) px-4 py-3.5 text-[length:var(--text-base)] font-semibold text-(--brand-ink) outline-none placeholder:text-(--brand-muted) focus:border-(--brand-border-strong) transition"
+            />
 
-            <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
+            <p className="mt-2 text-[length:var(--text-xs)] font-semibold leading-snug text-(--brand-body-ink)">
               {fullName.trim()
                 ? t("settings.fullNameFound")
-                : t("settings.fullNameNotFound")}
+                : t("settings.noFullNameFound")}
             </p>
-          </AppSheetCard>
+          </section>
 
-          <section>
+          <section className="py-6">
             <TrainerSelectionModal
               selectedTrainerId={selectedTrainerId}
               onTrainerSelect={setSelectedTrainerId}
             />
           </section>
 
-          <IntensitySlider
-            value={intensityLevel}
-            onChange={setIntensityLevel}
-          />
+          <section className="py-6">
+            <IntensitySlider
+              value={intensityLevel}
+              onChange={setIntensityLevel}
+            />
+          </section>
 
-          <ContextModel value={context} onChange={setContext} />
+          <section className="py-6">
+            <ContextModel value={context} onChange={setContext} />
+          </section>
 
-          <AppSheetCard>
-            <div className="space-y-2">
-              {profile.isAdmin && (
-                <button
-                  className={appSheetSecondaryButtonClass}
-                  onClick={() => {
-                    setOpen(false);
-                    void navigate({ to: "/admin/workouts" });
-                  }}
-                >
-                  {t("admin.page")}
-                </button>
-              )}
-              <SignOutButton>
-                <button className={appSheetSecondaryButtonClass}>
-                  {t("auth.logout")}
-                </button>
-              </SignOutButton>
+          <section className="py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
+                  <Globe size={20} />
+                </div>
+                <AppSheetSectionTitle>
+                  {t("settings.language")}
+                </AppSheetSectionTitle>
+              </div>
+              <LanguageSwitcher
+                value={i18n.language}
+                onChange={(lng: string) => i18n.changeLanguage(lng)}
+              />
             </div>
-          </AppSheetCard>
+          </section>
+
+          <section className="py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
+                  <CircleHelp size={20} />
+                </div>
+                <AppSheetSectionTitle>
+                  {t("settings.getHelp")}
+                </AppSheetSectionTitle>
+              </div>
+              <button
+                className="rounded-full px-4 py-2 text-[length:var(--text-sm)] font-extrabold bg-(--brand-primary) text-white hover:opacity-95 transition"
+                onClick={() => setSupportOpen(true)}
+              >
+                {t("settings.getHelpButton")}
+              </button>
+            </div>
+          </section>
+
+          <section className="pt-6 pb-4 space-y-2">
+            {profile.isAdmin && (
+              <button
+                className={appSheetSecondaryButtonClass}
+                onClick={() => {
+                  setOpen(false);
+                  void navigate({ to: "/admin/workouts" });
+                }}
+              >
+                {t("admin.page")}
+              </button>
+            )}
+            <SignOutButton>
+              <button className={appSheetSecondaryButtonClass}>
+                {t("auth.logout")}
+              </button>
+            </SignOutButton>
+          </section>
         </div>
       </AppSheet>
-      <SupportSheet
-        open={supportOpen}
-        setOpen={setSupportOpen}
-        initialMode={supportInitialMode}
-      />
+      <SupportSheet open={supportOpen} setOpen={setSupportOpen} />
     </>
   );
 }

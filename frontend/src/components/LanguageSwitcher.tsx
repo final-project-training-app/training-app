@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const LANGUAGES = [
@@ -22,27 +23,23 @@ export default function LanguageSwitcher({
   };
 
   return (
-    <div className="flex gap-2">
-      {LANGUAGES.map((lang) => {
-        const isActive = activeLang === lang.code;
-
-        return (
-          <button
-            key={lang.code}
-            onClick={() => handleChange(lang.code)}
-            className={`
-              px-3 py-1.5 rounded-xl text-sm font-extrabold transition active:scale-[0.97]
-              ${
-                isActive
-                  ? "bg-[#5b3fd6] text-white hover:bg-[#4e35c0]"
-                  : "border border-[#c5b0f0] bg-[#f0ecfc] text-[#4d2a7a] hover:bg-[#e3d9ff]"
-              }
-            `}
-          >
+    <div className="relative">
+      <select
+        value={activeLang}
+        onChange={(e) => handleChange(e.target.value)}
+        className="appearance-none rounded-xl border border-(--brand-btn-secondary-border) bg-(--brand-btn-secondary-bg) px-3 py-2 pr-8 text-[length:var(--text-sm)] font-extrabold text-(--brand-btn-secondary-text) cursor-pointer focus:outline-none focus:border-(--brand-border-strong) transition"
+      >
+        {LANGUAGES.map((lang) => (
+          <option key={lang.code} value={lang.code}>
             {lang.label}
-          </button>
-        );
-      })}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        size={14}
+        strokeWidth={2.5}
+        className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-(--brand-btn-secondary-text)"
+      />
     </div>
   );
 }

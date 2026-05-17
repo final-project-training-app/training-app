@@ -83,8 +83,10 @@
     "getHelpButton": "Hjälp",
     "fullName": "Namn",
     "fullNameDescription": "Namnet används av coachen under samtalet.",
+    "fullNamePlaceholder": "Ditt förnamn",
     "fullNameFound": "Namnet är hämtat från din profil.",
     "noFullNameFound": "Ingen namnuppgift hittades.",
+    "saveAndClose": "Spara och stäng",
     "close": "Stäng",
     "cancel": "Avbryt"
   },
@@ -92,9 +94,7 @@
   "support": {
     "title": "Hjälp & support",
     "subtitle": "Hitta svar eller kontakta support",
-    "faqTitle": "Hur använder jag appen",
-    "faqText": "Använd Inställningar för att anpassa din profil och intensitet. Kontakta support vid behov.",
-    "faqTextShort": "Anpassa namn, tränare och intensitet i Inställningar. Kontakta support vid behov.",
+    "faqTitle": "Så här fungerar appen",
     "contactUs": "Kontakta support",
     "formTitle": "Skicka ett meddelande",
     "formDescription": "Beskriv ditt problem så återkommer vi.",
@@ -105,7 +105,17 @@
     "emailSubject": "Supportförfrågan: Training App",
     "emailIntro": "Supportförfrågan från appen:",
     "userEmail": "Användarens e-post",
-    "backToFAQ": "Tillbaka till hjälp"
+    "backToFAQ": "Tillbaka till hjälp",
+    "help0Title": "Starta ett träningspass",
+    "help0Text": "Tryck på \"Ring tränaren\" på startsidan. Tränaren ringer upp och guidar dig muntligt genom hela passet — precis som ett riktigt telefonsamtal.",
+    "help1Title": "Prata fritt med din tränare",
+    "help1Text": "Du kan avbryta, ställa frågor eller be om paus när som helst. Säg till exempel \"kan vi ta det lite lugnare\" eller \"vad gör jag nu?\" så svarar tränaren direkt.",
+    "help2Title": "Välj din tränare",
+    "help2Text": "I Inställningar hittar du alla tillgängliga tränare. Prova att lyssna på en kort presentation och välj den röst och personlighet som passar dig bäst.",
+    "help3Title": "Anpassa intensiteten",
+    "help3Text": "Ange i Inställningar hur intensivt du vill träna — från Mycket lätt till Mycket intensivt. Tränaren anpassar övningarna efter din nivå.",
+    "help4Title": "Lägg till ditt namn",
+    "help4Text": "Skriv in ditt förnamn i Inställningar så att tränaren kan tilltala dig personligt under passet."
   },
   "trainerAdmin": {
     "title": "Tränare",
@@ -151,6 +161,13 @@
     "selectTrainer": "Välj tränare",
     "clickRowHint": "Klicka på en rad för att se detaljer"
   },
+  "languages": {
+    "english": "Engelska",
+    "swedish": "Svenska",
+    "somali": "Somaliska",
+    "tamil": "Tamilska",
+    "urdu": "Urdu"
+  },
   "trainerSelection": {
     "notLoggedIn": "Du är inte inloggad.",
     "title": "Välj tränare",
@@ -160,6 +177,8 @@
     "selectTrainer": "Välj tränare",
     "noTrainers": "Inga tränare tillgängliga.",
     "noTrainersForFilter": "Inga tränare matchar valt språk.",
+    "allLanguages": "Alla språk",
+    "changeFilter": "Ändra",
     "previousTrainer": "Föregående tränare",
     "nextTrainer": "Nästa tränare",
     "trainerCount": "Tränare {{current}} av {{total}}",

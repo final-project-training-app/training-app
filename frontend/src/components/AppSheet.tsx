@@ -2,16 +2,16 @@ import { X } from "lucide-react";
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export const appSheetFieldClass =
-  "rounded-2xl border border-[#ddd2ff] bg-[#f5f2fb]";
+  "rounded-2xl border border-(--brand-border-field) bg-(--brand-field-bg)";
 
 export const appSheetCardClass =
-  "rounded-3xl border border-[#e3d9ff] bg-[#f5f2fb] p-4";
+  "rounded-2xl border border-(--brand-border-light) bg-(--brand-card-bg) p-4";
 
 export const appSheetPrimaryButtonClass =
-  "w-full rounded-2xl bg-[#5b3fd6] px-4 py-3.5 text-[16px] font-extrabold text-white transition hover:bg-[#4e35c0] active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-70";
+  "w-full rounded-full bg-(--brand-primary) px-4 py-4 text-[length:var(--text-base)] font-extrabold text-white shadow-[0_2px_12px_rgba(80,64,200,0.28)] transition hover:bg-(--brand-primary-strong) active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-70";
 
 export const appSheetSecondaryButtonClass =
-  "w-full rounded-xl border border-[#c5b0f0] bg-[#f0ecfc] px-4 py-3 text-[15px] font-extrabold text-[#4d2a7a] transition hover:bg-[#e3d9ff] active:scale-[0.985] active:bg-[#ddd2ff]";
+  "w-full rounded-2xl border border-(--brand-btn-secondary-border) bg-(--brand-btn-secondary-bg) px-4 py-3.5 text-[length:var(--text-sm)] font-extrabold text-(--brand-btn-secondary-text) transition hover:bg-(--brand-btn-secondary-hover) active:scale-[0.985]";
 
 type AppSheetProps = {
   open: boolean;
@@ -44,6 +44,7 @@ export function AppSheet({
   const backdropRef = useRef<HTMLDivElement>(null);
   const scrollBodyRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
+  const mouseStartY = useRef<number | null>(null);
   // Drag position stored in a ref – no re-render needed during drag.
   const dragY = useRef(0);
   // Guards against animating the close on initial mount (open=false from birth).
@@ -148,6 +149,12 @@ export function AppSheet({
     touchStartY.current = e.touches[0].clientY;
   }
 
+  function onMouseDown(e: React.MouseEvent) {
+    if (!open) return;
+    if (scrollBodyRef.current?.contains(e.target as Node)) return;
+    mouseStartY.current = e.clientY;
+  }
+
   useEffect(() => {
     const el = sectionRef.current;
     if (!el || !open) return;
@@ -180,6 +187,46 @@ export function AppSheet({
     return () => el.removeEventListener("touchmove", handleTouchMove);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    function handleMouseMove(e: MouseEvent) {
+      if (mouseStartY.current == null) return;
+      const delta = e.clientY - mouseStartY.current;
+      const el = sectionRef.current;
+      if (!el) return;
+      el.style.transition = "none";
+      const newY = delta > 0 ? delta : Math.max(delta / 3, -60);
+      dragY.current = newY;
+      el.style.transform = `translateY(${newY}px)`;
+      const sheetHeight = el.offsetHeight || 1;
+      applyBackdrop(Math.max(0, newY / sheetHeight), false);
+    }
+
+    function handleMouseUp() {
+      if (mouseStartY.current == null) return;
+      const dragged = dragY.current;
+      mouseStartY.current = null;
+      dragY.current = 0;
+      const el = sectionRef.current;
+      if (!el) return;
+      el.style.transition = "transform 300ms ease-out";
+      if (dragged > 120) {
+        onClose();
+      } else {
+        el.style.transform = "translateY(0)";
+        applyBackdrop(0, true);
+      }
+    }
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [open, onClose]);
+
   function onTouchEnd() {
     if (touchStartY.current == null) return;
     const dragged = dragY.current;
@@ -209,7 +256,7 @@ export function AppSheet({
         ref={backdropRef}
         onClick={onClose}
         className={[
-          "absolute inset-0 z-40 bg-[#221447]/18 opacity-0",
+          "absolute inset-0 z-40 bg-(--brand-backdrop) opacity-0",
           backdropVisible ? "" : "pointer-events-none",
         ].join(" ")}
       />
@@ -219,6 +266,7 @@ export function AppSheet({
         onWheel={handleWheel}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
         className={[
           "absolute inset-x-0 bottom-0 z-50 flex w-full flex-col",
           "app-sheet-surface overflow-hidden rounded-t-4xl",
@@ -229,25 +277,25 @@ export function AppSheet({
         // No transform style prop – position is controlled entirely via
         // el.style.transform so CSS transitions always have a reliable from-state.
       >
-        <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-[#c8bfeb]" />
+        <div className="mx-auto mt-3 h-1 w-9 shrink-0 cursor-grab select-none rounded-full bg-black/20 active:cursor-grabbing" />
 
         <div className="min-h-0 flex flex-1 flex-col px-5 pb-[max(1.25rem,var(--stage-safe-bottom))] pt-4">
           <header className="flex shrink-0 items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[#5b3fd6]">
+              <div className="flex items-center gap-2 text-(--brand-primary)">
                 {icon ? (
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#f0e9ff]">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-(--brand-soft)">
                     {icon}
                   </div>
                 ) : null}
 
-                <h2 className="text-[28px] font-extrabold leading-none tracking-tight text-[#281d7a]">
+                <h2 className="text-[length:var(--text-2xl)] font-extrabold leading-none tracking-tight text-(--brand-title-ink)">
                   {title}
                 </h2>
               </div>
 
               {subtitle ? (
-                <p className="mt-1.5 text-[14px] font-semibold leading-snug text-[#6f6a93]">
+                <p className="mt-1.5 text-[length:var(--text-sm)] font-semibold leading-snug text-(--brand-muted)">
                   {subtitle}
                 </p>
               ) : null}
@@ -256,7 +304,7 @@ export function AppSheet({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f0e9ff] text-[#5b3fd6] transition active:scale-95"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--brand-soft) text-(--brand-primary) transition active:scale-95"
               aria-label="Stäng"
             >
               <X size={21} strokeWidth={2.4} />
@@ -286,7 +334,7 @@ export function AppSheetCard({ children }: { children: ReactNode }) {
 
 export function AppSheetSectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h3 className="text-[18px] font-extrabold leading-tight text-[#281d7a]">
+    <h3 className="text-[length:var(--text-xl)] font-extrabold leading-tight text-(--brand-title-ink)">
       {children}
     </h3>
   );
@@ -294,7 +342,7 @@ export function AppSheetSectionTitle({ children }: { children: ReactNode }) {
 
 export function AppSheetSectionText({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-1.5 text-[14px] font-semibold leading-relaxed text-[#5c567f]">
+    <p className="mt-1.5 text-[length:var(--text-sm)] font-semibold leading-relaxed text-(--brand-body-ink)">
       {children}
     </p>
   );
@@ -312,12 +360,12 @@ export function AppSheetNotice({
       ? "border-emerald-300 bg-emerald-50 text-emerald-950"
       : tone === "danger"
         ? "border-rose-300 bg-rose-50 text-rose-950"
-        : "border-[#ddd2ff] bg-[#f1ecff] text-[#3f2a7a]";
+        : "border-(--brand-border-field) bg-(--brand-soft) text-(--brand-title-ink)";
 
   return (
     <div
       role="status"
-      className={`rounded-2xl border px-4 py-3 text-center text-[14px] font-bold ${toneClass}`}
+      className={`rounded-2xl border px-4 py-3 text-center text-[length:var(--text-sm)] font-bold ${toneClass}`}
     >
       {children}
     </div>
@@ -326,7 +374,7 @@ export function AppSheetNotice({
 
 export function AppSheetLabel({ children }: { children: ReactNode }) {
   return (
-    <p className="text-[12px] font-extrabold uppercase tracking-wide text-[#6f6a93]">
+    <p className="text-[length:var(--text-xs)] font-extrabold uppercase tracking-wide text-(--brand-muted)">
       {children}
     </p>
   );
@@ -334,7 +382,7 @@ export function AppSheetLabel({ children }: { children: ReactNode }) {
 
 export function AppSheetValue({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-1 text-[17px] font-extrabold leading-snug text-[#221447]">
+    <p className="mt-1 text-[length:var(--text-base)] font-extrabold leading-snug text-(--brand-ink)">
       {children}
     </p>
   );
