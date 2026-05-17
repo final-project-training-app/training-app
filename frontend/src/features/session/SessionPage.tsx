@@ -52,7 +52,7 @@ export function SessionPage() {
 function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [elapsedSeconds] = useState(0);
   const [isEnding, setIsEnding] = useState(false);
   const { t } = useTranslation();
 
@@ -79,7 +79,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     }
   }
 
-  const { step, error, debugEvents, endSession, hangUp, getCurrentRms, showInstructionsVideo, currentTurn } =
+  const { step, error, debugEvents, hangUp, getCurrentRms, showInstructionsVideo, currentTurn } =
     useCoachSession({
       session,
       trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
