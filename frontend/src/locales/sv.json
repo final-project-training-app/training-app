@@ -292,6 +292,7 @@
     "controlbuttonLabelMyInfo": "Min info",
     "controlbuttonLabelInstructions": "Instruktioner",
     "controlbuttonLabelEndCall": "Lägg på",
+    "disconnecting": "Kopplar ner",
     "trainerMissing": "Tränare saknas",
     "workoutMissing": "Pass saknas",
     "suiteTitle": "Träningssvit",
@@ -303,6 +304,7 @@
   },
   "sessionPage": {
     "loading": "Laddar session...",
+    "calling": "Ringer tränare...",
     "genericError": "Något gick fel.",
     "status": {
       "idle": "Ansluter till tränaren...",

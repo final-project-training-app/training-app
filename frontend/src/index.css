@@ -265,3 +265,17 @@ body.admin-shell {
   backdrop-filter: blur(14px);
 }
 
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 6px 3px rgba(196, 176, 255, 0.55); }
+  50%       { box-shadow: 0 0 12px 5px rgba(196, 176, 255, 0.2); }
+}
+
+.call-pulse-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 2px solid rgba(196, 176, 255, 0.85);
+  pointer-events: none;
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+

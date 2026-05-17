@@ -71,6 +71,10 @@ type SessionCallProps = {
   debugEvents?: CoachSessionDebugEvent[];
   getCurrentRms?: () => number;
   showInstructionsVideo?: boolean;
+  isAiSpeaking?: boolean;
+  isUserTurn?: boolean;
+  isLoading?: boolean;
+  isEnding?: boolean;
   onSpeaker: () => void;
   onTrainingSuite: () => void;
   onInfo: () => void;
@@ -115,12 +119,14 @@ function ControlButton({
   onClick,
   active = false,
   disabled = false,
+  pulsing = false,
 }: {
   label: string;
   children: ReactNode;
   onClick?: () => void;
   active?: boolean;
   disabled?: boolean;
+  pulsing?: boolean;
 }) {
   return (
     <button
@@ -130,15 +136,20 @@ function ControlButton({
       aria-pressed={active}
       className="group flex min-w-0 flex-col items-center gap-[clamp(0.35rem,0.95cqh,0.65rem)] text-center disabled:opacity-60"
     >
-      <div
-        className={[
-          "flex h-[clamp(56px,8.5cqh,80px)] w-[clamp(56px,8.5cqh,80px)] items-center justify-center rounded-full shadow-[inset_0_0_0_1px_rgba(91,63,214,0.06)] transition group-active:scale-95 [&>svg]:h-[clamp(24px,3.45cqh,32px)] [&>svg]:w-[clamp(24px,3.45cqh,32px)]",
-          active
-            ? "bg-[#5b3fd6] text-white shadow-[0_10px_24px_rgba(91,63,214,0.22)]"
-            : "bg-[#ece7f8] text-[#5b3fd6]",
-        ].join(" ")}
-      >
-        {children}
+      <div className="relative">
+        {pulsing && (
+          <div className="call-pulse-ring" />
+        )}
+        <div
+          className={[
+            "flex h-[clamp(56px,8.5cqh,80px)] w-[clamp(56px,8.5cqh,80px)] items-center justify-center rounded-full shadow-[inset_0_0_0_1px_rgba(91,63,214,0.06)] transition group-active:scale-95 [&>svg]:h-[clamp(24px,3.45cqh,32px)] [&>svg]:w-[clamp(24px,3.45cqh,32px)]",
+            active
+              ? "bg-[#5b3fd6] text-white shadow-[0_10px_24px_rgba(91,63,214,0.22)]"
+              : "bg-[#ece7f8] text-[#5b3fd6]",
+          ].join(" ")}
+        >
+          {children}
+        </div>
       </div>
 
       <span
@@ -162,6 +173,10 @@ export function SessionCall({
   debugEvents = [],
   getCurrentRms,
   showInstructionsVideo = false,
+  isAiSpeaking = false,
+  isUserTurn = false,
+  isLoading = false,
+  isEnding = false,
   onSpeaker,
   onTrainingSuite,
   onInfo,
@@ -213,37 +228,49 @@ export function SessionCall({
 
       <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-[var(--stage-inline-pad)] pb-[var(--stage-safe-bottom)] pt-[var(--stage-safe-top)]">
         <section className="flex shrink-0 flex-col items-center text-center">
-          <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] relative flex h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)] items-center justify-center overflow-hidden rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
-            {trainerImage ? (
-              <img
-                src={trainerImage}
-                alt={trainerName}
-                className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
-                style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
-              />
-            ) : (
-              <div
-                className="absolute inset-0 flex items-center justify-center rounded-full bg-[#e8e1f8] text-[#5b3fd6] transition-opacity duration-1000"
-                style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
-              >
-                <UserRound size={56} strokeWidth={1.8} />
-              </div>
+          <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] relative h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)]">
+            {isAiSpeaking && !isEnding && (
+              <div className="call-pulse-ring" />
             )}
-            {session.instructionsVideo && (
-              <video
-                ref={videoRef}
-                src={session.instructionsVideo}
-                loop
-                playsInline
-                preload="auto"
-                className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
-                style={{ opacity: showInstructionsVideo ? 1 : 0 }}
-              />
-            )}
+            <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
+              {trainerImage ? (
+                <img
+                  src={trainerImage}
+                  alt={trainerName}
+                  className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
+                  style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
+                />
+              ) : (
+                <div
+                  className="absolute inset-0 flex items-center justify-center rounded-full bg-[#e8e1f8] text-[#5b3fd6] transition-opacity duration-1000"
+                  style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
+                >
+                  <UserRound size={56} strokeWidth={1.8} />
+                </div>
+              )}
+              {session.instructionsVideo && (
+                <video
+                  ref={videoRef}
+                  src={session.instructionsVideo}
+                  loop
+                  playsInline
+                  preload="auto"
+                  className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
+                  style={{ opacity: showInstructionsVideo ? 1 : 0 }}
+                />
+              )}
+              {isEnding && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#100b2f]/50">
+                  <span className="text-[clamp(11px,1.5cqh,14px)] font-bold text-white">
+                    {t("sessionCall.disconnecting")}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           <h1 className="text-[clamp(25px,3.45cqh,34px)] font-extrabold leading-none text-[#100b2f]">
-            {trainerName || t("sessionCall.trainerMissing")}
+            {isLoading ? " " : trainerName || t("sessionCall.trainerMissing")}
           </h1>
 
           <span className="sr-only">
@@ -251,7 +278,7 @@ export function SessionCall({
           </span>
 
           <p className="mt-[clamp(0.3rem,0.9cqh,0.7rem)] max-w-[320px] text-[clamp(11px,1.4cqh,14px)] font-bold leading-snug text-[#6f6a93]">
-            {displayWorkoutName || t("sessionCall.workoutMissing")}
+            {isLoading ? "" : displayWorkoutName || t("sessionCall.workoutMissing")}
           </p>
 
           <p className="mt-1 max-w-[320px] text-[clamp(10px,1.25cqh,13px)] font-bold text-[#8a83aa]">
@@ -265,6 +292,8 @@ export function SessionCall({
               isMuted ? t("sessionCall.soundOff") : t("sessionCall.soundOn")
             }
             active={isMuted}
+            pulsing={isUserTurn && !isEnding}
+            disabled={isEnding}
             onClick={() => setIsMuted((current) => !current)}
           >
             <MicOff size={36} strokeWidth={1.5} />
@@ -272,6 +301,7 @@ export function SessionCall({
 
           <ControlButton
             label={t("sessionCall.controlbuttonLabelSettings")}
+            disabled={isEnding}
             onClick={() => setSettingsOpen(true)}
           >
             <Settings size={36} strokeWidth={1.5} />
@@ -280,6 +310,7 @@ export function SessionCall({
           <ControlButton
             label={t("sessionCall.controlbuttonLabelSpeaker")}
             active={isSpeakerOn}
+            disabled={isEnding}
             onClick={() => setIsSpeakerOn((current) => !current)}
           >
             <Volume2 size={36} strokeWidth={1.5} />
@@ -287,6 +318,7 @@ export function SessionCall({
 
           <ControlButton
             label={t("sessionCall.controlbuttonLabelStreak")}
+            disabled={isEnding}
             onClick={onTrainingSuite}
           >
             <CalendarDays size={36} strokeWidth={1.5} />
@@ -294,6 +326,7 @@ export function SessionCall({
 
           <ControlButton
             label={t("sessionCall.controlbuttonLabelMyInfo")}
+            disabled={isEnding}
             onClick={onInfo}
           >
             <UserRound size={36} strokeWidth={1.5} />
@@ -301,6 +334,7 @@ export function SessionCall({
 
           <ControlButton
             label={t("sessionCall.controlbuttonLabelInstructions")}
+            disabled={isEnding}
             onClick={onSpeaker}
           >
             <MessageSquareText size={36} strokeWidth={1.5} />
@@ -310,9 +344,15 @@ export function SessionCall({
         <button
           type="button"
           onClick={onEnd}
-          className="mx-auto mt-auto flex w-full max-w-[var(--stage-control-max-width)] flex-col items-center gap-[clamp(0.35rem,1cqh,0.6rem)] pb-[clamp(0rem,0.8cqh,0.25rem)] transition active:scale-95"
+          disabled={isEnding}
+          className="mx-auto mt-auto flex w-full max-w-[var(--stage-control-max-width)] flex-col items-center gap-[clamp(0.35rem,1cqh,0.6rem)] pb-[clamp(0rem,0.8cqh,0.25rem)] transition active:scale-95 disabled:cursor-not-allowed"
         >
-          <div className="flex h-[clamp(58px,8.8cqh,84px)] w-[clamp(58px,8.8cqh,84px)] items-center justify-center rounded-full bg-[#ef4444] text-white shadow-[0_12px_26px_rgba(239,68,68,0.22)] [&>svg]:h-[clamp(28px,3.9cqh,38px)] [&>svg]:w-[clamp(28px,3.9cqh,38px)]">
+          <div className={[
+            "flex h-[clamp(58px,8.8cqh,84px)] w-[clamp(58px,8.8cqh,84px)] items-center justify-center rounded-full text-white transition-colors duration-300 [&>svg]:h-[clamp(28px,3.9cqh,38px)] [&>svg]:w-[clamp(28px,3.9cqh,38px)]",
+            isEnding
+              ? "bg-[#c8c4d0]"
+              : "bg-[#ef4444] shadow-[0_12px_26px_rgba(239,68,68,0.22)]",
+          ].join(" ")}>
             <PhoneOff strokeWidth={1.75} />
           </div>
 

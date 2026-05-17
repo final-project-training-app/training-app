@@ -225,6 +225,10 @@ export function useUpdateProfile() {
           },
         );
       }
+
+      void queryClient.invalidateQueries({
+        queryKey: ["coach-call-session"],
+      });
     },
     onError: (error) => {
       console.error("[useUpdateProfile]", error);

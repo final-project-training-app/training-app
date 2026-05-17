@@ -712,6 +712,16 @@ export function useCoachSession(
     setSessionStep("idle");
   }, [addDebugEvent, clearVideoTimers, disconnectLive, getAiPlaybackRemainingMs, setSessionStep]);
 
+  const hangUp = useCallback(() => {
+    stopRingback();
+    addDebugEvent("hang up");
+    clearVideoTimers();
+    setShowInstructionsVideo(false);
+    stopSessionAudio();
+    disconnectLive();
+    setSessionStep("idle");
+  }, [addDebugEvent, clearVideoTimers, disconnectLive, setSessionStep]);
+
   //──────────────────────
   // Cleanup on unmount
   //──────────────────────
@@ -761,6 +771,7 @@ export function useCoachSession(
     startWorkout,
     finishSession,
     endSession,
+    hangUp,
     getCurrentRms,
     trainer,
     isTrainerLoading,

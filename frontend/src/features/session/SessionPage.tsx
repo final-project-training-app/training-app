@@ -7,8 +7,11 @@ import type { CoachCallSession, SessionPanel } from "./types";
 import { useCoachSession } from "../ai-conversation";
 import type { CoachSessionStep } from "../ai-conversation";
 
+const LOADING_SESSION: CoachCallSession = { id: "", isAuthenticated: false, durationSeconds: 0 };
+
 export function SessionPage() {
   const { workoutId } = useParams({ from: "/session/$workoutId" });
+  const navigate = useNavigate();
 
   const {
     data: session,
@@ -18,14 +21,6 @@ export function SessionPage() {
   } = useCoachCallSession(workoutId);
   const { t } = useTranslation();
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-lg font-bold text-[#5b3fd6]">
-        {t("sessionPage.loading")}
-      </div>
-    );
-  }
-
   if (isError) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[#fbf8ff] px-8 text-center text-base font-semibold text-[#221447]">
@@ -34,8 +29,21 @@ export function SessionPage() {
     );
   }
 
-  if (!session) {
-    return null;
+  if (isLoading || !session) {
+    return (
+      <SessionCall
+        session={LOADING_SESSION}
+        coachStatusLabel={t("sessionPage.calling")}
+        elapsedSeconds={0}
+        activePanel="none"
+        isLoading={true}
+        onSpeaker={() => {}}
+        onTrainingSuite={() => {}}
+        onInfo={() => {}}
+        onClosePanel={() => {}}
+        onEnd={() => void navigate({ to: "/" })}
+      />
+    );
   }
 
   return <ReadySessionPage session={session} />;
@@ -45,6 +53,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isEnding, setIsEnding] = useState(false);
   const { t } = useTranslation();
 
   function getCoachStatusLabel(step: CoachSessionStep) {
@@ -70,12 +79,18 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     }
   }
 
-  const { step, error, debugEvents, endSession, getCurrentRms, showInstructionsVideo } =
+  const { step, error, debugEvents, endSession, hangUp, getCurrentRms, showInstructionsVideo, currentTurn } =
     useCoachSession({
       session,
       trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
       autoStart: true,
     });
+
+  const isAiSpeaking =
+    currentTurn === "gemini" ||
+    step === "playing_instructions" ||
+    step === "playing_workout";
+  const isUserTurn = currentTurn === "user";
 
   useEffect(() => {
     if (step !== "completed") return;
@@ -83,11 +98,10 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     return () => clearTimeout(timer);
   }, [step, navigate]);
 
-  async function handleEnd() {
-    await endSession();
-    setActivePanel("none");
-    setElapsedSeconds(0);
-    void navigate({ to: "/" });
+  function handleEnd() {
+    setIsEnding(true);
+    hangUp();
+    setTimeout(() => void navigate({ to: "/" }), 3000);
   }
 
   function togglePanel(panel: Exclude<SessionPanel, "none">) {
@@ -104,6 +118,9 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
       debugEvents={debugEvents}
       getCurrentRms={getCurrentRms}
       showInstructionsVideo={showInstructionsVideo}
+      isAiSpeaking={isAiSpeaking}
+      isUserTurn={isUserTurn}
+      isEnding={isEnding}
       onSpeaker={() => togglePanel("exercise")}
       onTrainingSuite={() => togglePanel("suite")}
       onInfo={() => togglePanel("info")}
