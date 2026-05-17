@@ -258,7 +258,7 @@ function SettingsModalBody({
         }
       >
         <div className="divide-y divide-(--brand-border)/60 pb-2">
-          <section className="py-5">
+          <section className="py-6">
             <div className="mb-2 flex items-center gap-2">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
                 <User size={20} />
@@ -279,35 +279,36 @@ function SettingsModalBody({
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              placeholder={t("settings.fullNamePlaceholder")}
               className="mt-3 w-full rounded-2xl border border-(--brand-border-field) bg-(--brand-control) px-4 py-3.5 text-[length:var(--text-base)] font-semibold text-(--brand-ink) outline-none placeholder:text-(--brand-muted) focus:border-(--brand-border-strong) transition"
             />
 
             <p className="mt-2 text-[length:var(--text-xs)] font-semibold leading-snug text-(--brand-body-ink)">
               {fullName.trim()
                 ? t("settings.fullNameFound")
-                : t("settings.fullNameNotFound")}
+                : t("settings.noFullNameFound")}
             </p>
           </section>
 
-          <section className="py-5">
+          <section className="py-6">
             <TrainerSelectionModal
               selectedTrainerId={selectedTrainerId}
               onTrainerSelect={setSelectedTrainerId}
             />
           </section>
 
-          <section className="py-5">
+          <section className="py-6">
             <IntensitySlider
               value={intensityLevel}
               onChange={setIntensityLevel}
             />
           </section>
 
-          <section className="py-5">
+          <section className="py-6">
             <ContextModel value={context} onChange={setContext} />
           </section>
 
-          <section className="py-5">
+          <section className="py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
@@ -324,7 +325,7 @@ function SettingsModalBody({
             </div>
           </section>
 
-          <section className="py-5">
+          <section className="py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
@@ -343,7 +344,7 @@ function SettingsModalBody({
             </div>
           </section>
 
-          <section className="pt-5 pb-1 space-y-2">
+          <section className="pt-6 pb-4 space-y-2">
             {profile.isAdmin && (
               <button
                 className={appSheetSecondaryButtonClass}

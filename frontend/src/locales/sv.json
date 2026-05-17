@@ -83,6 +83,7 @@
     "getHelpButton": "Hjälp",
     "fullName": "Namn",
     "fullNameDescription": "Namnet används av coachen under samtalet.",
+    "fullNamePlaceholder": "Ditt förnamn",
     "fullNameFound": "Namnet är hämtat från din profil.",
     "noFullNameFound": "Ingen namnuppgift hittades.",
     "saveAndClose": "Spara och stäng",

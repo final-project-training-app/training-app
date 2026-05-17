@@ -83,6 +83,7 @@
     "getHelpButton": "Get help",
     "fullName": "Name",
     "fullNameDescription": "The name is used by the coach during the session.",
+    "fullNamePlaceholder": "Your first name",
     "fullNameFound": "The name is taken from your profile.",
     "noFullNameFound": "No name found.",
     "saveAndClose": "Save and close",
