@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 export const appSheetFieldClass =
   "rounded-2xl border border-[#ddd2ff] bg-[#f5f2fb]";
@@ -40,9 +40,59 @@ export function AppSheet({
   onClose,
   height = "default",
 }: AppSheetProps) {
+  const sectionRef = useRef<HTMLElement>(null);
   const scrollBodyRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
-  const [dragY, setDragY] = useState(0);
+  // Drag position stored in a ref – no re-render needed during drag.
+  const dragY = useRef(0);
+  // Guards against animating the close on initial mount (open=false from birth).
+  // Without this, every AppSheet instance would slide down on first render.
+  const hasEverBeenOpen = useRef(false);
+  // Only the backdrop uses React state; the sheet's position is driven
+  // entirely by direct DOM manipulation so CSS transitions are 100% reliable.
+  const [backdropVisible, setBackdropVisible] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    if (open) {
+      hasEverBeenOpen.current = true;
+      setBackdropVisible(true);
+      // Snap to bottom (no transition) so the browser commits that position,
+      // then animate up.  getBoundingClientRect() forces a synchronous style-
+      // flush so the browser treats translateY(100%) as the CSS "from" state.
+      el.style.transition = "none";
+      el.style.transform = "translateY(100%)";
+      el.getBoundingClientRect();
+      el.style.transition = "transform 500ms ease-out";
+      el.style.transform = "translateY(0)";
+      // No cleanup returned: a cleanup that resets the transform would fire
+      // before the close effect and prevent the slide-down animation.
+      // StrictMode double-invoke: second run overwrites the first before any
+      // browser paint, so the net result is still one correct animation.
+    } else {
+      if (!hasEverBeenOpen.current) {
+        // Initial mount in closed state – just snap off-screen, no animation.
+        el.style.transition = "none";
+        el.style.transform = "translateY(100%)";
+        return;
+      }
+      // Slide-down close.  Enable transition first, then force a style-flush
+      // so the browser commits the current position as the from-state before
+      // we change the transform.
+      el.style.transition = "transform 500ms ease-out";
+      el.getBoundingClientRect();
+      el.style.transform = "translateY(100%)";
+
+      const tid = setTimeout(() => {
+        setBackdropVisible(false);
+        dragY.current = 0;
+        el.style.transition = "none";
+      }, 550);
+      return () => clearTimeout(tid);
+    }
+  }, [open]);
 
   function handleWheel(event: React.WheelEvent<HTMLElement>) {
     const scrollBody = scrollBodyRef.current;
@@ -76,26 +126,59 @@ export function AppSheet({
 
   function onTouchStart(e: React.TouchEvent) {
     if (!open) return;
+    // Restrict drag to the handle / header area – the scroll body has touch-pan-y
+    // so the browser claims vertical gestures there and preventDefault won't work.
+    if (scrollBodyRef.current?.contains(e.target as Node)) return;
     touchStartY.current = e.touches[0].clientY;
   }
 
-  function onTouchMove(e: React.TouchEvent) {
-    if (touchStartY.current == null) return;
-    const delta = e.touches[0].clientY - touchStartY.current;
-    // Only track downward swipes
-    if (delta > 0) {
-      setDragY(Math.min(delta, 400));
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || !open) return;
+
+    function handleTouchMove(e: TouchEvent) {
+      if (touchStartY.current == null) return;
+      const delta = e.touches[0].clientY - touchStartY.current;
+
+      if (delta > 0) {
+        // Downward – only intercept when scroll body is at top.
+        const scrollBody = scrollBodyRef.current;
+        if (scrollBody && scrollBody.scrollTop > 0) return;
+      }
+
+      e.preventDefault();
+      if (!el) return;
+      el.style.transition = "none";
+
+      // Upward drag is dampened (⅓, max 60 px); downward is uncapped.
+      const newY = delta > 0 ? delta : Math.max(delta / 3, -60);
+      dragY.current = newY;
+      el.style.transform = `translateY(${newY}px)`;
     }
-  }
+
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    return () => el.removeEventListener("touchmove", handleTouchMove);
+  }, [open]);
 
   function onTouchEnd() {
     if (touchStartY.current == null) return;
-    const dragged = dragY;
+    const dragged = dragY.current;
     touchStartY.current = null;
-    setDragY(0);
-    // Close if swiped down sufficiently
+    dragY.current = 0;
+
+    const el = sectionRef.current;
+    if (!el) return;
+
+    // Re-enable transition before animating.
+    el.style.transition = "transform 500ms ease-out";
+
     if (dragged > 120) {
+      // The close effect will animate translateY(100%) from wherever the sheet
+      // currently is (the drag release point).
       onClose();
+    } else {
+      // Snap back to fully open.
+      el.style.transform = "translateY(0)";
     }
   }
 
@@ -105,29 +188,25 @@ export function AppSheet({
         onClick={onClose}
         className={[
           "absolute inset-0 z-40 bg-[#221447]/18 backdrop-blur-[3px]",
-          "transition-opacity duration-200 ease-out",
-          open
-            ? "opacity-100 motion-safe:animate-[app-backdrop-in_220ms_ease-out_both]"
-            : "pointer-events-none opacity-0",
+          "transition-opacity duration-[300ms] ease-out",
+          backdropVisible ? "opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
       />
 
       <section
+        ref={sectionRef}
         onWheel={handleWheel}
         onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         className={[
           "absolute inset-x-0 bottom-0 z-50 flex w-full flex-col",
           "app-sheet-surface overflow-hidden rounded-t-4xl",
           "will-change-transform",
-          "transition-[transform,opacity] duration-200 ease-out",
           maxHeightClass[height],
-          open
-            ? "opacity-100 motion-safe:animate-[app-sheet-in_320ms_cubic-bezier(0.22,1,0.36,1)_both]"
-            : "pointer-events-none translate-y-full opacity-0",
+          open ? "" : "pointer-events-none",
         ].join(" ")}
-        style={{ transform: open ? `translateY(${dragY}px)` : undefined }}
+        // No transform style prop – position is controlled entirely via
+        // el.style.transform so CSS transitions always have a reliable from-state.
       >
         <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-[#c8bfeb]" />
 

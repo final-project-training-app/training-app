@@ -203,52 +203,45 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Buttons background */}
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[15]">
-        <div
-          className={`app-shell-footer-surface absolute bottom-0 left-0 right-0 rounded-t-3xl ${
-            isLoaded
-              ? "h-[var(--home-footer-height-auth)]"
-              : "h-[var(--home-footer-height)]"
-          }`}
-        />
-      </div>
-
-      {/* Buttons */}
-      <footer className="absolute inset-x-[var(--stage-inline-pad)] bottom-[var(--home-footer-bottom)] z-20 flex flex-col items-center gap-[var(--home-footer-gap)]">
-        <button
-          type="button"
-          onClick={() => {
-            void handleStartCall();
-          }}
-          className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition hover:bg-[#4e35c0] active:scale-[0.98]"
-        >
-          <Phone size={22} strokeWidth={2.5} />
-          {t("home.callTrainer")}
-        </button>
-
-        {isLoaded ? (
-          isSignedIn ? (
+      {/* Footer – unified plate with buttons */}
+      <footer className="absolute inset-x-0 bottom-0 z-[15] pointer-events-none">
+        <div className="home-footer-plate rounded-t-3xl pointer-events-auto px-[var(--stage-inline-pad)] pt-5 pb-[max(1.25rem,var(--stage-safe-bottom))]">
+          <div className="flex flex-col items-center gap-[var(--home-footer-gap)]">
             <button
               type="button"
-              onClick={() => setOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition hover:bg-[#e3d9ff] active:scale-[0.98]"
+              onClick={() => {
+                void handleStartCall();
+              }}
+              className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition hover:bg-[#4e35c0] active:scale-[0.98]"
             >
-              <Settings size={16} strokeWidth={2.2} />
-              {t("home.settings")}
+              <Phone size={22} strokeWidth={2.5} />
+              {t("home.callTrainer")}
             </button>
-          ) : (
-            <SignInButton>
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition hover:bg-[#e3d9ff] active:scale-[0.98]"
-              >
-                <LogIn size={16} strokeWidth={2.2} />
-                {t("auth.login")}
-              </button>
-            </SignInButton>
-          )
-        ) : null}
+
+            {isLoaded ? (
+              isSignedIn ? (
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
+                  className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition hover:bg-[#e3d9ff] active:scale-[0.98]"
+                >
+                  <Settings size={16} strokeWidth={2.2} />
+                  {t("home.settings")}
+                </button>
+              ) : (
+                <SignInButton>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition hover:bg-[#e3d9ff] active:scale-[0.98]"
+                  >
+                    <LogIn size={16} strokeWidth={2.2} />
+                    {t("auth.login")}
+                  </button>
+                </SignInButton>
+              )
+            ) : null}
+          </div>
+        </div>
       </footer>
 
       {isLoaded && isSignedIn ? (
