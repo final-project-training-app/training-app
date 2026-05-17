@@ -7,6 +7,7 @@ const DESKTOP_SCALE_MIN_HEIGHT = DESIGN_HEIGHT + 64;
 const DESKTOP_FRAME_PADDING = 64;
 const WIDE_FRAME_VERTICAL_PADDING = 48;
 const DESKTOP_MAX_SCALE = 1.12;
+const PHONE_FRAME_RADIUS = 34;
 
 type StageViewport = {
   width: number;
@@ -104,7 +105,7 @@ export default function AppStageFrame({ children }: AppStageFrameProps) {
             "app-stage relative origin-top-left overflow-hidden bg-[#f7f2ff]",
             useWideFrame ? "app-stage--wide" : "app-stage--mobile",
             showPhoneFrame
-              ? "rounded-[34px] border border-white/70 shadow-[0_28px_90px_rgba(55,38,110,0.24)]"
+              ? "rounded-[34px]"
               : "shadow-[0_0_70px_rgba(55,38,110,0.16)]",
           ].join(" ")}
           style={{
@@ -116,6 +117,12 @@ export default function AppStageFrame({ children }: AppStageFrameProps) {
         >
           {children}
         </div>
+        {showPhoneFrame && (
+          <div
+            className="pointer-events-none absolute -inset-[10px] z-[100] border-[10px] border-black shadow-[0_20px_40px_rgba(0,0,0,0.22)]"
+            style={{ borderRadius: PHONE_FRAME_RADIUS * stageScale + 10 }}
+          />
+        )}
       </div>
     </div>
   );
