@@ -34,8 +34,8 @@ export default function LanguageSwitcher({
               px-3 py-1.5 rounded-xl text-sm font-extrabold transition active:scale-[0.97]
               ${
                 isActive
-                  ? "bg-[#5b3fd6] text-white hover:bg-[#4e35c0]"
-                  : "border border-[#c5b0f0] bg-[#f0ecfc] text-[#4d2a7a] hover:bg-[#e3d9ff]"
+                  ? "bg-(--brand-primary) text-white hover:bg-(--brand-primary-strong)"
+                  : "border border-(--brand-btn-secondary-border) bg-(--brand-btn-secondary-bg) text-(--brand-btn-secondary-text) hover:bg-(--brand-btn-secondary-hover)"
               }
             `}
           >

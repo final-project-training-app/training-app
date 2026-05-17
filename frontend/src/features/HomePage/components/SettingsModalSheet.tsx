@@ -12,11 +12,9 @@ const SHEET_CLOSE_DURATION_MS = 350;
 
 import {
   AppSheet,
-  AppSheetCard,
   AppSheetNotice,
   AppSheetSectionText,
   AppSheetSectionTitle,
-  appSheetFieldClass,
   appSheetPrimaryButtonClass,
   appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
@@ -274,8 +272,8 @@ function SettingsModalBody({
           </section>
         }
       >
-        <div className="space-y-4 pb-2">
-          <AppSheetCard>
+        <div className="divide-y divide-(--brand-border)/60 pb-2">
+          <section className="py-5">
             <div className="flex justify-between items-center">
               <AppSheetSectionTitle>
                 {t("settings.language")}
@@ -285,16 +283,16 @@ function SettingsModalBody({
                 onChange={(lng: string) => i18n.changeLanguage(lng)}
               />
             </div>
-          </AppSheetCard>
-          <AppSheetCard>
+          </section>
+
+          <section className="py-5">
             <div className="flex justify-between items-center">
               <AppSheetSectionTitle>
                 {t("settings.getHelp")}
               </AppSheetSectionTitle>
               <button
-                className="rounded px-3 py-1 text-sm font-extrabold bg-[#5b3fd6] text-white hover:opacity-95"
+                className="rounded-full px-4 py-2 text-[length:var(--text-sm)] font-extrabold bg-(--brand-primary) text-white hover:opacity-95 transition"
                 onClick={() => {
-                  // open support directly in form mode, stacked on top of Settings
                   setSupportInitialMode("form");
                   setSupportOpen(true);
                 }}
@@ -302,8 +300,9 @@ function SettingsModalBody({
                 {t("settings.getHelpButton")}
               </button>
             </div>
-          </AppSheetCard>
-          <AppSheetCard>
+          </section>
+
+          <section className="py-5">
             <label htmlFor="fullName" className="block">
               <AppSheetSectionTitle>
                 {t("settings.fullName")}
@@ -314,57 +313,57 @@ function SettingsModalBody({
               {t("settings.fullNameDescription")}
             </AppSheetSectionText>
 
-            <div className={`${appSheetFieldClass} mt-3 px-3 py-2.5`}>
-              <input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full border-none bg-transparent px-1 py-1 text-[16px] font-semibold text-[#221447] outline-none placeholder:text-[#8f89b3]"
-              />
-            </div>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="mt-3 w-full rounded-2xl border border-(--brand-border-field) bg-(--brand-control) px-4 py-3.5 text-[length:var(--text-base)] font-semibold text-(--brand-ink) outline-none placeholder:text-(--brand-muted) focus:border-(--brand-border-strong) transition"
+            />
 
-            <p className="mt-2 text-[12px] font-semibold leading-snug text-[#6b59b2]">
+            <p className="mt-2 text-[length:var(--text-xs)] font-semibold leading-snug text-(--brand-body-ink)">
               {fullName.trim()
                 ? t("settings.fullNameFound")
                 : t("settings.fullNameNotFound")}
             </p>
-          </AppSheetCard>
+          </section>
 
-          <section>
+          <section className="py-5">
             <TrainerSelectionModal
               selectedTrainerId={selectedTrainerId}
               onTrainerSelect={setSelectedTrainerId}
             />
           </section>
 
-          <IntensitySlider
-            value={intensityLevel}
-            onChange={setIntensityLevel}
-          />
+          <section className="py-5">
+            <IntensitySlider
+              value={intensityLevel}
+              onChange={setIntensityLevel}
+            />
+          </section>
 
-          <ContextModel value={context} onChange={setContext} />
+          <section className="py-5">
+            <ContextModel value={context} onChange={setContext} />
+          </section>
 
-          <AppSheetCard>
-            <div className="space-y-2">
-              {profile.isAdmin && (
-                <button
-                  className={appSheetSecondaryButtonClass}
-                  onClick={() => {
-                    setOpen(false);
-                    void navigate({ to: "/admin/workouts" });
-                  }}
-                >
-                  {t("admin.page")}
-                </button>
-              )}
-              <SignOutButton>
-                <button className={appSheetSecondaryButtonClass}>
-                  {t("auth.logout")}
-                </button>
-              </SignOutButton>
-            </div>
-          </AppSheetCard>
+          <section className="pt-5 pb-1 space-y-2">
+            {profile.isAdmin && (
+              <button
+                className={appSheetSecondaryButtonClass}
+                onClick={() => {
+                  setOpen(false);
+                  void navigate({ to: "/admin/workouts" });
+                }}
+              >
+                {t("admin.page")}
+              </button>
+            )}
+            <SignOutButton>
+              <button className={appSheetSecondaryButtonClass}>
+                {t("auth.logout")}
+              </button>
+            </SignOutButton>
+          </section>
         </div>
       </AppSheet>
       <SupportSheet

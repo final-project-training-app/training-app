@@ -4,7 +4,6 @@ import { useUser } from "@clerk/react";
 import { useTranslation } from "react-i18next";
 import {
   AppSheet,
-  AppSheetCard,
   AppSheetNotice,
   AppSheetSectionText,
   AppSheetSectionTitle,
@@ -91,8 +90,8 @@ export default function SupportSheet({
         </section>
       }
     >
-      <div className="space-y-4 pb-2">
-        <AppSheetCard>
+      <div className="divide-y divide-(--brand-border)/60 pb-2">
+        <section className="py-5">
           <div className="flex items-start justify-between">
             <div className="pr-4">
               <AppSheetSectionTitle>
@@ -102,19 +101,17 @@ export default function SupportSheet({
                 {t("support.faqTextShort")}
               </AppSheetSectionText>
             </div>
-            <div>
-              <button
-                className="rounded px-3 py-1 text-sm font-semibold text-[#5b3fd6] hover:bg-[#f5f0ff]"
-                onClick={() => setMode("form")}
-              >
-                {t("support.contactUs")}
-              </button>
-            </div>
+            <button
+              className="rounded-full px-3 py-1.5 text-[length:var(--text-sm)] font-semibold text-(--brand-primary) hover:bg-(--brand-soft) transition"
+              onClick={() => setMode("form")}
+            >
+              {t("support.contactUs")}
+            </button>
           </div>
-        </AppSheetCard>
+        </section>
 
         {mode === "form" && (
-          <AppSheetCard>
+          <section className="py-5">
             <AppSheetSectionTitle>
               {t("support.formTitle")}
             </AppSheetSectionTitle>
@@ -122,12 +119,12 @@ export default function SupportSheet({
               {t("support.formDescription")}
             </AppSheetSectionText>
 
-            <div className="mt-3 px-3 py-2.5">
+            <div className="mt-3">
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={t("support.placeholder") || ""}
-                className="w-full min-h-[120px] resize-vertical rounded-md border px-3 py-2 text-sm bg-transparent text-[var(--brand-ink)] outline-none"
+                className="w-full min-h-[120px] resize-vertical rounded-2xl border border-(--brand-border-field) bg-(--brand-field-bg) px-4 py-3 text-[length:var(--text-base)] text-(--brand-ink) outline-none placeholder:text-(--brand-muted) focus:border-(--brand-border-strong) transition"
               />
             </div>
 
@@ -138,7 +135,7 @@ export default function SupportSheet({
                 {feedback}
               </AppSheetNotice>
             ) : null}
-          </AppSheetCard>
+          </section>
         )}
       </div>
     </AppSheet>

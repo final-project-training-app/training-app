@@ -1,9 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
+  /* Typography */
+  --brand-font: 'Nunito', system-ui, sans-serif;
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1.0625rem;
+  --text-lg:   1.1875rem;
+  --text-xl:   1.375rem;
+  --text-2xl:  1.75rem;
+
   --brand-browser-top: #d8cef2;
   --brand-primary: #5836d6;
   --brand-primary-strong: #5b3fe6;
+  --brand-primary-deep: #53479d;
 
   --brand-ink: #100b2f;
   --brand-ink-soft: #2b254d;
@@ -21,9 +32,12 @@
   --brand-control: #f4efff;
 
   --brand-border: #d8ccff;
+  --brand-border-light: #e3d9ff;
+  --brand-border-field: #ddd2ff;
   --brand-border-strong: #8067d9;
   --brand-panel-border: rgba(83, 64, 211, 0.35);
   --brand-overlay: rgba(255, 255, 255, 0.45);
+  --brand-backdrop: rgba(30, 18, 70, 0.18);
 
   --brand-shadow: rgba(88, 54, 214, 0);
   --brand-image-shadow: rgba(42, 32, 88, 0.12);
@@ -31,6 +45,18 @@
   --brand-danger: #ef4444;
   --brand-on-primary: #ffffff;
   --brand-on-danger: #ffffff;
+
+  /* Component tokens */
+  --brand-card-bg:              #f5f2fb;
+  --brand-card-border:          #e3d9ff;
+  --brand-field-bg:             #f5f2fb;
+  --brand-field-border:         #ddd2ff;
+  --brand-title-ink:            #281d7a;
+  --brand-body-ink:             #5c567f;
+  --brand-btn-secondary-bg:     #f0ecfc;
+  --brand-btn-secondary-border: #c5b0f0;
+  --brand-btn-secondary-text:   #53479d;
+  --brand-btn-secondary-hover:  #e3d9ff;
 
   --brand-call-background: radial-gradient(
     circle at top,
@@ -64,6 +90,7 @@ body {
   margin: 0;
   min-height: 100svh;
   min-height: 100dvh;
+  font-family: var(--brand-font);
   background-color: var(--brand-browser-top);
   background:
     radial-gradient(circle at top, rgba(123, 99, 217, 0.16), transparent 34%),
