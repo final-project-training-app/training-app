@@ -8,10 +8,10 @@ export const appSheetCardClass =
   "rounded-3xl border border-[#e3d9ff] bg-[#f5f2fb] p-4";
 
 export const appSheetPrimaryButtonClass =
-  "w-full rounded-2xl bg-[#5b3fd6] px-4 py-3.5 text-[16px] font-extrabold text-white transition active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-70";
+  "w-full rounded-2xl bg-[#5b3fd6] px-4 py-3.5 text-[16px] font-extrabold text-white transition hover:bg-[#4e35c0] active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-70";
 
 export const appSheetSecondaryButtonClass =
-  "w-full rounded-xl px-4 py-3 text-[15px] font-extrabold text-[#4d2a7a] transition active:scale-[0.985] active:bg-[#efe9fb]";
+  "w-full rounded-xl border border-[#c5b0f0] bg-[#f0ecfc] px-4 py-3 text-[15px] font-extrabold text-[#4d2a7a] transition hover:bg-[#e3d9ff] active:scale-[0.985] active:bg-[#ddd2ff]";
 
 type AppSheetProps = {
   open: boolean;

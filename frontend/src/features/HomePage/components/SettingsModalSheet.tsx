@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "@clerk/react";
+import { SignOutButton, useAuth } from "@clerk/react";
+import { useNavigate } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
@@ -26,6 +27,7 @@ type ProfileSettings = {
   intensityLevel?: number | null;
   context?: string | null;
   trainerId?: number | null;
+  isAdmin?: boolean;
 };
 
 const INTENSITY_MIN = 1;
@@ -145,6 +147,7 @@ function SettingsModalBody({
   profile: ProfileSettings;
 }) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState(profile.name?.trim() ?? "");
   const [intensityLevel, setIntensityLevel] = useState(() =>
     normalizeIntensityLevel(profile.intensityLevel),
@@ -329,6 +332,27 @@ function SettingsModalBody({
           />
 
           <ContextModel value={context} onChange={setContext} />
+
+          <AppSheetCard>
+            <div className="space-y-2">
+              {profile.isAdmin && (
+                <button
+                  className={appSheetSecondaryButtonClass}
+                  onClick={() => {
+                    setOpen(false);
+                    void navigate({ to: "/admin/workouts" });
+                  }}
+                >
+                  {t("admin.page")}
+                </button>
+              )}
+              <SignOutButton>
+                <button className={appSheetSecondaryButtonClass}>
+                  {t("auth.logout")}
+                </button>
+              </SignOutButton>
+            </div>
+          </AppSheetCard>
         </div>
       </AppSheet>
       <SupportSheet

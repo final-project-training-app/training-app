@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Phone, Settings } from "lucide-react";
+import { LogIn, Phone, Settings } from "lucide-react";
 import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
 import { startRingback } from "../ai-conversation/audio/ringback";
 import type { BackendWorkoutResponse } from "../ai-conversation/tools/workout/workoutTypes";
@@ -173,38 +173,6 @@ export default function HomePage() {
 
   return (
     <div className="home-stage relative h-full w-full overflow-hidden bg-[#f7f2ff] text-[#221447]">
-      {/* Auth / admin layer - stays inside the shared app stage */}
-      <div className="absolute right-[var(--home-auth-right)] top-[var(--home-auth-top)] z-50">
-        {!isLoaded ? null : isSignedIn ? (
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {profile?.isAdmin && (
-              <button
-                onClick={() =>
-                  navigate({
-                    to: "/admin/workouts",
-                  })
-                }
-                className="rounded-full bg-(--brand-primary) px-4 py-2.5 text-sm font-bold text-(--brand-on-primary) shadow-sm transition active:scale-95"
-              >
-                {t("admin.page")}
-              </button>
-            )}
-
-            <SignOutButton>
-              <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2.5 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
-                {t("auth.logout")}
-              </button>
-            </SignOutButton>
-          </div>
-        ) : (
-          <SignInButton>
-            <button className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-3.5 py-2 text-sm font-bold text-(--brand-primary) shadow-sm backdrop-blur-sm transition active:scale-95">
-              {t("auth.login")}
-            </button>
-          </SignInButton>
-        )}
-      </div>
-
       {/* Background inside phone stage */}
       <img
         src={assets.background}
@@ -239,7 +207,7 @@ export default function HomePage() {
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[15]">
         <div
           className={`app-shell-footer-surface absolute bottom-0 left-0 right-0 rounded-t-3xl ${
-            isLoaded && isSignedIn
+            isLoaded
               ? "h-[var(--home-footer-height-auth)]"
               : "h-[var(--home-footer-height)]"
           }`}
@@ -253,21 +221,33 @@ export default function HomePage() {
           onClick={() => {
             void handleStartCall();
           }}
-          className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition active:scale-[0.98]"
+          className="flex min-h-[var(--home-cta-min-height)] w-full items-center justify-center gap-3 rounded-2xl bg-[#5b3fd6] px-6 py-4 text-lg font-extrabold text-white transition hover:bg-[#4e35c0] active:scale-[0.98]"
         >
           <Phone size={22} strokeWidth={2.5} />
           {t("home.callTrainer")}
         </button>
 
-        {isLoaded && isSignedIn ? (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition active:scale-[0.98]"
-          >
-            <Settings size={16} strokeWidth={2.2} />
-            {t("home.settings")}
-          </button>
+        {isLoaded ? (
+          isSignedIn ? (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition hover:bg-[#e3d9ff] active:scale-[0.98]"
+            >
+              <Settings size={16} strokeWidth={2.2} />
+              {t("home.settings")}
+            </button>
+          ) : (
+            <SignInButton>
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-xl border border-(--brand-border-strong) bg-(--brand-surface-raised) px-4 py-2 text-sm font-bold text-(--brand-primary) backdrop-blur-sm transition hover:bg-[#e3d9ff] active:scale-[0.98]"
+              >
+                <LogIn size={16} strokeWidth={2.2} />
+                {t("auth.login")}
+              </button>
+            </SignInButton>
+          )
         ) : null}
       </footer>
 

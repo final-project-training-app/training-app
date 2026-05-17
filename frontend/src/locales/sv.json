@@ -4,7 +4,7 @@
     "logout": "Logga ut"
   },
   "admin": {
-    "page": "Admin sida",
+    "page": "Admin-sida",
     "checkingAccess": "Kontrollerar åtkomst...",
     "access": "Admin-åtkomst",
     "signInTitle": "Logga in för att fortsätta",
