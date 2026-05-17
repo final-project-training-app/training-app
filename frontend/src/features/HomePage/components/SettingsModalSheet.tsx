@@ -8,6 +8,8 @@ import TrainerSelectionModal from "./TrainerSelectionModal";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
 
+const SHEET_CLOSE_DURATION_MS = 350;
+
 import {
   AppSheet,
   AppSheetCard,
@@ -97,8 +99,18 @@ export default function SettingsModalSheet({
   const { t } = useTranslation();
   const { isLoaded, isSignedIn } = useAuth();
   const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
+  const [isRendered, setIsRendered] = useState(open);
 
-  if (!open) {
+  useEffect(() => {
+    if (open) {
+      setIsRendered(true);
+    } else {
+      const tid = setTimeout(() => setIsRendered(false), SHEET_CLOSE_DURATION_MS);
+      return () => clearTimeout(tid);
+    }
+  }, [open]);
+
+  if (!isRendered) {
     return null;
   }
 

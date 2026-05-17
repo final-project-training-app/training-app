@@ -41,6 +41,7 @@ export function AppSheet({
   height = "default",
 }: AppSheetProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const scrollBodyRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
   // Drag position stored in a ref – no re-render needed during drag.
@@ -48,9 +49,20 @@ export function AppSheet({
   // Guards against animating the close on initial mount (open=false from birth).
   // Without this, every AppSheet instance would slide down on first render.
   const hasEverBeenOpen = useRef(false);
-  // Only the backdrop uses React state; the sheet's position is driven
-  // entirely by direct DOM manipulation so CSS transitions are 100% reliable.
+  // Only pointer-events use React state; opacity/blur are driven via DOM refs
+  // so transitions are always in sync with the sheet position.
   const [backdropVisible, setBackdropVisible] = useState(false);
+
+  function applyBackdrop(fraction: number, animated: boolean) {
+    const bd = backdropRef.current;
+    if (!bd) return;
+    const clamped = Math.max(0, Math.min(1, fraction));
+    bd.style.transition = animated
+      ? "opacity 300ms ease-out, backdrop-filter 300ms ease-out"
+      : "none";
+    bd.style.opacity = String(1 - clamped);
+    bd.style.backdropFilter = `blur(${3 * (1 - clamped)}px)`;
+  }
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -64,9 +76,11 @@ export function AppSheet({
       // flush so the browser treats translateY(100%) as the CSS "from" state.
       el.style.transition = "none";
       el.style.transform = "translateY(100%)";
+      applyBackdrop(1, false);
       el.getBoundingClientRect();
-      el.style.transition = "transform 500ms ease-out";
+      el.style.transition = "transform 300ms ease-out";
       el.style.transform = "translateY(0)";
+      applyBackdrop(0, true);
       // No cleanup returned: a cleanup that resets the transform would fire
       // before the close effect and prevent the slide-down animation.
       // StrictMode double-invoke: second run overwrites the first before any
@@ -76,20 +90,22 @@ export function AppSheet({
         // Initial mount in closed state – just snap off-screen, no animation.
         el.style.transition = "none";
         el.style.transform = "translateY(100%)";
+        applyBackdrop(1, false);
         return;
       }
       // Slide-down close.  Enable transition first, then force a style-flush
       // so the browser commits the current position as the from-state before
       // we change the transform.
-      el.style.transition = "transform 500ms ease-out";
+      el.style.transition = "transform 300ms ease-out";
       el.getBoundingClientRect();
       el.style.transform = "translateY(100%)";
+      applyBackdrop(1, true);
 
       const tid = setTimeout(() => {
         setBackdropVisible(false);
         dragY.current = 0;
         el.style.transition = "none";
-      }, 550);
+      }, 350);
       return () => clearTimeout(tid);
     }
   }, [open]);
@@ -154,6 +170,10 @@ export function AppSheet({
       const newY = delta > 0 ? delta : Math.max(delta / 3, -60);
       dragY.current = newY;
       el.style.transform = `translateY(${newY}px)`;
+
+      // Backdrop opacity/blur follow how far down the sheet has been dragged.
+      const sheetHeight = el.offsetHeight || 1;
+      applyBackdrop(Math.max(0, newY / sheetHeight), false);
     }
 
     el.addEventListener("touchmove", handleTouchMove, { passive: false });
@@ -170,7 +190,7 @@ export function AppSheet({
     if (!el) return;
 
     // Re-enable transition before animating.
-    el.style.transition = "transform 500ms ease-out";
+    el.style.transition = "transform 300ms ease-out";
 
     if (dragged > 120) {
       // The close effect will animate translateY(100%) from wherever the sheet
@@ -179,17 +199,18 @@ export function AppSheet({
     } else {
       // Snap back to fully open.
       el.style.transform = "translateY(0)";
+      applyBackdrop(0, true);
     }
   }
 
   return (
     <>
       <div
+        ref={backdropRef}
         onClick={onClose}
         className={[
-          "absolute inset-0 z-40 bg-[#221447]/18 backdrop-blur-[3px]",
-          "transition-opacity duration-[300ms] ease-out",
-          backdropVisible ? "opacity-100" : "pointer-events-none opacity-0",
+          "absolute inset-0 z-40 bg-[#221447]/18 opacity-0",
+          backdropVisible ? "" : "pointer-events-none",
         ].join(" ")}
       />
 
