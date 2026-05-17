@@ -160,6 +160,7 @@ function SettingsModalBody({
   );
 
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialMount = useRef(true);
 
   const updateProfile = useUpdateProfile();
 
@@ -170,6 +171,25 @@ function SettingsModalBody({
       }
     };
   }, []);
+
+  // Auto-save trainer immediately when selection changes, using last-saved profile
+  // values for other fields to avoid persisting incomplete form edits.
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (selectedTrainerId == null) return;
+    updateProfile
+      .mutateAsync({
+        name: (profile.name ?? "").trim(),
+        intensityLevel: normalizeIntensityLevel(profile.intensityLevel),
+        context: profile.context ?? "",
+        trainerId: selectedTrainerId,
+      })
+      .catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTrainerId]);
 
   const showFeedback = (message: string) => {
     if (feedbackTimeoutRef.current) {
@@ -185,11 +205,6 @@ function SettingsModalBody({
 
   const handleSave = async () => {
     setSaveFeedback(null);
-
-    if (selectedTrainerId == null) {
-      showFeedback(t("settings.selectTrainer"));
-      return;
-    }
 
     try {
       await updateProfile.mutateAsync({

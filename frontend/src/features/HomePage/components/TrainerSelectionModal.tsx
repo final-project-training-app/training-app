@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader,
+  SlidersHorizontal,
   Square,
   UserRound,
   Volume2,
@@ -20,6 +21,10 @@ import {
   AppSheetSectionText,
   AppSheetSectionTitle,
 } from "../../../components/AppSheet";
+import {
+  getStoredLanguageFilter,
+  setStoredLanguageFilter,
+} from "../trainerPreference";
 
 type Trainer = {
   id: number;
@@ -29,6 +34,10 @@ type Trainer = {
   intro?: string | null;
   language?: string;
 };
+
+function wrap(index: number, length: number): number {
+  return ((index % length) + length) % length;
+}
 
 export default function TrainerSelectionModal({
   onTrainerSelect,
@@ -40,6 +49,7 @@ export default function TrainerSelectionModal({
   const { getToken, isSignedIn } = useAuth();
   const { play, stop, loadingId, playingId } = useVoicePlayer();
   const { t } = useTranslation();
+
   const {
     data: trainers = [],
     isLoading,
@@ -48,52 +58,172 @@ export default function TrainerSelectionModal({
     queryKey: ["trainers"],
     queryFn: async () => {
       const token = await getToken();
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      if (!token) throw new Error("Not authenticated");
       return fetchTrainersWithToken(token);
     },
     enabled: isSignedIn === true,
     refetchOnWindowFocus: false,
   });
 
-  const handleSelectTrainer = (id: number) => {
-    onTrainerSelect?.(id);
-  };
-
-  const selectedIndex = useMemo(
-    () =>
-      trainers.findIndex(
-        (trainer: Trainer) => trainer.id === selectedTrainerId,
-      ),
-    [selectedTrainerId, trainers],
+  const [activeLanguages, setActiveLanguages] = useState<string[]>(
+    () => getStoredLanguageFilter() ?? [],
   );
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  const activeIndex = selectedIndex >= 0 ? selectedIndex : 0;
-  const selectedTrainer = trainers[activeIndex] ?? null;
+  // Carousel state
+  const [centerIndex, setCenterIndex] = useState(0);
+  // trackOffset: -100 = showing center, -200 = showing next, 0 = showing prev
+  const [trackOffset, setTrackOffset] = useState(-100);
+  const [transitionEnabled, setTransitionEnabled] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragX, setDragX] = useState(0);
 
-  const selectTrainerByIndex = (index: number) => {
-    const trainer = trainers[index];
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const isHorizontalSwipe = useRef<boolean | null>(null);
+  const isSnappingBack = useRef(false);
+  const hasInitialisedFilter = useRef(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
-    if (!trainer) {
-      return;
+  const allLanguages = useMemo(() => {
+    const langs = (trainers as Trainer[])
+      .map((t) => t.language)
+      .filter((l): l is string => typeof l === "string" && l.trim() !== "");
+    return Array.from(new Set(langs));
+  }, [trainers]);
+
+  useEffect(() => {
+    if (allLanguages.length === 0 || hasInitialisedFilter.current) return;
+    hasInitialisedFilter.current = true;
+    const stored = getStoredLanguageFilter();
+    if (stored !== null && stored.length > 0) {
+      const valid = stored.filter((l) => allLanguages.includes(l));
+      setActiveLanguages(valid.length > 0 ? valid : allLanguages);
+    } else {
+      const defaults = allLanguages.filter((l) =>
+        /sv|svenska|en|english|engelska/i.test(l),
+      );
+      setActiveLanguages(defaults.length > 0 ? defaults : allLanguages);
     }
+  }, [allLanguages]);
 
-    handleSelectTrainer(trainer.id);
+  useEffect(() => {
+    if (!filterOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [filterOpen]);
+
+  const filteredTrainers = useMemo(() => {
+    if (activeLanguages.length === 0) return trainers as Trainer[];
+    return (trainers as Trainer[]).filter(
+      (t) =>
+        typeof t.language === "string" && activeLanguages.includes(t.language),
+    );
+  }, [trainers, activeLanguages]);
+
+  // When filtered list changes, snap to selected trainer without animation
+  useEffect(() => {
+    const idx = filteredTrainers.findIndex((t) => t.id === selectedTrainerId);
+    setTransitionEnabled(false);
+    setCenterIndex(idx >= 0 ? idx : 0);
+    setTrackOffset(-100);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setTransitionEnabled(true));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredTrainers]);
+
+  const n = filteredTrainers.length;
+  const prevItem = n > 0 ? filteredTrainers[wrap(centerIndex - 1, n)] : null;
+  const centerItem = n > 0 ? filteredTrainers[centerIndex] : null;
+  const nextItem = n > 0 ? filteredTrainers[wrap(centerIndex + 1, n)] : null;
+
+  const navigate = (direction: 1 | -1) => {
+    if (isAnimating || n <= 1) return;
+    setIsAnimating(true);
+    setTrackOffset(direction === 1 ? -200 : 0);
   };
 
-  const moveSelection = (direction: -1 | 1) => {
-    if (trainers.length === 0) {
+  const handleTransitionEnd = (e: React.TransitionEvent) => {
+    if (e.propertyName !== "transform") return;
+
+    // Snap-back (user dragged but didn't swipe far enough)
+    if (isSnappingBack.current) {
+      isSnappingBack.current = false;
       return;
     }
 
-    const nextIndex =
-      selectedIndex === -1
-        ? 0
-        : Math.min(Math.max(selectedIndex + direction, 0), trainers.length - 1);
+    if (!isAnimating) return;
 
-    selectTrainerByIndex(nextIndex);
+    const direction = trackOffset === -200 ? 1 : -1;
+
+    // Instantly reset position and advance center — no visible jump
+    setTransitionEnabled(false);
+    setTrackOffset(-100);
+    setCenterIndex((prev) => wrap(prev + direction, n));
+    setIsAnimating(false);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setTransitionEnabled(true));
+    });
+  };
+
+  const toggleLanguage = (lang: string) => {
+    setActiveLanguages((prev) => {
+      let next = prev.includes(lang)
+        ? prev.filter((l) => l !== lang)
+        : [...prev, lang];
+      if (next.length === 0) next = allLanguages;
+      setStoredLanguageFilter(next);
+      return next;
+    });
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isAnimating) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = null;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (
+      isHorizontalSwipe.current === null &&
+      (Math.abs(dx) > 5 || Math.abs(dy) > 5)
+    ) {
+      isHorizontalSwipe.current = Math.abs(dx) > Math.abs(dy);
+    }
+    if (isHorizontalSwipe.current) {
+      setIsDragging(true);
+      setDragX(dx);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    const wasHorizontal = isHorizontalSwipe.current;
+    touchStartX.current = null;
+    touchStartY.current = null;
+    isHorizontalSwipe.current = null;
+    setIsDragging(false);
+    setDragX(0);
+
+    if (wasHorizontal && Math.abs(delta) > 55) {
+      navigate(delta < 0 ? 1 : -1);
+    } else if (wasHorizontal) {
+      // Snap back with transition
+      isSnappingBack.current = true;
+    }
   };
 
   if (isSignedIn === false) {
@@ -103,6 +233,17 @@ export default function TrainerSelectionModal({
       </section>
     );
   }
+
+  const trackStyle: React.CSSProperties = {
+    transform: isDragging
+      ? `translateX(calc(-100% + ${dragX}px))`
+      : `translateX(${trackOffset}%)`,
+    transition:
+      transitionEnabled && !isDragging
+        ? "transform 0.38s cubic-bezier(0.25,0.46,0.45,0.94)"
+        : "none",
+    willChange: "transform",
+  };
 
   return (
     <section aria-labelledby="trainer-selection-title" className="space-y-4">
@@ -114,133 +255,259 @@ export default function TrainerSelectionModal({
         </AppSheetNotice>
       ) : trainers.length > 0 ? (
         <AppSheetCard>
+          {/* Header */}
           <div className="flex items-start gap-3 text-[#4f3bb8]">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-(--brand-primary)">
               <UserRound size={22} />
             </div>
-
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div id="trainer-selection-title">
                 <AppSheetSectionTitle>
                   {t("trainerSelection.title")}
                 </AppSheetSectionTitle>
               </div>
-
               <AppSheetSectionText>
                 {t("trainerSelection.description")}
               </AppSheetSectionText>
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => moveSelection(-1)}
-              disabled={trainers.length <= 1 || activeIndex <= 0}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#ddd2ff] bg-white text-[#5b3fd6] transition active:scale-95 disabled:opacity-40"
-              aria-label={t("trainerSelection.previousTrainer")}
-            >
-              <ChevronLeft size={22} strokeWidth={2.8} />
-            </button>
-
-            <div className="min-w-0 flex-1 text-center">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#8c82b3]">
-                {t("trainerSelection.trainerCount", {
-                  current: activeIndex + 1,
-                  total: trainers.length,
-                })}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => moveSelection(1)}
-              disabled={
-                trainers.length <= 1 || activeIndex >= trainers.length - 1
-              }
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#ddd2ff] bg-white text-[#5b3fd6] transition active:scale-95 disabled:opacity-40"
-              aria-label={t("trainerSelection.nextTrainer")}
-            >
-              <ChevronRight size={22} strokeWidth={2.8} />
-            </button>
-          </div>
-
-          {selectedTrainer ? (
-            <div role="listbox" aria-label="Välj tränare" className="mt-4">
-              <div role="option" aria-selected="true" className="space-y-4">
-                <div className="relative block w-full overflow-hidden rounded-3xl bg-[#efe7ff] text-left">
-                  <div className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#5c35c4] text-white shadow-sm">
-                    <Check size={18} strokeWidth={3} />
-                  </div>
-
-                  <div className="px-4 pb-2 pt-4 text-center">
-                    <h3 className="text-[20px] font-extrabold leading-tight text-[#281d7a]">
-                      {selectedTrainer.name}
-                    </h3>
-                  </div>
-
-                  <div className="aspect-4/3 w-full overflow-hidden">
-                    {selectedTrainer.imageSelect ? (
-                      <img
-                        src={selectedTrainer.imageSelect}
-                        alt={selectedTrainer.name}
-                        loading="lazy"
-                        className="h-full w-full object-contain object-center"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[#7a68be]">
-                        <UserRound size={52} strokeWidth={1.8} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
+          {/* Discreet language filter */}
+          {allLanguages.length > 1 && (
+            <div ref={filterRef} className="relative mt-1.5 ml-[52px]">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-medium text-[#a89fc8]">
+                  {activeLanguages.join(" · ")}
+                </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    const trainerId = String(selectedTrainer.id);
-
-                    if (playingId === trainerId) {
-                      stop();
-                    } else {
-                      play(trainerId, selectedTrainer.intro);
-                    }
-                  }}
-                  disabled={loadingId === String(selectedTrainer.id)}
-                  className={`flex w-full items-center justify-center gap-2 ${appSheetFieldClass} px-3 py-3 text-[15px] font-extrabold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
-                    playingId === String(selectedTrainer.id)
-                      ? "border-rose-300 bg-rose-50 text-rose-800"
-                      : "text-[#3f2a7a]"
-                  }`}
+                  onClick={() => setFilterOpen((prev) => !prev)}
+                  aria-expanded={filterOpen}
+                  className="text-[#a89fc8] transition hover:text-[#5b3fd6] active:scale-95"
                 >
-                  {loadingId === String(selectedTrainer.id) ? (
-                    <>
-                      <Loader size={16} className="animate-spin" />
-                      {t("trainerSelection.loadingAudio")}
-                    </>
-                  ) : playingId === String(selectedTrainer.id) ? (
-                    <>
-                      <Square size={15} className="fill-current" />
-                      {t("trainerSelection.stopAudio")}
-                    </>
-                  ) : (
-                    <>
-                      <Volume2 size={16} />
-                      {t("trainerSelection.listenAudio")}
-                    </>
-                  )}
+                  <SlidersHorizontal size={12} strokeWidth={2} />
                 </button>
               </div>
+              {filterOpen && (
+                <div className="absolute left-0 top-full z-10 mt-1.5 min-w-[160px] space-y-0.5 rounded-2xl border border-[#ddd2ff] bg-white p-2 shadow-lg">
+                  {allLanguages.map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => toggleLanguage(lang)}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition hover:bg-[#f1ecff] active:scale-[0.98]"
+                    >
+                      <div
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] border-2 transition ${
+                          activeLanguages.includes(lang)
+                            ? "border-[#5b3fd6] bg-[#5b3fd6]"
+                            : "border-[#ddd2ff] bg-white"
+                        }`}
+                      >
+                        {activeLanguages.includes(lang) && (
+                          <Check size={11} strokeWidth={3} className="text-white" />
+                        )}
+                      </div>
+                      <span className="text-[14px] font-semibold text-[#281d7a]">
+                        {lang}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : null}
+          )}
 
-          <p className="mt-4 text-center text-[14px] font-semibold leading-relaxed text-[#5c567f]">
-            {t("trainerSelection.selectDescription")}
-          </p>
+          {/* No trainers after filter */}
+          {n === 0 && (
+            <div className="mt-3">
+              <AppSheetNotice>
+                {t("trainerSelection.noTrainersForFilter")}
+              </AppSheetNotice>
+            </div>
+          )}
+
+          {/* Carousel */}
+          {centerItem && (
+            <div className="relative mt-4">
+              {/* 3-item sliding window — overflow hides prev and next */}
+              <div
+                className="overflow-hidden rounded-3xl"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div
+                  className="flex"
+                  style={trackStyle}
+                  onTransitionEnd={handleTransitionEnd}
+                >
+                  {[prevItem, centerItem, nextItem].map((trainer, slot) => (
+                    <div
+                      key={`${slot}-${trainer?.id ?? "empty"}`}
+                      className="w-full shrink-0"
+                      aria-hidden={slot !== 1}
+                    >
+                      {trainer ? (
+                        <TrainerCard
+                          trainer={trainer}
+                          isSelected={trainer.id === selectedTrainerId}
+                          playingId={playingId}
+                          loadingId={loadingId}
+                          onPlay={() => play(String(trainer.id), trainer.intro)}
+                          onStop={stop}
+                          onSelect={() => onTrainerSelect?.(trainer.id)}
+                          t={t}
+                        />
+                      ) : (
+                        <div className="aspect-[8/9] bg-[#efe7ff]" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Left arrow */}
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                disabled={n <= 1}
+                className="absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#5b3fd6] bg-white/20 text-[#5b3fd6] shadow-[0_1px_8px_rgba(0,0,0,0.18)] backdrop-blur-[2px] transition active:scale-95 disabled:opacity-30"
+                aria-label={t("trainerSelection.previousTrainer")}
+              >
+                <ChevronLeft size={20} strokeWidth={2.2} />
+              </button>
+
+              {/* Right arrow */}
+              <button
+                type="button"
+                onClick={() => navigate(1)}
+                disabled={n <= 1}
+                className="absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#5b3fd6] bg-white/20 text-[#5b3fd6] shadow-[0_1px_8px_rgba(0,0,0,0.18)] backdrop-blur-[2px] transition active:scale-95 disabled:opacity-30"
+                aria-label={t("trainerSelection.nextTrainer")}
+              >
+                <ChevronRight size={20} strokeWidth={2.2} />
+              </button>
+            </div>
+          )}
         </AppSheetCard>
       ) : (
         <AppSheetNotice>{t("trainerSelection.noTrainers")}</AppSheetNotice>
       )}
     </section>
+  );
+}
+
+// Separate component so React can key each slot independently
+function TrainerCard({
+  trainer,
+  isSelected,
+  playingId,
+  loadingId,
+  onPlay,
+  onStop,
+  onSelect,
+  t,
+}: {
+  trainer: Trainer;
+  isSelected: boolean;
+  playingId: string | null;
+  loadingId: string | null;
+  onPlay: () => void;
+  onStop: () => void;
+  onSelect: () => void;
+  t: (key: string) => string;
+}) {
+  const id = String(trainer.id);
+  const isPlaying = playingId === id;
+  const isLoading = loadingId === id;
+
+  return (
+    <div className="relative aspect-[8/9] overflow-hidden bg-[#efe7ff]">
+      {/* Image — left half, full height */}
+      {trainer.imageSelect ? (
+        <img
+          src={trainer.imageSelect}
+          alt={trainer.name}
+          loading="lazy"
+          draggable={false}
+          className="absolute bottom-0 left-0 h-full w-1/2 select-none object-contain object-bottom"
+        />
+      ) : (
+        <div className="absolute bottom-0 left-0 flex h-full w-1/2 items-end justify-center pb-4 text-[#7a68be]">
+          <UserRound size={80} strokeWidth={1.2} />
+        </div>
+      )}
+
+      {/* Top-right: name, title, language, selected indicator */}
+      <div className="absolute right-0 top-0 w-1/2 px-4 pt-4 text-right">
+        <h3 className="text-[17px] font-extrabold leading-tight text-[#281d7a]">
+          {trainer.name}
+        </h3>
+        <p className="text-[12px] font-semibold text-[#5c567f]">
+          {t("trainerSelection.trainerTitle")}
+        </p>
+        {trainer.language && (
+          <p className="text-[12px] font-semibold text-[#7a68be]">
+            {trainer.language}
+          </p>
+        )}
+        {isSelected && (
+          <div className="mt-2 flex justify-end">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#5c35c4] text-white">
+              <Check size={18} strokeWidth={3} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom-right: buttons — 65% card width */}
+      <div className="absolute bottom-0 right-0 w-[65%] space-y-1.5 px-4 pb-4">
+        {/* Preview audio */}
+        <button
+          type="button"
+          onClick={isPlaying ? onStop : onPlay}
+          disabled={isLoading}
+          className={`flex w-full items-center justify-center gap-1.5 ${appSheetFieldClass} px-2 py-2 text-[13px] font-extrabold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 ${
+            isPlaying
+              ? "border-rose-300 bg-rose-50 text-rose-800"
+              : "text-[#3f2a7a]"
+          }`}
+        >
+          {isLoading ? (
+            <>
+              <Loader size={14} className="animate-spin" />
+              {t("trainerSelection.loadingAudio")}
+            </>
+          ) : isPlaying ? (
+            <>
+              <Square size={13} className="fill-current" />
+              {t("trainerSelection.stopAudio")}
+            </>
+          ) : (
+            <>
+              <Volume2 size={14} />
+              {t("trainerSelection.listenAudio")}
+            </>
+          )}
+        </button>
+
+        {/* Select / selected */}
+        {isSelected ? (
+          <p className="flex w-full items-center justify-center gap-1 py-2 text-center text-[13px] font-extrabold text-[#5c35c4]">
+            <Check size={14} strokeWidth={3} />
+            {t("trainerSelection.selected")}
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={onSelect}
+            className="flex w-full items-center justify-center rounded-2xl bg-[#5b3fd6] px-2 py-2 text-[13px] font-extrabold text-white transition active:scale-95"
+          >
+            {t("trainerSelection.selectButton")}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

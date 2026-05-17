@@ -154,17 +154,21 @@
   "trainerSelection": {
     "notLoggedIn": "Du är inte inloggad.",
     "title": "Välj tränare",
-    "description": "Välj en tränare i taget. Använd pilarna för att byta.",
+    "description": "Bläddra med pilarna och välj den tränare du vill ha.",
     "loading": "Hämtar tränare...",
     "fetchError": "Kunde inte hämta tränare.",
     "selectTrainer": "Välj tränare",
     "noTrainers": "Inga tränare tillgängliga.",
+    "noTrainersForFilter": "Inga tränare matchar valt språk.",
     "previousTrainer": "Föregående tränare",
     "nextTrainer": "Nästa tränare",
     "trainerCount": "Tränare {{current}} av {{total}}",
+    "trainerTitle": "Personlig tränare",
+    "selectButton": "Välj",
+    "selected": "Vald",
     "loadingAudio": "Laddar ljud...",
     "stopAudio": "Stoppa",
-    "listenAudio": "Lyssna",
+    "listenAudio": "Provlyssna",
     "selectDescription": "Byt med pilarna tills du hittar en röst som känns tydlig och trygg."
   },
   "workoutsAdmin": {
