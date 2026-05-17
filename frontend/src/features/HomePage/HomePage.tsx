@@ -6,7 +6,7 @@ import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
 import { startRingback } from "../ai-conversation/audio/ringback";
 import type { BackendWorkoutResponse } from "../ai-conversation/tools/workout/workoutTypes";
 import { coachCallSessionQueryOptions } from "../session/query";
-import { SignInButton, SignOutButton, useAuth } from "@clerk/react";
+import { SignInButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
 import { getJson } from "../../lib/api/fetcher";
