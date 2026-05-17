@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SignOutButton, useAuth } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
-import { Settings } from "lucide-react";
+import { CircleHelp, Globe, Settings, User } from "lucide-react";
 import IntensitySlider from "./IntensitySlider";
 import ContextModel from "./ContextModal";
 import TrainerSelectionModal from "./TrainerSelectionModal";
@@ -168,9 +168,6 @@ function SettingsModalBody({
   );
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
   const [supportOpen, setSupportOpen] = useState(false);
-  const [supportInitialMode, setSupportInitialMode] = useState<"faq" | "form">(
-    "faq",
-  );
 
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
@@ -227,7 +224,7 @@ function SettingsModalBody({
         trainerId: Number(selectedTrainerId),
       });
 
-      showFeedback(t("settings.saveSuccess"));
+      setOpen(false);
     } catch (error) {
       console.error("[SettingsModalSheet] Save failed:", error);
       showFeedback(t("settings.saveError"));
@@ -245,6 +242,9 @@ function SettingsModalBody({
         height="large"
         footer={
           <section className="space-y-2.5 pb-1">
+            {saveFeedback ? (
+              <AppSheetNotice tone="danger">{saveFeedback}</AppSheetNotice>
+            ) : null}
             <button
               className={appSheetPrimaryButtonClass}
               disabled={updateProfile.isPending}
@@ -252,62 +252,23 @@ function SettingsModalBody({
             >
               {updateProfile.isPending
                 ? t("settings.saving")
-                : t("settings.saveChanges")}
-            </button>
-
-            {saveFeedback ? (
-              <AppSheetNotice
-                tone={saveFeedback.includes("✓") ? "success" : "danger"}
-              >
-                {saveFeedback}
-              </AppSheetNotice>
-            ) : null}
-
-            <button
-              className={appSheetSecondaryButtonClass}
-              onClick={() => setOpen(false)}
-            >
-              {t("settings.cancel")}
+                : t("settings.saveAndClose")}
             </button>
           </section>
         }
       >
         <div className="divide-y divide-(--brand-border)/60 pb-2">
           <section className="py-5">
-            <div className="flex justify-between items-center">
-              <AppSheetSectionTitle>
-                {t("settings.language")}
-              </AppSheetSectionTitle>
-              <LanguageSwitcher
-                value={i18n.language}
-                onChange={(lng: string) => i18n.changeLanguage(lng)}
-              />
+            <div className="mb-2 flex items-center gap-2">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
+                <User size={20} />
+              </div>
+              <label htmlFor="fullName">
+                <AppSheetSectionTitle>
+                  {t("settings.fullName")}
+                </AppSheetSectionTitle>
+              </label>
             </div>
-          </section>
-
-          <section className="py-5">
-            <div className="flex justify-between items-center">
-              <AppSheetSectionTitle>
-                {t("settings.getHelp")}
-              </AppSheetSectionTitle>
-              <button
-                className="rounded-full px-4 py-2 text-[length:var(--text-sm)] font-extrabold bg-(--brand-primary) text-white hover:opacity-95 transition"
-                onClick={() => {
-                  setSupportInitialMode("form");
-                  setSupportOpen(true);
-                }}
-              >
-                {t("settings.getHelpButton")}
-              </button>
-            </div>
-          </section>
-
-          <section className="py-5">
-            <label htmlFor="fullName" className="block">
-              <AppSheetSectionTitle>
-                {t("settings.fullName")}
-              </AppSheetSectionTitle>
-            </label>
 
             <AppSheetSectionText>
               {t("settings.fullNameDescription")}
@@ -346,6 +307,42 @@ function SettingsModalBody({
             <ContextModel value={context} onChange={setContext} />
           </section>
 
+          <section className="py-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
+                  <Globe size={20} />
+                </div>
+                <AppSheetSectionTitle>
+                  {t("settings.language")}
+                </AppSheetSectionTitle>
+              </div>
+              <LanguageSwitcher
+                value={i18n.language}
+                onChange={(lng: string) => i18n.changeLanguage(lng)}
+              />
+            </div>
+          </section>
+
+          <section className="py-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary-deep)">
+                  <CircleHelp size={20} />
+                </div>
+                <AppSheetSectionTitle>
+                  {t("settings.getHelp")}
+                </AppSheetSectionTitle>
+              </div>
+              <button
+                className="rounded-full px-4 py-2 text-[length:var(--text-sm)] font-extrabold bg-(--brand-primary) text-white hover:opacity-95 transition"
+                onClick={() => setSupportOpen(true)}
+              >
+                {t("settings.getHelpButton")}
+              </button>
+            </div>
+          </section>
+
           <section className="pt-5 pb-1 space-y-2">
             {profile.isAdmin && (
               <button
@@ -366,11 +363,7 @@ function SettingsModalBody({
           </section>
         </div>
       </AppSheet>
-      <SupportSheet
-        open={supportOpen}
-        setOpen={setSupportOpen}
-        initialMode={supportInitialMode}
-      />
+      <SupportSheet open={supportOpen} setOpen={setSupportOpen} />
     </>
   );
 }

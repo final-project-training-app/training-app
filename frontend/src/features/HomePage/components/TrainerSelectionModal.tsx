@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader,
-  SlidersHorizontal,
   Square,
   UserRound,
   Volume2,
@@ -15,7 +14,6 @@ import { fetchTrainersWithToken } from "../../../api/trainers";
 import { useVoicePlayer } from "../../../hooks/useVoicePlayer";
 import { useTranslation } from "react-i18next";
 import {
-  AppSheetCard,
   appSheetFieldClass,
   AppSheetNotice,
   AppSheetSectionText,
@@ -69,6 +67,7 @@ export default function TrainerSelectionModal({
     () => getStoredLanguageFilter() ?? [],
   );
   const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   // Carousel state
   const [centerIndex, setCenterIndex] = useState(0);
@@ -84,7 +83,6 @@ export default function TrainerSelectionModal({
   const isHorizontalSwipe = useRef<boolean | null>(null);
   const isSnappingBack = useRef(false);
   const hasInitialisedFilter = useRef(false);
-  const filterRef = useRef<HTMLDivElement>(null);
 
   const allLanguages = useMemo(() => {
     const langs = (trainers as Trainer[])
@@ -254,7 +252,7 @@ export default function TrainerSelectionModal({
           {t("trainerSelection.fetchError")}
         </AppSheetNotice>
       ) : trainers.length > 0 ? (
-        <AppSheetCard>
+        <div>
           {/* Header */}
           <div className="flex items-start gap-3 text-(--brand-primary-deep)">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-(--brand-surface) text-(--brand-primary)">
@@ -272,24 +270,26 @@ export default function TrainerSelectionModal({
             </div>
           </div>
 
-          {/* Discreet language filter */}
+          {/* Language filter — summary + popover */}
           {allLanguages.length > 1 && (
-            <div ref={filterRef} className="relative mt-1.5 ml-[52px]">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-medium text-(--brand-muted)">
-                  {activeLanguages.join(" · ")}
+            <div ref={filterRef} className="relative mt-2 ml-[52px]">
+              <div className="flex items-center gap-2">
+                <span className="text-[length:var(--text-xs)] font-semibold text-(--brand-body-ink)">
+                  {activeLanguages.length > 0
+                    ? activeLanguages.map((l) => t(`languages.${l}`, { defaultValue: l })).join(", ")
+                    : t("trainerSelection.allLanguages")}
                 </span>
                 <button
                   type="button"
                   onClick={() => setFilterOpen((prev) => !prev)}
-                  aria-expanded={filterOpen}
-                  className="text-(--brand-muted) transition hover:text-(--brand-primary) active:scale-95"
+                  className="rounded-lg px-2.5 py-1 text-[length:var(--text-xs)] font-extrabold text-(--brand-primary) border border-(--brand-border-field) bg-(--brand-surface) hover:bg-(--brand-soft) transition active:scale-95"
                 >
-                  <SlidersHorizontal size={12} strokeWidth={2} />
+                  {t("trainerSelection.changeFilter")}
                 </button>
               </div>
+
               {filterOpen && (
-                <div className="absolute left-0 top-full z-10 mt-1.5 min-w-[160px] space-y-0.5 rounded-2xl border border-(--brand-border-field) bg-(--brand-surface) p-2 shadow-lg">
+                <div className="absolute left-0 top-full z-10 mt-2 min-w-[180px] space-y-1 rounded-2xl border border-(--brand-border-field) bg-(--brand-surface) p-3 shadow-lg">
                   {allLanguages.map((lang) => (
                     <button
                       key={lang}
@@ -309,7 +309,7 @@ export default function TrainerSelectionModal({
                         )}
                       </div>
                       <span className="text-[length:var(--text-sm)] font-semibold text-(--brand-title-ink)">
-                        {lang}
+                        {t(`languages.${lang}`, { defaultValue: lang })}
                       </span>
                     </button>
                   ))}
@@ -332,7 +332,7 @@ export default function TrainerSelectionModal({
             <div className="relative mt-4">
               {/* 3-item sliding window — overflow hides prev and next */}
               <div
-                className="overflow-hidden rounded-3xl"
+                className="overflow-hidden rounded-3xl border border-(--brand-border)"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -390,7 +390,7 @@ export default function TrainerSelectionModal({
               </button>
             </div>
           )}
-        </AppSheetCard>
+        </div>
       ) : (
         <AppSheetNotice>{t("trainerSelection.noTrainers")}</AppSheetNotice>
       )}
@@ -449,7 +449,7 @@ function TrainerCard({
         </p>
         {trainer.language && (
           <p className="text-[12px] font-semibold text-(--brand-muted)">
-            {trainer.language}
+            {t(`languages.${trainer.language}`, { defaultValue: trainer.language })}
           </p>
         )}
         {isSelected && (
@@ -502,7 +502,7 @@ function TrainerCard({
           <button
             type="button"
             onClick={onSelect}
-            className="flex w-full items-center justify-center rounded-2xl bg-(--brand-primary) px-2 py-2 text-[13px] font-extrabold text-white transition active:scale-95"
+            className="flex w-full items-center justify-center rounded-2xl bg-(--brand-primary) px-2 py-2.5 text-[length:var(--text-sm)] font-extrabold text-white transition active:scale-95"
           >
             {t("trainerSelection.selectButton")}
           </button>

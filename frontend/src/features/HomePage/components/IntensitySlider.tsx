@@ -87,26 +87,9 @@ const IntensitySlider = ({ value, onChange }: IntensitySliderProps) => {
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-5 gap-1 text-center">
-            {steps.map((label, index) =>
-              (() => {
-                const stepValue = index + INTENSITY_MIN;
-
-                return (
-                  <span
-                    key={label}
-                    className={`text-[11px] font-bold leading-tight transition ${
-                      stepValue === safeValue
-                        ? "text-(--brand-title-ink)"
-                        : "text-(--brand-muted)"
-                    }`}
-                  >
-                    {label}
-                  </span>
-                );
-              })(),
-            )}
-          </div>
+          <p className="mt-4 text-center text-[length:var(--text-lg)] font-extrabold text-(--brand-title-ink)">
+            {steps[safeValue - INTENSITY_MIN]}
+          </p>
         </div>
       </div>
     </div>

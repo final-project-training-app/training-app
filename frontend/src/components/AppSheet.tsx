@@ -44,6 +44,7 @@ export function AppSheet({
   const backdropRef = useRef<HTMLDivElement>(null);
   const scrollBodyRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
+  const mouseStartY = useRef<number | null>(null);
   // Drag position stored in a ref – no re-render needed during drag.
   const dragY = useRef(0);
   // Guards against animating the close on initial mount (open=false from birth).
@@ -148,6 +149,12 @@ export function AppSheet({
     touchStartY.current = e.touches[0].clientY;
   }
 
+  function onMouseDown(e: React.MouseEvent) {
+    if (!open) return;
+    if (scrollBodyRef.current?.contains(e.target as Node)) return;
+    mouseStartY.current = e.clientY;
+  }
+
   useEffect(() => {
     const el = sectionRef.current;
     if (!el || !open) return;
@@ -179,6 +186,46 @@ export function AppSheet({
     el.addEventListener("touchmove", handleTouchMove, { passive: false });
     return () => el.removeEventListener("touchmove", handleTouchMove);
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handleMouseMove(e: MouseEvent) {
+      if (mouseStartY.current == null) return;
+      const delta = e.clientY - mouseStartY.current;
+      const el = sectionRef.current;
+      if (!el) return;
+      el.style.transition = "none";
+      const newY = delta > 0 ? delta : Math.max(delta / 3, -60);
+      dragY.current = newY;
+      el.style.transform = `translateY(${newY}px)`;
+      const sheetHeight = el.offsetHeight || 1;
+      applyBackdrop(Math.max(0, newY / sheetHeight), false);
+    }
+
+    function handleMouseUp() {
+      if (mouseStartY.current == null) return;
+      const dragged = dragY.current;
+      mouseStartY.current = null;
+      dragY.current = 0;
+      const el = sectionRef.current;
+      if (!el) return;
+      el.style.transition = "transform 300ms ease-out";
+      if (dragged > 120) {
+        onClose();
+      } else {
+        el.style.transform = "translateY(0)";
+        applyBackdrop(0, true);
+      }
+    }
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [open, onClose]);
 
   function onTouchEnd() {
     if (touchStartY.current == null) return;
@@ -219,6 +266,7 @@ export function AppSheet({
         onWheel={handleWheel}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
         className={[
           "absolute inset-x-0 bottom-0 z-50 flex w-full flex-col",
           "app-sheet-surface overflow-hidden rounded-t-4xl",
@@ -229,7 +277,7 @@ export function AppSheet({
         // No transform style prop – position is controlled entirely via
         // el.style.transform so CSS transitions always have a reliable from-state.
       >
-        <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-(--brand-border-strong)/40" />
+        <div className="mx-auto mt-3 h-1.5 w-16 cursor-grab select-none rounded-full bg-black/20 active:cursor-grabbing" />
 
         <div className="min-h-0 flex flex-1 flex-col px-5 pb-[max(1.25rem,var(--stage-safe-bottom))] pt-4">
           <header className="flex shrink-0 items-start justify-between gap-3">

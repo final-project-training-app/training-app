@@ -46,15 +46,19 @@ export function useVoicePlayer() {
       }
     };
 
-    // Use both canplay and canplaythrough for better compatibility
+    // Guard so both oncanplay and oncanplaythrough firing doesn't double-play,
+    // which would cause the second play() to trigger onerror, clearing onended.
+    let started = false;
     const startPlayback = () => {
+      if (started) return;
+      started = true;
       setLoadingId(null);
+      setPlayingId(id);
       audio.play().catch((err) => {
         console.error("Error playing audio:", err);
         setLoadingId(null);
         setPlayingId(null);
       });
-      setPlayingId(id);
     };
 
     audio.oncanplay = startPlayback;
