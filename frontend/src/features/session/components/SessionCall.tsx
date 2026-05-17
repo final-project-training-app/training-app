@@ -71,6 +71,8 @@ type SessionCallProps = {
   debugEvents?: CoachSessionDebugEvent[];
   getCurrentRms?: () => number;
   showInstructionsVideo?: boolean;
+  isAiSpeaking?: boolean;
+  isUserTurn?: boolean;
   onSpeaker: () => void;
   onTrainingSuite: () => void;
   onInfo: () => void;
@@ -115,12 +117,14 @@ function ControlButton({
   onClick,
   active = false,
   disabled = false,
+  pulsing = false,
 }: {
   label: string;
   children: ReactNode;
   onClick?: () => void;
   active?: boolean;
   disabled?: boolean;
+  pulsing?: boolean;
 }) {
   return (
     <button
@@ -130,15 +134,20 @@ function ControlButton({
       aria-pressed={active}
       className="group flex min-w-0 flex-col items-center gap-[clamp(0.35rem,0.95cqh,0.65rem)] text-center disabled:opacity-60"
     >
-      <div
-        className={[
-          "flex h-[clamp(56px,8.5cqh,80px)] w-[clamp(56px,8.5cqh,80px)] items-center justify-center rounded-full shadow-[inset_0_0_0_1px_rgba(91,63,214,0.06)] transition group-active:scale-95 [&>svg]:h-[clamp(24px,3.45cqh,32px)] [&>svg]:w-[clamp(24px,3.45cqh,32px)]",
-          active
-            ? "bg-[#5b3fd6] text-white shadow-[0_10px_24px_rgba(91,63,214,0.22)]"
-            : "bg-[#ece7f8] text-[#5b3fd6]",
-        ].join(" ")}
-      >
-        {children}
+      <div className="relative">
+        {pulsing && (
+          <div className="call-pulse-ring" />
+        )}
+        <div
+          className={[
+            "flex h-[clamp(56px,8.5cqh,80px)] w-[clamp(56px,8.5cqh,80px)] items-center justify-center rounded-full shadow-[inset_0_0_0_1px_rgba(91,63,214,0.06)] transition group-active:scale-95 [&>svg]:h-[clamp(24px,3.45cqh,32px)] [&>svg]:w-[clamp(24px,3.45cqh,32px)]",
+            active
+              ? "bg-[#5b3fd6] text-white shadow-[0_10px_24px_rgba(91,63,214,0.22)]"
+              : "bg-[#ece7f8] text-[#5b3fd6]",
+          ].join(" ")}
+        >
+          {children}
+        </div>
       </div>
 
       <span
@@ -162,6 +171,8 @@ export function SessionCall({
   debugEvents = [],
   getCurrentRms,
   showInstructionsVideo = false,
+  isAiSpeaking = false,
+  isUserTurn = false,
   onSpeaker,
   onTrainingSuite,
   onInfo,
@@ -213,33 +224,38 @@ export function SessionCall({
 
       <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-[var(--stage-inline-pad)] pb-[var(--stage-safe-bottom)] pt-[var(--stage-safe-top)]">
         <section className="flex shrink-0 flex-col items-center text-center">
-          <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] relative flex h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)] items-center justify-center overflow-hidden rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
-            {trainerImage ? (
-              <img
-                src={trainerImage}
-                alt={trainerName}
-                className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
-                style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
-              />
-            ) : (
-              <div
-                className="absolute inset-0 flex items-center justify-center rounded-full bg-[#e8e1f8] text-[#5b3fd6] transition-opacity duration-1000"
-                style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
-              >
-                <UserRound size={56} strokeWidth={1.8} />
-              </div>
+          <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] relative h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)]">
+            {isAiSpeaking && (
+              <div className="call-pulse-ring" />
             )}
-            {session.instructionsVideo && (
-              <video
-                ref={videoRef}
-                src={session.instructionsVideo}
-                loop
-                playsInline
-                preload="auto"
-                className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
-                style={{ opacity: showInstructionsVideo ? 1 : 0 }}
-              />
-            )}
+            <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
+              {trainerImage ? (
+                <img
+                  src={trainerImage}
+                  alt={trainerName}
+                  className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
+                  style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
+                />
+              ) : (
+                <div
+                  className="absolute inset-0 flex items-center justify-center rounded-full bg-[#e8e1f8] text-[#5b3fd6] transition-opacity duration-1000"
+                  style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
+                >
+                  <UserRound size={56} strokeWidth={1.8} />
+                </div>
+              )}
+              {session.instructionsVideo && (
+                <video
+                  ref={videoRef}
+                  src={session.instructionsVideo}
+                  loop
+                  playsInline
+                  preload="auto"
+                  className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
+                  style={{ opacity: showInstructionsVideo ? 1 : 0 }}
+                />
+              )}
+            </div>
           </div>
 
           <h1 className="text-[clamp(25px,3.45cqh,34px)] font-extrabold leading-none text-[#100b2f]">
@@ -265,6 +281,7 @@ export function SessionCall({
               isMuted ? t("sessionCall.soundOff") : t("sessionCall.soundOn")
             }
             active={isMuted}
+            pulsing={isUserTurn}
             onClick={() => setIsMuted((current) => !current)}
           >
             <MicOff size={36} strokeWidth={1.5} />

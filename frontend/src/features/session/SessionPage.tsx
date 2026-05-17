@@ -70,12 +70,18 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     }
   }
 
-  const { step, error, debugEvents, endSession, getCurrentRms, showInstructionsVideo } =
+  const { step, error, debugEvents, endSession, getCurrentRms, showInstructionsVideo, currentTurn } =
     useCoachSession({
       session,
       trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
       autoStart: true,
     });
+
+  const isAiSpeaking =
+    currentTurn === "gemini" ||
+    step === "playing_instructions" ||
+    step === "playing_workout";
+  const isUserTurn = currentTurn === "user";
 
   useEffect(() => {
     if (step !== "completed") return;
@@ -104,6 +110,8 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
       debugEvents={debugEvents}
       getCurrentRms={getCurrentRms}
       showInstructionsVideo={showInstructionsVideo}
+      isAiSpeaking={isAiSpeaking}
+      isUserTurn={isUserTurn}
       onSpeaker={() => togglePanel("exercise")}
       onTrainingSuite={() => togglePanel("suite")}
       onInfo={() => togglePanel("info")}
