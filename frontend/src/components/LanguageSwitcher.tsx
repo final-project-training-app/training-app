@@ -31,11 +31,11 @@ export default function LanguageSwitcher({
             key={lang.code}
             onClick={() => handleChange(lang.code)}
             className={`
-              px-3 py-1 rounded-md text-sm font-medium transition
+              px-3 py-1.5 rounded-xl text-sm font-extrabold transition active:scale-[0.97]
               ${
                 isActive
-                  ? "bg-[#6b59b2] text-white"
-                  : "bg-transparent text-[#6b59b2] border border-[#6b59b2]"
+                  ? "bg-[#5b3fd6] text-white hover:bg-[#4e35c0]"
+                  : "border border-[#c5b0f0] bg-[#f0ecfc] text-[#4d2a7a] hover:bg-[#e3d9ff]"
               }
             `}
           >
