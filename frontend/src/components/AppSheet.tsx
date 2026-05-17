@@ -277,7 +277,7 @@ export function AppSheet({
         // No transform style prop – position is controlled entirely via
         // el.style.transform so CSS transitions always have a reliable from-state.
       >
-        <div className="mx-auto mt-3 h-1.5 w-16 cursor-grab select-none rounded-full bg-black/20 active:cursor-grabbing" />
+        <div className="mx-auto mt-3 h-1 w-9 shrink-0 cursor-grab select-none rounded-full bg-black/20 active:cursor-grabbing" />
 
         <div className="min-h-0 flex flex-1 flex-col px-5 pb-[max(1.25rem,var(--stage-safe-bottom))] pt-4">
           <header className="flex shrink-0 items-start justify-between gap-3">

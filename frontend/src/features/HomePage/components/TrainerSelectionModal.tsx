@@ -449,7 +449,7 @@ function TrainerCard({
         </p>
         {trainer.language && (
           <p className="text-[12px] font-semibold text-(--brand-muted)">
-            {t(`languages.${trainer.language}`, { defaultValue: trainer.language })}
+            {t(`languages.${trainer.language}`)}
           </p>
         )}
         {isSelected && (
