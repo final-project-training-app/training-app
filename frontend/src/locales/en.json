@@ -155,17 +155,21 @@
   "trainerSelection": {
     "notLoggedIn": "You are not logged in.",
     "title": "Select trainer",
-    "description": "Switch using the arrows until you find a voice that feels clear and confident.",
+    "description": "Browse with the arrows and select the trainer you want.",
     "loading": "Loading trainers...",
     "fetchError": "Could not fetch trainers.",
     "selectTrainer": "Select trainer",
     "noTrainers": "No trainers found.",
+    "noTrainersForFilter": "No trainers match the selected language.",
     "previousTrainer": "Previous trainer",
     "nextTrainer": "Next trainer",
     "trainerCount": "Trainer {{current}} of {{total}}",
+    "trainerTitle": "Personal trainer",
+    "selectButton": "Select",
+    "selected": "Selected",
     "loadingAudio": "Loading audio...",
     "stopAudio": "Stop",
-    "listenAudio": "Listen",
+    "listenAudio": "Preview",
     "selectDescription": "Switch using the arrows until you find a voice that feels clear and confident."
   },
   "workoutsAdmin": {
