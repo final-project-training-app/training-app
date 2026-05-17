@@ -71,6 +71,7 @@ body {
   color: var(--brand-ink);
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -168,11 +169,8 @@ body.admin-shell {
   --home-auth-top: var(--stage-safe-top);
   --home-auth-right: var(--stage-inline-pad);
   --home-footer-gap: clamp(0.6rem, 1.4cqh, 0.75rem);
-  --home-footer-bottom: max(20px, calc(var(--stage-safe-bottom) - 0.1rem));
-  --home-footer-height: clamp(96px, 14cqh, 100px);
-  --home-footer-height-auth: clamp(116px, 17cqh, 140px);
   --home-cta-min-height: clamp(56px, 7cqh, 60px);
-  --hero-logo-top: clamp(14px, 2.4cqh, 22px);
+  --hero-logo-top: max(clamp(14px, 2.4cqh, 22px), calc(env(safe-area-inset-top) + 8px));
   --hero-logo-width: min(86cqw, 48cqh, 370px);
   --hero-logo-height: calc(var(--hero-logo-width) * 0.546);
   --hero-logo-bottom: calc(var(--hero-logo-top) + var(--hero-logo-height));
@@ -246,6 +244,14 @@ body.admin-shell {
   backdrop-filter: blur(12px);
 }
 
+.home-footer-plate {
+  border-top: 1px solid rgba(255, 255, 255, 0.75);
+  background: #e9e0ef;
+  box-shadow:
+    0 -16px 44px rgba(55, 38, 110, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
 .app-shell-footer-surface {
   border-top: 1px solid rgba(255, 255, 255, 0.75);
   background: linear-gradient(
@@ -259,26 +265,3 @@ body.admin-shell {
   backdrop-filter: blur(14px);
 }
 
-@keyframes app-sheet-in {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.985);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes app-backdrop-in {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0);
-  }
-
-  to {
-    opacity: 1;
-    backdrop-filter: blur(3px);
-  }
-}
