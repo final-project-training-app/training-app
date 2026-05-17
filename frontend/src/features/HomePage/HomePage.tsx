@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { LogIn, Phone, Settings } from "lucide-react";
 import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
-import { startRingback } from "../ai-conversation/audio/ringback";
+import { startRingback, stopGymAmbience } from "../ai-conversation/audio/ringback";
 import type { BackendWorkoutResponse } from "../ai-conversation/tools/workout/workoutTypes";
 import { coachCallSessionQueryOptions } from "../session/query";
 import { SignInButton, useAuth } from "@clerk/react";
@@ -81,6 +81,10 @@ export default function HomePage() {
   const { data: profile } = useMyProfile();
   const { currentWorkout } = useCurrentWorkout();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    stopGymAmbience();
+  }, []);
 
   useEffect(() => {
     if (typeof profile?.trainerId !== "number") {
