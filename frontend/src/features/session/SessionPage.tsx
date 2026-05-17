@@ -37,7 +37,6 @@ export function SessionPage() {
         elapsedSeconds={0}
         activePanel="none"
         isLoading={true}
-        isAiSpeaking={true}
         onSpeaker={() => {}}
         onTrainingSuite={() => {}}
         onInfo={() => {}}
@@ -54,6 +53,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isEnding, setIsEnding] = useState(false);
   const { t } = useTranslation();
 
   function getCoachStatusLabel(step: CoachSessionStep) {
@@ -79,7 +79,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     }
   }
 
-  const { step, error, debugEvents, endSession, getCurrentRms, showInstructionsVideo, currentTurn } =
+  const { step, error, debugEvents, endSession, hangUp, getCurrentRms, showInstructionsVideo, currentTurn } =
     useCoachSession({
       session,
       trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
@@ -98,11 +98,10 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     return () => clearTimeout(timer);
   }, [step, navigate]);
 
-  async function handleEnd() {
-    await endSession();
-    setActivePanel("none");
-    setElapsedSeconds(0);
-    void navigate({ to: "/" });
+  function handleEnd() {
+    setIsEnding(true);
+    hangUp();
+    setTimeout(() => void navigate({ to: "/" }), 3000);
   }
 
   function togglePanel(panel: Exclude<SessionPanel, "none">) {
@@ -121,6 +120,7 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
       showInstructionsVideo={showInstructionsVideo}
       isAiSpeaking={isAiSpeaking}
       isUserTurn={isUserTurn}
+      isEnding={isEnding}
       onSpeaker={() => togglePanel("exercise")}
       onTrainingSuite={() => togglePanel("suite")}
       onInfo={() => togglePanel("info")}

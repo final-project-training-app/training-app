@@ -293,6 +293,7 @@
     "controlbuttonLabelMyInfo": "My Info",
     "controlbuttonLabelInstructions": "Instructions",
     "controlbuttonLabelEndCall": "End Call",
+    "disconnecting": "Disconnecting",
     "trainerMissing": "Trainer missing",
     "workoutMissing": "Workout missing",
     "suiteTitle": "Training suite",
