@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 export const appSheetFieldClass =
   "rounded-2xl border border-[#ddd2ff] bg-[#f5f2fb]";
@@ -64,7 +64,7 @@ export function AppSheet({
     bd.style.backdropFilter = `blur(${3 * (1 - clamped)}px)`;
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
 

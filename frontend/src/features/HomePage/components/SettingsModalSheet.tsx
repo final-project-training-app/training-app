@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SignOutButton, useAuth } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
@@ -101,7 +101,7 @@ export default function SettingsModalSheet({
   const { data: user, isSuccess, isLoading, isError, error } = useMyProfile();
   const [isRendered, setIsRendered] = useState(open);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (open) {
       setIsRendered(true);
     } else {
