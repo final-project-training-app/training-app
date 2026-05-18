@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { LogIn, Phone, Settings } from "lucide-react";
+import { SessionPage } from "../session/SessionPage";
 import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
 import { startRingback, stopGymAmbience } from "../ai-conversation/audio/ringback";
 import type { BackendWorkoutResponse } from "../ai-conversation/tools/workout/workoutTypes";
@@ -70,9 +70,9 @@ function getHomepageTrainer(trainerId?: number | null) {
 }
 
 export default function HomePage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null);
   const [cachedTrainerId, setCachedTrainerId] = useState<number | null>(() =>
     getStoredTrainerId(),
   );
@@ -168,11 +168,11 @@ export default function HomePage() {
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
+    setActiveWorkoutId(selectedWorkoutId);
+  }
 
-    navigate({
-      to: "/session/$workoutId",
-      params: { workoutId: selectedWorkoutId },
-    });
+  if (activeWorkoutId !== null) {
+    return <SessionPage workoutId={activeWorkoutId} onEnd={() => setActiveWorkoutId(null)} />;
   }
 
   return (
