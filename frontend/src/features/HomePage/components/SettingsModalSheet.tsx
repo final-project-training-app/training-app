@@ -20,7 +20,6 @@ import {
   appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
 import LanguageSwitcher from "../../../components/LanguageSwitcher";
-import useCurrentUser from "../../../hooks/useCurrentUser";
 import SupportSheet from "./SupportSheet";
 
 type ProfileSettings = {
@@ -178,11 +177,9 @@ function SettingsModalBody({
 
   const updateProfile = useUpdateProfile();
 
-  const { setTrainerId } = useCurrentUser();
 
   function onTrainerSelect(trainerId: number) {
     setSelectedTrainerId(trainerId);
-    setTrainerId(trainerId);
   }
 
   useEffect(() => {
