@@ -54,6 +54,26 @@ export function readFeedbackSummary(functionCall: FunctionCall): string {
 }
 
 //──────────────────────
+// Read profile suggestions from finish_session tool call
+//──────────────────────
+export type ProfileSuggestions = {
+  suggestedIntensityLevel?: number | null;
+  suggestedContext?: string | null;
+};
+
+export function readProfileSuggestions(functionCall: FunctionCall): ProfileSuggestions {
+  const args = functionCall.args ?? {};
+  const level = args.suggested_intensity_level;
+  const ctx = args.suggested_context;
+  return {
+    suggestedIntensityLevel:
+      typeof level === "number" ? Math.round(Math.min(5, Math.max(1, level))) : null,
+    // AI producerar alltid den fullständiga sammanslagna kontextsträngen
+    suggestedContext: typeof ctx === "string" && ctx.trim() ? ctx.trim() : null,
+  };
+}
+
+//──────────────────────
 // Map session step to queued action
 //──────────────────────
 export function getQueuedActionForStep(

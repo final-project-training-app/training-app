@@ -27,11 +27,13 @@ import {
   getModelText,
   getQueuedActionForStep,
   readFeedbackSummary,
+  readProfileSuggestions,
   sleep,
   waitForAIToFinishSpeaking,
   type AITurnState,
   type CoachSessionDebugEvent,
   type CoachSessionStep,
+  type ProfileSuggestions,
   type UseCoachSessionOptions,
 } from "./helpers";
 import { useTrainer } from "../session/query";
@@ -58,7 +60,7 @@ export function useCoachSession(
 ) {
   const { session, autoStart = true } = options;
 
-  const { userId, voice, coachPrompt } = useCurrentUser();
+  const { userId, voice, coachPrompt, updateProfile } = useCurrentUser();
   const {
     data: trainer,
     isLoading: isTrainerLoading,
@@ -99,7 +101,7 @@ export function useCoachSession(
   const disconnectRef = useRef<() => void>(() => {});
   const startInstructionsRef = useRef<() => Promise<void>>(async () => {});
   const startWorkoutRef = useRef<() => Promise<void>>(async () => {});
-  const finishSessionRef = useRef<(summary?: string) => void>(() => {});
+  const finishSessionRef = useRef<(summary?: string, suggestions?: ProfileSuggestions) => void>(() => {});
 
   const { token, loadToken, tokenLoading, tokenError } = useLiveToken();
 
@@ -252,7 +254,10 @@ export function useCoachSession(
         if (!finished) {
           addDebugEvent("wait-for-ai-timeout", "Proceeding anyway...");
         }
-        finishSessionRef.current(readFeedbackSummary(functionCall));
+        finishSessionRef.current(
+          readFeedbackSummary(functionCall),
+          readProfileSuggestions(functionCall),
+        );
         return {
           id: functionCall.id,
           name,
@@ -616,7 +621,7 @@ export function useCoachSession(
   // Finish session with summary
   //──────────────────────
   const finishSessionWithSummary = useCallback(
-    async (summary = "") => {
+    async (summary = "", suggestions?: ProfileSuggestions) => {
       stopSessionAudio();
 
       try {
@@ -631,6 +636,25 @@ export function useCoachSession(
           "create_feedback",
           JSON.stringify(feedbackResp?.response ?? {}),
         );
+
+        if (
+          suggestions?.suggestedIntensityLevel != null ||
+          suggestions?.suggestedContext != null
+        ) {
+          try {
+            await updateProfile({
+              ...(suggestions.suggestedIntensityLevel != null && {
+                intensityLevel: suggestions.suggestedIntensityLevel,
+              }),
+              ...(suggestions.suggestedContext != null && {
+                context: suggestions.suggestedContext,
+              }),
+            });
+            addDebugEvent("update_profile", JSON.stringify(suggestions));
+          } catch (e) {
+            addDebugEvent("update_profile_failed", String(e));
+          }
+        }
 
         aiTurnStateRef.current = { started: false, complete: false };
         getSession()?.sendClientContent({
@@ -687,6 +711,7 @@ export function useCoachSession(
       getSession,
       session.id,
       setSessionStep,
+      updateProfile,
     ],
   );
 
