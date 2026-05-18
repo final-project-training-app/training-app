@@ -1,11 +1,13 @@
 import {
   CalendarDays,
   MessageSquareText,
+  Mic,
   MicOff,
   PhoneOff,
   Settings,
   UserRound,
   Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { CoachCallSession, SessionPanel } from "../types";
@@ -75,6 +77,10 @@ type SessionCallProps = {
   isUserTurn?: boolean;
   isLoading?: boolean;
   isEnding?: boolean;
+  isMicrophoneMuted?: boolean;
+  isSpeakerMuted?: boolean;
+  onToggleMicrophoneMuted: () => void;
+  onToggleSpeakerMuted: () => void;
   onSpeaker: () => void;
   onTrainingSuite: () => void;
   onInfo: () => void;
@@ -177,14 +183,16 @@ export function SessionCall({
   isUserTurn = false,
   isLoading = false,
   isEnding = false,
+  isMicrophoneMuted = false,
+  isSpeakerMuted = false,
+  onToggleMicrophoneMuted,
+  onToggleSpeakerMuted,
   onSpeaker,
   onTrainingSuite,
   onInfo,
   onClosePanel,
   onEnd,
 }: SessionCallProps) {
-  const [isMuted, setIsMuted] = useState(true);
-  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -196,13 +204,14 @@ export function SessionCall({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    video.muted = isSpeakerMuted;
     if (showInstructionsVideo) {
       video.currentTime = 0;
       void video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, [showInstructionsVideo]);
+  }, [isSpeakerMuted, showInstructionsVideo]);
 
   return (
     <main className="relative h-full w-full overflow-hidden bg-[#fbf8ff] text-[#221447]">
@@ -289,14 +298,20 @@ export function SessionCall({
         <section className="mx-auto mt-[clamp(0.85rem,3.3cqh,2.6rem)] grid w-full max-w-[var(--stage-control-max-width)] shrink-0 grid-cols-3 justify-items-center gap-x-[clamp(0.75rem,3.5cqw,1.35rem)] gap-y-[clamp(0.7rem,2.7cqh,2.05rem)]">
           <ControlButton
             label={
-              isMuted ? t("sessionCall.soundOff") : t("sessionCall.soundOn")
+              isMicrophoneMuted
+                ? t("sessionCall.soundOff")
+                : t("sessionCall.soundOn")
             }
-            active={isMuted}
+            active={!isMicrophoneMuted}
             pulsing={isUserTurn && !isEnding}
             disabled={isEnding}
-            onClick={() => setIsMuted((current) => !current)}
+            onClick={onToggleMicrophoneMuted}
           >
-            <MicOff size={36} strokeWidth={1.5} />
+            {isMicrophoneMuted ? (
+              <MicOff size={36} strokeWidth={1.5} />
+            ) : (
+              <Mic size={36} strokeWidth={1.5} />
+            )}
           </ControlButton>
 
           <ControlButton
@@ -308,12 +323,20 @@ export function SessionCall({
           </ControlButton>
 
           <ControlButton
-            label={t("sessionCall.controlbuttonLabelSpeaker")}
-            active={isSpeakerOn}
+            label={
+              isSpeakerMuted
+                ? t("sessionCall.soundOff")
+                : t("sessionCall.soundOn")
+            }
+            active={!isSpeakerMuted}
             disabled={isEnding}
-            onClick={() => setIsSpeakerOn((current) => !current)}
+            onClick={onToggleSpeakerMuted}
           >
-            <Volume2 size={36} strokeWidth={1.5} />
+            {isSpeakerMuted ? (
+              <VolumeX size={36} strokeWidth={1.5} />
+            ) : (
+              <Volume2 size={36} strokeWidth={1.5} />
+            )}
           </ControlButton>
 
           <ControlButton

@@ -37,6 +37,10 @@ export function SessionPage() {
         elapsedSeconds={0}
         activePanel="none"
         isLoading={true}
+        isMicrophoneMuted={false}
+        isSpeakerMuted={false}
+        onToggleMicrophoneMuted={() => {}}
+        onToggleSpeakerMuted={() => {}}
         onSpeaker={() => {}}
         onTrainingSuite={() => {}}
         onInfo={() => {}}
@@ -79,7 +83,19 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
     }
   }
 
-  const { step, error, debugEvents, hangUp, getCurrentRms, showInstructionsVideo, currentTurn } =
+  const {
+    step,
+    error,
+    debugEvents,
+    hangUp,
+    getCurrentRms,
+    showInstructionsVideo,
+    currentTurn,
+    isMicrophoneMuted,
+    isSpeakerMuted,
+    toggleMicrophoneMuted,
+    toggleSpeakerMuted,
+  } =
     useCoachSession({
       session,
       trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
@@ -121,6 +137,10 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
       isAiSpeaking={isAiSpeaking}
       isUserTurn={isUserTurn}
       isEnding={isEnding}
+      isMicrophoneMuted={isMicrophoneMuted}
+      isSpeakerMuted={isSpeakerMuted}
+      onToggleMicrophoneMuted={toggleMicrophoneMuted}
+      onToggleSpeakerMuted={toggleSpeakerMuted}
       onSpeaker={() => togglePanel("exercise")}
       onTrainingSuite={() => togglePanel("suite")}
       onInfo={() => togglePanel("info")}

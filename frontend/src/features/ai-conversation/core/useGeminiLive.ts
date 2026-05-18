@@ -86,6 +86,8 @@ export const useGeminiLive = ({
   const onFirstAiAudioRef = useRef(onFirstAiAudio);
   const firstAiAudioFiredRef = useRef(false);
   const voiceRef = useRef<string | null>(voice ?? null);
+  const microphoneEnabledRef = useRef(true);
+  const speakerMutedRef = useRef(false);
   useEffect(() => {
     tokenRef.current = token;
     toolsRef.current = tools;
@@ -310,7 +312,7 @@ export const useGeminiLive = ({
 
           const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
           onAudioRef.current?.(bytes.buffer);
-          if (!suppressAiAudioRef.current) {
+          if (!suppressAiAudioRef.current && !speakerMutedRef.current) {
             void playAiPcm16(bytes.buffer);
           }
           audioParts++;
@@ -391,6 +393,24 @@ export const useGeminiLive = ({
 
   function allowAiOutput() {
     suppressAiAudioRef.current = false;
+  }
+
+  function setMicrophoneEnabled(enabled: boolean) {
+    microphoneEnabledRef.current = enabled;
+    mediaStreamRef.current?.getAudioTracks().forEach((track) => {
+      track.enabled = enabled;
+    });
+  }
+
+  function setSpeakerMuted(muted: boolean) {
+    speakerMutedRef.current = muted;
+    if (!muted) {
+      return;
+    }
+    aiAudioCtxRef.current?.close();
+    aiAudioCtxRef.current = null;
+    aiPlayheadRef.current = 0;
+    playingUntilWallMsRef.current = 0;
   }
 
   function getSession() {
@@ -475,6 +495,9 @@ export const useGeminiLive = ({
         },
       });
       mediaStreamRef.current = stream;
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = microphoneEnabledRef.current;
+      });
 
       const trackSettings = stream.getAudioTracks()[0]?.getSettings() ?? {};
       console.debug("[GeminiLive] track settings:", trackSettings);
@@ -668,5 +691,7 @@ export const useGeminiLive = ({
     getSession,
     getAiPlaybackRemainingMs,
     getCurrentRms,
+    setMicrophoneEnabled,
+    setSpeakerMuted,
   };
 };
