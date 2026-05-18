@@ -1,5 +1,7 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.dto.AdminRecentFeedbackDTO;
+import com.example.trainingapp.dto.AdminWorkoutFeedbackSummaryDTO;
 import com.example.trainingapp.service.FeedbackService;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -57,7 +58,7 @@ public class AdminController {
     }
 
     @GetMapping("/workouts/feedback-summary")
-    public ResponseEntity<List<Map<String, Object>>> getWorkoutFeedbackSummary(Authentication authentication) {
+    public ResponseEntity<List<AdminWorkoutFeedbackSummaryDTO>> getWorkoutFeedbackSummary(Authentication authentication) {
         String clerkId = getClerkId(authentication);
 
         if (!service.isAdmin(clerkId)) {
@@ -68,7 +69,7 @@ public class AdminController {
     }
 
     @GetMapping("/feedbacks")
-    public ResponseEntity<List<Map<String, Object>>> getRecentFeedbackEntries(Authentication authentication) {
+    public ResponseEntity<List<AdminRecentFeedbackDTO>> getRecentFeedbackEntries(Authentication authentication) {
         String clerkId = getClerkId(authentication);
 
         if (!service.isAdmin(clerkId)) {
