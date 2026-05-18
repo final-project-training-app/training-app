@@ -6,11 +6,13 @@ import { coachLiveTools, executeLiveToolCall } from "./tools";
 import {
   stopRingback,
   startGymAmbience,
+  setCallAudioMuted,
   stopGymAmbience,
 } from "./audio/ringback";
 import { fixedLiveUserId } from "./tools/shared/liveIntroDefaults";
 import {
   preloadSessionAudio,
+  setSessionAudioMuted,
   startSessionAudio,
   stopSessionAudio,
 } from "./audio/sessionAudio";
@@ -77,6 +79,8 @@ export function useCoachSession(
   const [audioCapturing, setAudioCapturing] = useState(false);
   const [debugEvents, setDebugEvents] = useState<CoachSessionDebugEvent[]>([]);
   const [showInstructionsVideo, setShowInstructionsVideo] = useState(false);
+  const [isMicrophoneMuted, setIsMicrophoneMuted] = useState(false);
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
 
   const debugIdRef = useRef(0);
   const startedAtRef = useRef(0);
@@ -155,6 +159,8 @@ export function useCoachSession(
     getSession,
     getAiPlaybackRemainingMs,
     getCurrentRms,
+    setMicrophoneEnabled,
+    setSpeakerMuted,
   } = useGeminiLive({
     token,
     tools: [...coachLiveTools, ...SESSION_CONTROL_TOOLS],
@@ -738,6 +744,16 @@ export function useCoachSession(
     console.log("Current turn:", currentTurn, "coach step:", stepRef.current);
   }, [currentTurn]);
 
+  useEffect(() => {
+    setMicrophoneEnabled(!isMicrophoneMuted);
+  }, [isMicrophoneMuted, setMicrophoneEnabled]);
+
+  useEffect(() => {
+    setSpeakerMuted(isSpeakerMuted);
+    setSessionAudioMuted(isSpeakerMuted);
+    setCallAudioMuted(isSpeakerMuted);
+  }, [isSpeakerMuted, setSpeakerMuted]);
+
   // must be declared before usage in the auto-start effect
   const canStartLive = Boolean(voice && trainer?.prompt && !isTrainerLoading);
 
@@ -777,6 +793,10 @@ export function useCoachSession(
     isTrainerLoading,
     trainerError,
     showInstructionsVideo,
+    isMicrophoneMuted,
+    isSpeakerMuted,
+    toggleMicrophoneMuted: () => setIsMicrophoneMuted((current) => !current),
+    toggleSpeakerMuted: () => setIsSpeakerMuted((current) => !current),
   };
 }
 
