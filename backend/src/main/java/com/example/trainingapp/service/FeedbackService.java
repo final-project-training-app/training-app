@@ -1,5 +1,7 @@
 package com.example.trainingapp.service;
 
+import com.example.trainingapp.dto.AdminRecentFeedbackDTO;
+import com.example.trainingapp.dto.AdminWorkoutFeedbackSummaryDTO;
 import com.example.trainingapp.entity.Feedback;
 import com.example.trainingapp.entity.FeedbackDifficulty;
 import com.example.trainingapp.entity.Workout;
@@ -14,9 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -144,11 +144,11 @@ public class FeedbackService {
         feedbackRepository.deleteById(id);
     }
 
-    public List<Map<String, Object>> getWorkoutFeedbackSummary() {
+    public List<AdminWorkoutFeedbackSummaryDTO> getWorkoutFeedbackSummary() {
         List<Workout> workouts = workoutRepository.findAll();
         List<Feedback> feedbacks = feedbackRepository.findAll();
 
-        Map<Long, List<Feedback>> feedbackByWorkoutId = new HashMap<>();
+        java.util.Map<Long, List<Feedback>> feedbackByWorkoutId = new java.util.HashMap<>();
         for (Feedback feedback : feedbacks) {
             if (feedback.getWorkoutId() == null) {
                 continue;
@@ -158,7 +158,7 @@ public class FeedbackService {
                     .add(feedback);
         }
 
-        List<Map<String, Object>> summary = new ArrayList<>();
+        List<AdminWorkoutFeedbackSummaryDTO> summary = new ArrayList<>();
         for (Workout workout : workouts) {
             List<Feedback> workoutFeedback = feedbackByWorkoutId.getOrDefault(workout.getId(), List.of());
             int feedbackCount = workoutFeedback.size();
@@ -187,40 +187,42 @@ public class FeedbackService {
             double dislikeRate = feedbackCount == 0 ? 0 : roundTwoDecimals((double) dislikedCount / feedbackCount);
             double tooHardRate = feedbackCount == 0 ? 0 : roundTwoDecimals((double) tooHardCount / feedbackCount);
 
-            Map<String, Object> item = new HashMap<>();
-            item.put("workoutId", workout.getId());
-            item.put("workoutName", workout.getName());
-            item.put("feedbackCount", feedbackCount);
-            item.put("avgRating", avgRating);
-            item.put("dislikeRate", dislikeRate);
-            item.put("tooHardRate", tooHardRate);
-            item.put("status", deriveStatus(feedbackCount, avgRating, dislikeRate, tooHardRate));
-            summary.add(item);
+            summary.add(new AdminWorkoutFeedbackSummaryDTO(
+                    workout.getId(),
+                    workout.getName(),
+                    feedbackCount,
+                    avgRating,
+                    dislikeRate,
+                    tooHardRate,
+                    deriveStatus(feedbackCount, avgRating, dislikeRate, tooHardRate)
+            ));
         }
 
         return summary;
     }
 
-    public List<Map<String, Object>> getRecentFeedbackEntries() {
+    public List<AdminRecentFeedbackDTO> getRecentFeedbackEntries() {
         List<Feedback> feedbacks = new ArrayList<>(feedbackRepository.findAll());
         feedbacks.sort(Comparator.comparing(Feedback::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())));
 
-        List<Map<String, Object>> result = new ArrayList<>();
+        List<AdminRecentFeedbackDTO> result = new ArrayList<>();
         for (Feedback feedback : feedbacks) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", feedback.getId());
-            item.put("userId", feedback.getUserId());
-            item.put("workoutId", feedback.getWorkoutId());
-            item.put("activityLogId", feedback.getActivityLogId());
-            item.put("workoutName", workoutRepository.findById(feedback.getWorkoutId())
+            String workoutName = workoutRepository.findById(feedback.getWorkoutId())
                     .map(Workout::getName)
-                    .orElse("Unknown workout"));
-            item.put("difficulty", feedback.getDifficulty());
-            item.put("liked", feedback.getLiked());
-            item.put("rating", feedback.getRating());
-            item.put("comment", feedback.getComment());
-            item.put("createdAt", feedback.getCreatedAt());
-            result.add(item);
+                    .orElse("Unknown workout");
+
+            result.add(new AdminRecentFeedbackDTO(
+                    feedback.getId(),
+                    feedback.getUserId(),
+                    feedback.getWorkoutId(),
+                    feedback.getActivityLogId(),
+                    workoutName,
+                    feedback.getDifficulty(),
+                    feedback.getLiked(),
+                    feedback.getRating(),
+                    feedback.getComment(),
+                    feedback.getCreatedAt()
+            ));
         }
 
         return result;

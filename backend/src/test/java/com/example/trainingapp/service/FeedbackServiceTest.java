@@ -1,9 +1,12 @@
 package com.example.trainingapp.service;
 
+import com.example.trainingapp.dto.AdminWorkoutFeedbackSummaryDTO;
+import com.example.trainingapp.entity.ActivityLog;
 import com.example.trainingapp.entity.Feedback;
 import com.example.trainingapp.entity.FeedbackDifficulty;
 import com.example.trainingapp.entity.Workout;
 import com.example.trainingapp.entity.UserWorkoutPreferenceType;
+import com.example.trainingapp.repository.ActivityLogRepository;
 import com.example.trainingapp.repository.FeedbackRepository;
 import com.example.trainingapp.repository.WorkoutRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +19,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,11 +40,20 @@ class FeedbackServiceTest {
     @Mock
     private UserWorkoutPreferenceService preferenceService;
 
+    @Mock
+    private ActivityLogRepository activityLogRepository;
+
     @InjectMocks
     private FeedbackService feedbackService;
 
     private Feedback feedback;
     private Workout workout;
+    private ActivityLog activityLog;
+
+    private void stubActivityLogLookup() {
+        when(activityLogRepository.findTopByUserIdAndWorkoutIdAndStatusOrderByCompletedAtDesc(anyLong(), anyLong(), anyString()))
+                .thenReturn(Optional.of(activityLog));
+    }
 
     @BeforeEach
     void setUp() {
@@ -55,10 +68,16 @@ class FeedbackServiceTest {
         workout = new Workout();
         workout.setId(3L);
         workout.setName("Push Ups");
+
+        activityLog = new ActivityLog();
+        activityLog.setId(99L);
+        activityLog.setUserId(2L);
+        activityLog.setWorkoutId(3L);
     }
 
     @Test
     void saveFeedbackStoresTimestampAndSaves() {
+        stubActivityLogLookup();
         when(feedbackRepository.save(any(Feedback.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Feedback saved = feedbackService.saveFeedback(feedback);
@@ -69,6 +88,7 @@ class FeedbackServiceTest {
 
     @Test
     void saveFeedbackAddsDislikedPreferenceWhenLikedIsFalse() {
+        stubActivityLogLookup();
         feedback.setLiked(false);
         when(feedbackRepository.save(any(Feedback.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -104,9 +124,9 @@ class FeedbackServiceTest {
         when(workoutRepository.findAll()).thenReturn(List.of(workout));
         when(feedbackRepository.findAll()).thenReturn(List.of(feedback, other));
 
-        List<Map<String, Object>> summary = feedbackService.getWorkoutFeedbackSummary();
+        List<AdminWorkoutFeedbackSummaryDTO> summary = feedbackService.getWorkoutFeedbackSummary();
 
         assertEquals(1, summary.size());
-        assertEquals(2, summary.get(0).get("feedbackCount"));
+        assertEquals(2, summary.get(0).feedbackCount());
     }
 }

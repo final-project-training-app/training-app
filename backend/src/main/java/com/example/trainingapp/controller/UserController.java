@@ -2,6 +2,7 @@ package com.example.trainingapp.controller;
 
 import com.example.trainingapp.dto.UserRequestDTO;
 import com.example.trainingapp.dto.UserResponseDTO;
+import com.example.trainingapp.dto.UserCreateRequestDTO;
 import com.example.trainingapp.entity.User;
 import com.example.trainingapp.service.ActivityLogService;
 import com.example.trainingapp.service.UserService;
@@ -108,11 +109,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(
-            @RequestBody(required = false) Map<String, Object> request,
+            @RequestBody(required = false) UserCreateRequestDTO request,
             Authentication authentication
     ) {
         Jwt jwt = getJwtOrThrow(authentication);
-        String requestedName = request != null ? (String) request.get("displayName") : null;
+        String requestedName = request != null ? request.displayName() : null;
 
         User created = userService.createUser(
                 jwt.getSubject(),

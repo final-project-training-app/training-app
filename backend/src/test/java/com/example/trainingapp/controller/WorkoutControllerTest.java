@@ -1,7 +1,7 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.dto.WorkoutRequestDTO;
 import com.example.trainingapp.dto.WorkoutResponseDTO;
-import com.example.trainingapp.entity.Workout;
 import com.example.trainingapp.service.UserService;
 import com.example.trainingapp.service.WorkoutService;
 import org.junit.jupiter.api.DisplayName;
@@ -49,11 +49,30 @@ class WorkoutControllerTest {
     @Test
     void createWorkoutReturnsForbiddenForNonAdmin() {
         WorkoutController controller = new WorkoutController(workoutService, userService);
+        WorkoutRequestDTO request = new WorkoutRequestDTO(
+                "Test Workout",
+                "desc",
+                1,
+                "strength",
+                300,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                true,
+                false,
+                false,
+                true,
+                null
+        );
 
         when(userService.isAdmin("user_1")).thenReturn(false);
 
         ResponseEntity<WorkoutResponseDTO> response =
-                controller.createWorkout(new Workout(), auth("user_1"));
+                controller.createWorkout(request, auth("user_1"));
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         verify(workoutService, never()).createWorkout(any());
@@ -62,6 +81,25 @@ class WorkoutControllerTest {
     @Test
     void createWorkoutReturnsOkForAdmin() {
         WorkoutController controller = new WorkoutController(workoutService, userService);
+        WorkoutRequestDTO request = new WorkoutRequestDTO(
+                "Test Workout",
+                "desc",
+                1,
+                "strength",
+                300,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                true,
+                false,
+                false,
+                true,
+                null
+        );
 
         when(userService.isAdmin("admin_1")).thenReturn(true);
 
@@ -71,7 +109,7 @@ class WorkoutControllerTest {
         when(workoutService.createWorkout(any())).thenReturn(workout);
 
         ResponseEntity<WorkoutResponseDTO> response =
-                controller.createWorkout(new Workout(), auth("admin_1"));
+                controller.createWorkout(request, auth("admin_1"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Test Workout", response.getBody().name());

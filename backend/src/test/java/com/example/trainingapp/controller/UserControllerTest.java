@@ -1,5 +1,6 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.dto.UserCreateRequestDTO;
 import com.example.trainingapp.dto.UserRequestDTO;
 import com.example.trainingapp.entity.User;
 import com.example.trainingapp.service.ActivityLogService;
@@ -14,8 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,7 +39,7 @@ class UserControllerTest {
         when(userService.createUser(eq("clerk_1"), any())).thenReturn(user);
         when(userService.isAdmin("clerk_1")).thenReturn(false);
 
-        ResponseEntity<?> response = controller.createUser(Map.of("displayName", "Jane"), auth("clerk_1", "Jane"));
+        ResponseEntity<?> response = controller.createUser(new UserCreateRequestDTO("Jane"), auth("clerk_1", "Jane"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(userService).createUser(eq("clerk_1"), any());

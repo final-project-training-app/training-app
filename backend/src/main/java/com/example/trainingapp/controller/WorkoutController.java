@@ -2,7 +2,9 @@ package com.example.trainingapp.controller;
 
 import java.util.List;
 
+import com.example.trainingapp.dto.WorkoutRequestDTO;
 import com.example.trainingapp.dto.WorkoutResponseDTO;
+import com.example.trainingapp.entity.Trainer;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,6 +31,34 @@ public class WorkoutController {
     public WorkoutController(WorkoutService workoutService, UserService userService) {
         this.workoutService = workoutService;
         this.userService = userService;
+    }
+
+    private Workout toEntity(WorkoutRequestDTO request) {
+        Workout workout = new Workout();
+        workout.setName(request.name());
+        workout.setDescription(request.description());
+        workout.setLevel(request.level());
+        workout.setType(request.type());
+        workout.setDurationSeconds(request.durationSeconds());
+        workout.setInstructionsAudio(request.instructionsAudio());
+        workout.setWorkoutAudio(request.workoutAudio());
+        workout.setInstructionsImage(request.instructionsImage());
+        workout.setWorkoutImage(request.workoutImage());
+        workout.setInstructionsVideo(request.instructionsVideo());
+        workout.setInstructionsVideoStart(request.instructionsVideoStart());
+        workout.setInstructionsVideoStop(request.instructionsVideoStop());
+        workout.setKneeFriendly(request.kneeFriendly());
+        workout.setLowImpact(request.lowImpact());
+        workout.setSeated(request.seated());
+        workout.setBeginnerFriendly(request.beginnerFriendly());
+
+        if (request.trainer() != null && request.trainer().id() != null) {
+            Trainer trainer = new Trainer();
+            trainer.setId(request.trainer().id());
+            workout.setTrainer(trainer);
+        }
+
+        return workout;
     }
 
     private Jwt getJwtOrThrow(Authentication authentication) {
@@ -64,23 +94,23 @@ public class WorkoutController {
     }
 
     @PostMapping
-    public ResponseEntity<WorkoutResponseDTO> createWorkout(@RequestBody Workout workout, Authentication authentication) {
+    public ResponseEntity<WorkoutResponseDTO> createWorkout(@RequestBody WorkoutRequestDTO workoutRequest, Authentication authentication) {
         if (!isAdmin(authentication)) {
             return ResponseEntity.status(403).build();
         }
-        return ResponseEntity.ok(workoutService.createWorkout(workout));
+        return ResponseEntity.ok(workoutService.createWorkout(toEntity(workoutRequest)));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<WorkoutResponseDTO> updateWorkout(
             @PathVariable Long id,
-            @RequestBody Workout workout,
+            @RequestBody WorkoutRequestDTO workoutRequest,
             Authentication authentication
     ) {
         if (!isAdmin(authentication)) {
             return ResponseEntity.status(403).build();
         }
-        return ResponseEntity.ok(workoutService.updateWorkout(id, workout));
+        return ResponseEntity.ok(workoutService.updateWorkout(id, toEntity(workoutRequest)));
     }
 
     @DeleteMapping("/{id}")

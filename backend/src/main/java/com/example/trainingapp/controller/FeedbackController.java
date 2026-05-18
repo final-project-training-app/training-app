@@ -1,5 +1,7 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.dto.FeedbackRequestDTO;
+import com.example.trainingapp.dto.FeedbackResponseDTO;
 import com.example.trainingapp.entity.Feedback;
 import com.example.trainingapp.service.FeedbackService;
 import org.springframework.http.ResponseEntity;
@@ -29,21 +31,48 @@ public class FeedbackController {
         this.feedbackService = feedbackService;
     }
 
+    private Feedback toEntity(FeedbackRequestDTO request) {
+        Feedback feedback = new Feedback();
+        feedback.setUserId(request.userId());
+        feedback.setWorkoutId(request.workoutId());
+        feedback.setActivityLogId(request.activityLogId());
+        feedback.setDifficulty(request.difficulty());
+        feedback.setLiked(request.liked());
+        feedback.setRating(request.rating());
+        feedback.setComment(request.comment());
+        return feedback;
+    }
+
+    private FeedbackResponseDTO toResponse(Feedback feedback) {
+        return new FeedbackResponseDTO(
+                feedback.getId(),
+                feedback.getUserId(),
+                feedback.getWorkoutId(),
+                feedback.getActivityLogId(),
+                feedback.getDifficulty(),
+                feedback.getLiked(),
+                feedback.getRating(),
+                feedback.getComment(),
+                feedback.getCreatedAt()
+        );
+    }
+
     @PostMapping
-    public ResponseEntity<Feedback> createFeedback(@RequestBody Feedback feedback) {
-        Feedback saved = feedbackService.saveFeedback(feedback);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<FeedbackResponseDTO> createFeedback(@RequestBody FeedbackRequestDTO feedbackRequest) {
+        Feedback saved = feedbackService.saveFeedback(toEntity(feedbackRequest));
+        return ResponseEntity.ok(toResponse(saved));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Feedback> getFeedbackById(@PathVariable Long id) {
+    public ResponseEntity<FeedbackResponseDTO> getFeedbackById(@PathVariable Long id) {
         return feedbackService.getFeedbackById(id)
+                .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<Feedback>> getFeedback(
+    public ResponseEntity<List<FeedbackResponseDTO>> getFeedback(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long workoutId
     ) {
@@ -59,7 +88,7 @@ public class FeedbackController {
             return ResponseEntity.badRequest().build();
         }
 
-        return ResponseEntity.ok(feedbacks);
+        return ResponseEntity.ok(feedbacks.stream().map(this::toResponse).toList());
     }
 
     @DeleteMapping("/{id}")
