@@ -10,9 +10,15 @@ public record WorkoutRequestDTO(
         String workoutAudio,
         String instructionsImage,
         String workoutImage,
+        String instructionsVideo,
+        Integer instructionsVideoStart,
+        Integer instructionsVideoStop,
         Boolean kneeFriendly,
         Boolean lowImpact,
         Boolean seated,
-        Boolean beginnerFriendly
+        Boolean beginnerFriendly,
+        TrainerIdDTO trainer
 ) {
+    public record TrainerIdDTO(Long id) {
+    }
 }

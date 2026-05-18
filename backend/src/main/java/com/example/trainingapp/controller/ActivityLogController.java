@@ -1,5 +1,7 @@
 package com.example.trainingapp.controller;
 
+import com.example.trainingapp.dto.ActivityLogCreateRequestDTO;
+import com.example.trainingapp.dto.ActivityLogResponseDTO;
 import com.example.trainingapp.entity.ActivityLog;
 import com.example.trainingapp.service.ActivityLogService;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +27,38 @@ public class ActivityLogController {
         this.activityLogService = activityLogService;
     }
 
+    private ActivityLog toEntity(ActivityLogCreateRequestDTO request) {
+        ActivityLog activityLog = new ActivityLog();
+        activityLog.setUserId(request.userId());
+        activityLog.setWorkoutId(request.workoutId());
+        activityLog.setCompletedAt(request.completedAt());
+        activityLog.setDurationSeconds(request.durationSeconds());
+        activityLog.setFeedback(request.feedback());
+        activityLog.setStatus(request.status());
+        return activityLog;
+    }
+
+    private ActivityLogResponseDTO toResponse(ActivityLog activityLog) {
+        return new ActivityLogResponseDTO(
+                activityLog.getId(),
+                activityLog.getUserId(),
+                activityLog.getWorkoutId(),
+                activityLog.getCompletedAt(),
+                activityLog.getDurationSeconds(),
+                activityLog.getFeedback(),
+                activityLog.getStatus()
+        );
+    }
+
     @PostMapping
-    public ResponseEntity<ActivityLog> createActivityLog(@RequestBody ActivityLog activityLog) {
-        return ResponseEntity.ok().body(activityLogService.createActivityLog(activityLog));
+    public ResponseEntity<ActivityLogResponseDTO> createActivityLog(@RequestBody ActivityLogCreateRequestDTO activityLogRequest) {
+        ActivityLog created = activityLogService.createActivityLog(toEntity(activityLogRequest));
+        return ResponseEntity.ok().body(toResponse(created));
     }
 
     @PutMapping("/{id}/complete")
-    public ResponseEntity<ActivityLog> completeActivityLog(@PathVariable Long id) {
-        return ResponseEntity.ok().body(activityLogService.completeActivityLog(id));
+    public ResponseEntity<ActivityLogResponseDTO> completeActivityLog(@PathVariable Long id) {
+        ActivityLog completed = activityLogService.completeActivityLog(id);
+        return ResponseEntity.ok().body(toResponse(completed));
     }
 }

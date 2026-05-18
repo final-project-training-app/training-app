@@ -20,14 +20,19 @@ class WorkoutRequestDTOTest {
                 "workout.mp3",
                 "instructions.png",
                 "workout.png",
+                null,
+                null,
+                null,
                 true,
                 false,
                 false,
-                true
+                true,
+                new WorkoutRequestDTO.TrainerIdDTO(7L)
         );
 
         assertEquals("Push Ups", dto.name());
         assertEquals(300, dto.durationSeconds());
         assertTrue(dto.beginnerFriendly());
+        assertEquals(7L, dto.trainer().id());
     }
 }
