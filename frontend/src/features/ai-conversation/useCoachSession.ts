@@ -89,6 +89,7 @@ export function useCoachSession(
   const stepRef = useRef<CoachSessionStep>("idle");
   const hasStartedRef = useRef(false);
   const videoTimersRef = useRef<number[]>([]);
+  const workoutCompletedRef = useRef(false);
 
   const aiTurnStateRef = useRef<AITurnState>({
     started: false,
@@ -476,6 +477,7 @@ export function useCoachSession(
     setDebugEvents([]);
     addDebugEvent("session start");
     hasStartedRef.current = true;
+    workoutCompletedRef.current = false;
     setError(null);
     setSessionStep("live_intro");
 
@@ -547,6 +549,7 @@ export function useCoachSession(
       addDebugEvent("play workout", workoutAudioUrl);
       await startSessionAudio(workoutAudioUrl, {
         onEnded: async () => {
+          workoutCompletedRef.current = true;
           allowAiOutput();
           addDebugEvent("workout ended");
           setSessionStep("collecting_feedback");
@@ -625,17 +628,23 @@ export function useCoachSession(
       stopSessionAudio();
 
       try {
-        const workoutId = typeof session.id === "number" ? session.id : null;
+        const workoutPlayed = workoutCompletedRef.current;
 
-        const feedbackResp = await executeLiveToolCall({
-          name: "create_feedback",
-          args: { userId: fixedLiveUserId, workoutId, comment: summary },
-        });
+        if (workoutPlayed) {
+          const workoutId = typeof session.id === "number" ? session.id : null;
 
-        addDebugEvent(
-          "create_feedback",
-          JSON.stringify(feedbackResp?.response ?? {}),
-        );
+          const feedbackResp = await executeLiveToolCall({
+            name: "create_feedback",
+            args: { userId: fixedLiveUserId, workoutId, comment: summary },
+          });
+
+          addDebugEvent(
+            "create_feedback",
+            JSON.stringify(feedbackResp?.response ?? {}),
+          );
+        } else {
+          addDebugEvent("skip_feedback", "workout not completed");
+        }
 
         if (
           suggestions?.suggestedIntensityLevel != null ||
@@ -656,26 +665,6 @@ export function useCoachSession(
           }
         }
 
-        aiTurnStateRef.current = { started: false, complete: false };
-        getSession()?.sendClientContent({
-          turns: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: "Nu är passet och feedbacken sparad. Avsluta samtalet på ett varmt och naturligt sätt. Byt ett par sista ord med användaren och säg hej då.",
-                },
-              ],
-            },
-          ],
-          turnComplete: true,
-        });
-
-        await waitForAIToFinishSpeaking(
-          () => aiTurnStateRef.current,
-          () => getAiPlaybackRemainingMs(),
-          { timeoutMs: 8000 },
-        );
       } catch (e) {
         addDebugEvent("create_feedback_failed", String(e));
         try {
@@ -685,11 +674,7 @@ export function useCoachSession(
             turns: [
               {
                 role: "user",
-                parts: [
-                  {
-                    text: `Säg exakt: '${fallbackMsg}'`,
-                  },
-                ],
+                parts: [{ text: `Säg exakt: '${fallbackMsg}'` }],
               },
             ],
             turnComplete: true,
@@ -707,7 +692,6 @@ export function useCoachSession(
     [
       addDebugEvent,
       disconnectLive,
-      getAiPlaybackRemainingMs,
       getSession,
       session.id,
       setSessionStep,
