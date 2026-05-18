@@ -18,6 +18,7 @@ type PlaySessionAudioOptions = {
 // Changing src and calling play()/pause() does not modify the Web Audio
 // graph topology, so the audio renderer never needs to recompile the graph.
 let sessionElement: HTMLAudioElement | null = null;
+let sessionAudioMuted = false;
 
 function setupSessionElement(ctx: AudioContext): HTMLAudioElement {
   if (!sessionElement) {
@@ -27,6 +28,7 @@ function setupSessionElement(ctx: AudioContext): HTMLAudioElement {
     gain.connect(ctx.destination);
     ctx.createMediaElementSource(sessionElement).connect(gain);
   }
+  sessionElement.muted = sessionAudioMuted;
   return sessionElement;
 }
 
@@ -109,4 +111,11 @@ export function stopSessionAudio() {
   if (!sessionElement) return;
   sessionElement.onended = null;
   sessionElement.pause();
+}
+
+export function setSessionAudioMuted(muted: boolean) {
+  sessionAudioMuted = muted;
+  if (sessionElement) {
+    sessionElement.muted = muted;
+  }
 }
