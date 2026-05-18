@@ -307,11 +307,13 @@ export function SessionCall({
             disabled={isEnding}
             onClick={onToggleMicrophoneMuted}
           >
-            {isMicrophoneMuted ? (
-              <MicOff size={36} strokeWidth={1.5} />
-            ) : (
-              <Mic size={36} strokeWidth={1.5} />
-            )}
+            <span className="flex h-[36px] w-[36px] items-center justify-center">
+              {isMicrophoneMuted ? (
+                <MicOff size={36} strokeWidth={1.5} />
+              ) : (
+                <Mic size={36} strokeWidth={1.5} />
+              )}
+            </span>
           </ControlButton>
 
           <ControlButton
