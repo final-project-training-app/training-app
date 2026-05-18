@@ -12,6 +12,7 @@ export const liveSystemInstruction = [
   "När du upplever att användaren förväntar sig att du lägger på ska du kalla på `finish_session`.",
   "Kalla ALDRIG på `finish_session` medan du pratar.",
   "Undvik tekniska termer i talet.",
+  "Om samtalet avslöjar att användarens intensitetsnivå (1–5) eller bakgrundsbeskrivning (Bakgrund-fältet) borde uppdateras, ange det i `suggested_intensity_level` respektive `suggested_context` när du kallar på `finish_session`. `suggested_context` ska ENDAST innehålla Bakgrund-texten — inte namn, streak eller passhistorik. Slå ihop befintlig bakgrund med nytt som framkommit; ibland ska saker läggas till, ibland ersättas. Utelämna parametern om inget behöver ändras.",
 ].join(" ");
 
 export function buildUserContext(session: CoachCallSession): string {
@@ -70,6 +71,16 @@ export const SESSION_CONTROL_TOOLS: ToolListUnion = [
             summary: {
               type: Type.STRING,
               description: "A short Swedish summary of the user's feedback.",
+            },
+            suggested_intensity_level: {
+              type: Type.INTEGER,
+              description:
+                "Suggested new intensity level (1–5) if the conversation revealed the current level is wrong. Omit if unchanged.",
+            },
+            suggested_context: {
+              type: Type.STRING,
+              description:
+                "The updated value of the 'Bakgrund' field only — the user's personal background and goals. Do NOT include the user's name, streak, or workout history; those are tracked separately. Merge existing background info with anything new learned in the conversation. Omit entirely if nothing changed.",
             },
           },
         },
