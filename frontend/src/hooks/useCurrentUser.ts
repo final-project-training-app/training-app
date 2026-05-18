@@ -1,110 +1,129 @@
+import { useCallback, useMemo } from "react";
 import { useAuth } from "@clerk/react";
-import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getJson } from "../lib/api/fetcher";
+import { useUpdateProfile } from "./useUpdateProfile";
 import type { Trainer } from "../features/session/types";
 
-// Debug flags from env (Vite requires VITE_ prefix)
-export const DEBUG = import.meta.env.VITE_DEBUG === "true";
-export const DEBUG_USER_ID = import.meta.env.VITE_DEBUG_USER_ID ?? "1";
-export const DEBUG_TRAINER_ID = Number(
-  import.meta.env.VITE_DEBUG_TRAINER_ID ?? "1",
-);
-const FALLBACK_VOICE = "Kore"; // keep as fallback constant
+const FALLBACK_VOICE = "Kore";
 
-const useCurrentUser = () => {
-  const { userId: clerkId, isSignedIn, getToken } = useAuth();
-  const [userId, setUserId] = useState<string | null>(
-    DEBUG ? String(DEBUG_USER_ID) : null,
-  );
-  const [trainerId, setTrainerId] = useState<number | null>(
-    DEBUG ? DEBUG_TRAINER_ID : null,
-  );
-  const [level, setLevel] = useState<number | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [voice, setVoice] = useState<string | null>(null);
-  const [coachPrompt, setCoachPrompt] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchToken = async () => {
-      if (isSignedIn) {
-        try {
-          const newToken = await getToken();
-          setToken(newToken);
-          console.log("Got token");
-        } catch (err) {
-          console.error("Failed to get token:", err);
-          setToken(null);
-        }
-      } else {
-        setToken(null);
-        setUserId(null);
-        setTrainerId(null);
-        setVoice(FALLBACK_VOICE);
-        setCoachPrompt(null); 
-        console.log("User is not signed in, token set to null");
-      }
-    };
-    if (!DEBUG) fetchToken();
-  }, [isSignedIn, getToken]);
-
-  useEffect(() => {
-    console.log(
-      voice ? "Current user voice is: " + voice : "No voice for current user",
-    );
-  }, [voice]);
-
-  // Fetch user data only when token and clerkId are available
-  useEffect(() => {
-    if (DEBUG) return;
-    if (!token || !clerkId) return;
-
-    const fetchUserId = async () => {
-      try {
-        const userData: {
-          id: number;
-          name: string;
-          intensityLevel: number;
-          context: string;
-          isAdmin: boolean;
-          trainerId: number;
-        } = await getJson(`/api/users/by-clerk/${clerkId}`, { token });
-        console.log("Fetched user data:", userData);
-
-        const trainerData: Trainer = await getJson(
-          `/api/trainers/${userData.trainerId}`,
-          { token },
-        );
-
-        console.log("Fetched trainer data:", trainerData);
-        setUserId(userData.id.toString());
-        setTrainerId(userData.trainerId);
-        setLevel(userData.intensityLevel);
-        setVoice(trainerData.voice || FALLBACK_VOICE);
-        setCoachPrompt(trainerData.prompt || null);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-        setUserId(null);
-        setTrainerId(null);
-        setLevel(null);
-        setVoice(FALLBACK_VOICE);
-        setCoachPrompt(null);
-      }
-    };
-
-    fetchUserId();
-  }, [token, clerkId]);
-
-  return {
-    clerkId,
-    isSignedIn,
-    userId,
-    setUserId,
-    trainerId,
-    setTrainerId,
-    level,
-    voice,
-    coachPrompt,
-  };
+type CurrentUserProfile = {
+  id: number;
+  trainerId: number | null;
+  intensityLevel: number | null;
+  name?: string | null;
+  context?: string | null;
+  isAdmin?: boolean;
 };
 
-export default useCurrentUser;
+export default function useCurrentUser() {
+  const { userId: clerkId, isSignedIn, getToken } = useAuth();
+  const qc = useQueryClient();
+  const updateProfileMutation = useUpdateProfile();
+
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+    refetch: refetchProfile,
+  } = useQuery<CurrentUserProfile | null>({
+    queryKey: ["myProfile"],
+    queryFn: async () => {
+      if (!isSignedIn) return null;
+      const rawToken = await getToken();
+      const token: string | undefined = rawToken ?? undefined;
+      return await getJson<CurrentUserProfile>(`/api/users/me/profile`, {
+        token,
+      });
+    },
+    enabled: isSignedIn,
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+  });
+
+  const trainerId = profile?.trainerId ?? null;
+
+  const {
+    data: trainer,
+    isLoading: isTrainerLoading,
+    isError: isTrainerError,
+    refetch: refetchTrainer,
+  } = useQuery<Trainer | null>({
+    queryKey: ["trainer", trainerId == null ? "null" : String(trainerId)],
+    queryFn: async () => {
+      if (!trainerId || !isSignedIn) return null;
+      const rawToken = await getToken();
+      const token: string | undefined = rawToken ?? undefined;
+      return await getJson<Trainer>(`/api/trainers/${trainerId}`, { token });
+    },
+    enabled: !!trainerId && isSignedIn,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const userId = profile?.id ? String(profile.id) : null;
+  const level = profile?.intensityLevel ?? null;
+  const voice = (trainer?.voice as string | undefined) ?? FALLBACK_VOICE;
+  const coachPrompt = trainer?.prompt ?? null;
+
+  const updateProfile = useCallback(
+    async (data: Partial<CurrentUserProfile>) => {
+      const payload = {
+        name: data.name ?? profile?.name ?? "",
+        intensityLevel:
+          data.intensityLevel ?? profile?.intensityLevel ?? /* default */ 3,
+        context: data.context ?? profile?.context ?? "",
+        trainerId:
+          data.trainerId !== undefined
+            ? data.trainerId
+            : (profile?.trainerId ?? null),
+      };
+
+      await updateProfileMutation.mutateAsync(payload);
+      await qc.invalidateQueries({ queryKey: ["myProfile"] });
+
+      if (typeof payload.trainerId === "number") {
+        await qc.invalidateQueries({
+          queryKey: ["trainer", String(payload.trainerId)],
+        });
+      }
+    },
+    [profile, qc, updateProfileMutation],
+  );
+
+  return useMemo(
+    () => ({
+      clerkId,
+      isSignedIn,
+      isProfileLoading,
+      isProfileError,
+      isTrainerLoading,
+      isTrainerError,
+      user: profile ?? null,
+      userId,
+      trainerId,
+      level,
+      voice,
+      coachPrompt,
+      refetchProfile,
+      refetchTrainer,
+      updateProfile,
+    }),
+    [
+      clerkId,
+      isSignedIn,
+      isProfileLoading,
+      isProfileError,
+      isTrainerLoading,
+      isTrainerError,
+      profile,
+      userId,
+      trainerId,
+      level,
+      voice,
+      coachPrompt,
+      refetchProfile,
+      refetchTrainer,
+      updateProfile,
+    ],
+  );
+}

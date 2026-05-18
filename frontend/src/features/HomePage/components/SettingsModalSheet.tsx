@@ -1,15 +1,16 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SignOutButton, useAuth } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
 import { CircleHelp, Globe, Settings, User } from "lucide-react";
-import IntensitySlider from "./IntensitySlider";
-import ContextModel from "./ContextModal";
-import TrainerSelectionModal from "./TrainerSelectionModal";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMyProfile } from "../../../hooks/useMyProfile";
 import { useUpdateProfile } from "../../../hooks/useUpdateProfile";
+import ContextModel from "./ContextModal";
+import IntensitySlider from "./IntensitySlider";
+import TrainerSelectionModal from "./TrainerSelectionModal";
 
 const SHEET_CLOSE_DURATION_MS = 350;
 
+import { useTranslation } from "react-i18next";
 import {
   AppSheet,
   AppSheetNotice,
@@ -19,8 +20,8 @@ import {
   appSheetSecondaryButtonClass,
 } from "../../../components/AppSheet";
 import LanguageSwitcher from "../../../components/LanguageSwitcher";
+import useCurrentUser from "../../../hooks/useCurrentUser";
 import SupportSheet from "./SupportSheet";
-import { useTranslation } from "react-i18next";
 
 type ProfileSettings = {
   name?: string | null;
@@ -103,7 +104,10 @@ export default function SettingsModalSheet({
     if (open) {
       setIsRendered(true);
     } else {
-      const tid = setTimeout(() => setIsRendered(false), SHEET_CLOSE_DURATION_MS);
+      const tid = setTimeout(
+        () => setIsRendered(false),
+        SHEET_CLOSE_DURATION_MS,
+      );
       return () => clearTimeout(tid);
     }
   }, [open]);
@@ -173,6 +177,13 @@ function SettingsModalBody({
   const isInitialMount = useRef(true);
 
   const updateProfile = useUpdateProfile();
+
+  const { setTrainerId } = useCurrentUser();
+
+  function onTrainerSelect(trainerId: number) {
+    setSelectedTrainerId(trainerId);
+    setTrainerId(trainerId);
+  }
 
   useEffect(() => {
     return () => {
@@ -293,7 +304,7 @@ function SettingsModalBody({
           <section className="py-6">
             <TrainerSelectionModal
               selectedTrainerId={selectedTrainerId}
-              onTrainerSelect={setSelectedTrainerId}
+              onTrainerSelect={onTrainerSelect}
             />
           </section>
 
