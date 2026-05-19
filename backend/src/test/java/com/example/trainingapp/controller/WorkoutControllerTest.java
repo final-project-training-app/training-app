@@ -41,7 +41,9 @@ class WorkoutControllerTest {
         WorkoutController controller = new WorkoutController(workoutService, userService, geminiWorkoutService);
 
         WorkoutResponseDTO workout = new WorkoutResponseDTO(
-                1L, "Push Ups", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, true, null);
+                1L, "Push Ups", null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, true, null
+        );
 
         when(userService.isAdmin("admin_1")).thenReturn(true);
         when(workoutService.getAllWorkouts(true)).thenReturn(List.of(workout));
@@ -59,6 +61,8 @@ class WorkoutControllerTest {
         WorkoutRequestDTO request = new WorkoutRequestDTO(
                 "Test Workout",
                 "desc",
+                null,
+                null,
                 1,
                 "strength",
                 300,
@@ -91,6 +95,8 @@ class WorkoutControllerTest {
         WorkoutRequestDTO request = new WorkoutRequestDTO(
                 "Test Workout",
                 "desc",
+                null,
+                null,
                 1,
                 "strength",
                 300,
@@ -111,7 +117,9 @@ class WorkoutControllerTest {
         when(userService.isAdmin("admin_1")).thenReturn(true);
 
         WorkoutResponseDTO workout = new WorkoutResponseDTO(
-                null, "Test Workout", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, true, null);
+                null, "Test Workout", null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, true, null
+        );
 
         when(workoutService.createWorkout(any())).thenReturn(workout);
 
@@ -157,7 +165,7 @@ class WorkoutControllerTest {
 
         WorkoutResponseDTO updated = new WorkoutResponseDTO(
                 1L, "Push Ups", null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, false, null
+                null, null, null, null, null, null, null, null, null, false, null
         );
         when(workoutService.setWorkoutEnabled(1L, false)).thenReturn(updated);
 
