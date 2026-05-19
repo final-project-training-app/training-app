@@ -55,6 +55,20 @@ export async function fetchWorkouts(token: string) {
   return res.json();
 }
 
+export async function fetchRecommendedWorkoutId(token: string, trainerId: string, userId: string) {
+  const res = await fetch(`${API_BASE}/api/trainers/trainer/${trainerId}/recommend-for/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch recommended workout ID");
+  }
+
+  return res.json();
+}
+
 // GET one workout
 export async function fetchWorkoutById(id: number, token: string) {
   const res = await fetch(`${API_BASE}/api/workouts/${id}`, {
@@ -103,3 +117,4 @@ export async function deleteWorkout(id: number, token: string) {
 
   return true;
 }
+
