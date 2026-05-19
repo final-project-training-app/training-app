@@ -47,9 +47,25 @@ export async function startGymAmbience(ambienceFile?: string | null) {
   const filename = ambienceFile?.trim() || FALLBACK_AMBIENCE;
 
   if (!gymAmbienceCache.has(filename)) {
-    const response = await fetch(`/phone-sounds/${filename}`);
-    const ab = await response.arrayBuffer();
-    gymAmbienceCache.set(filename, await ctx.decodeAudioData(ab));
+    const path = `/phone-sounds/${filename}`;
+    try {
+      const response = await fetch(path);
+      if (!response.ok) {
+        console.error(`[ambience] fetch failed: ${response.status} ${response.statusText} (${path})`);
+        return;
+      }
+      const contentType = response.headers.get("Content-Type") ?? "";
+      if (!contentType.includes("audio") && !contentType.includes("octet-stream")) {
+        console.error(`[ambience] file not found or wrong type — server returned "${contentType}" for ${path}. Check that the file exists in /public/phone-sounds/.`);
+        return;
+      }
+      const ab = await response.arrayBuffer();
+      const buffer = await ctx.decodeAudioData(ab);
+      gymAmbienceCache.set(filename, buffer);
+    } catch (err) {
+      console.error(`[ambience] error loading ${filename}:`, err);
+      return;
+    }
   }
 
   const gain = ctx.createGain();
