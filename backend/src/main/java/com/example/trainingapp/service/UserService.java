@@ -100,4 +100,8 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
     }
+
+    public long getUserCount() {
+        return userRepository.count();
+    }
 }

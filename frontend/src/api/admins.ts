@@ -1,20 +1,19 @@
-const API_URL = (
-  import.meta.env.VITE_API_URL ??
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:8080"
-    : "https://backend-training.up.railway.app")
-).replace(/\/$/, "");
+import { getApiBaseUrl } from "../lib/apiBaseUrl";
+
+const API_URL = getApiBaseUrl();
 
 export default async function fetchAdminPage(token: string) {
   const res = await fetch(`${API_URL}/api/admin`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
+  if (!res.ok) throw new Error("Not authorized");
+  return res.text();
+}
 
-  if (!res.ok) {
-    throw new Error("Not authorized");
-  }
-
-  return res.text(); //for now it is text, but in the future it could be JSON or something else depending on what the admin page needs
+export async function fetchAdminUserCount(token: string): Promise<{ count: number; activeCount: number }> {
+  const res = await fetch(`${API_URL}/api/admin/users/count`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Could not fetch user count");
+  return res.json();
 }

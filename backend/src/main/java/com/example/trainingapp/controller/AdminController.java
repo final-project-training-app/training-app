@@ -1,7 +1,9 @@
 package com.example.trainingapp.controller;
 
 import com.example.trainingapp.dto.AdminRecentFeedbackDTO;
+import com.example.trainingapp.dto.AdminUserCountDTO;
 import com.example.trainingapp.dto.AdminWorkoutFeedbackSummaryDTO;
+import com.example.trainingapp.service.ActivityLogService;
 import com.example.trainingapp.service.FeedbackService;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +28,13 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 public class AdminController {
     private final UserService service;
     private final FeedbackService feedbackService;
+    private final ActivityLogService activityLogService;
 
 
-    public AdminController(UserService service, FeedbackService feedbackService) {
+    public AdminController(UserService service, FeedbackService feedbackService, ActivityLogService activityLogService) {
         this.service = service;
         this.feedbackService = feedbackService;
+        this.activityLogService = activityLogService;
     }
 
     private Jwt getJwtOrThrow(Authentication authentication) {
@@ -77,6 +81,19 @@ public class AdminController {
         }
 
         return ResponseEntity.ok(feedbackService.getRecentFeedbackEntries());
+    }
+
+    @GetMapping("/users/count")
+    public ResponseEntity<AdminUserCountDTO> getUserCount(Authentication authentication) {
+        String clerkId = getClerkId(authentication);
+
+        if (!service.isAdmin(clerkId)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        long total = service.getUserCount();
+        long active = activityLogService.getActiveUserCount();
+        return ResponseEntity.ok(new AdminUserCountDTO(total, active));
     }
 
 }

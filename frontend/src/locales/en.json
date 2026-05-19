@@ -27,7 +27,12 @@
       "feedback": "Feedback"
     },
     "activeUsers": "Active Users",
+    "activeUsersUnavailable": "--",
     "activeUsersChange": "12% from yesterday",
+    "defaultUserName": "Admin",
+    "backToHomeAriaLabel": "Back to home",
+    "totalRegistered": "Total registered",
+    "activeLast30Days": "Active last 30 days",
     "totalWorkouts": "Total Workouts",
     "allWorkoutsInApp": "All workouts in app",
     "goodFeedback": "Good Feedback",
@@ -220,6 +225,13 @@
     "allCategories": "All Categories",
     "allLevels": "All Levels",
     "allTrainers": "All Trainers",
+    "loading": "Loading workouts...",
+    "description": "Description",
+    "sortNewest": "Sort: Newest",
+    "sortNameAsc": "Sort: Name A–Z",
+    "sortNameDesc": "Sort: Name Z–A",
+    "sortDurationAsc": "Sort: Duration ↑",
+    "sortDurationDesc": "Sort: Duration ↓",
     "seconds": "sec",
     "namePlaceholder": "e.g. Axellyft",
     "descriptionPlaceholder": "Short description of the workout...",
@@ -231,7 +243,10 @@
     "instructionsAudio": "Instructions audio URL",
     "saving": "Saving…",
     "save": "Save",
-    "noWorkoutsFound": "No workouts found"
+    "noWorkoutsFound": "No workouts found",
+    "showing": "Showing {{start}}–{{end}} of {{total}} workouts",
+    "prev": "Prev",
+    "next": "Next"
   },
   "intensitySlider": {
     "0": "Very Easy",

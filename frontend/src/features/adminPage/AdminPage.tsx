@@ -2,6 +2,7 @@ import { SignInButton, SignOutButton, useAuth, useUser } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactElement, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import FeedbackAdminPage from "./FeedbackAdminPage";
 import MainWorkoutPage from "./MainWorkoutPage";
 import TrainerAdminPage from "./TrainerAdminPage";
@@ -9,6 +10,7 @@ import AdminDashboard from "./AdminDashboard";
 import { useAdminPage } from "../../hooks/useAdminPage";
 import { useMyProfile } from "../../hooks/useMyProfile";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import { fetchAdminUserCount } from "../../api/admins";
 
 type AdminView = "dashboard" | "workouts" | "trainers" | "feedback";
 
@@ -68,35 +70,37 @@ function SidebarSparkline() {
 
 function SidebarActiveUsersCard() {
   const { t } = useTranslation();
+  const { getToken } = useAuth();
+
+  const { data } = useQuery<{ count: number; activeCount: number }>({
+    queryKey: ["admin-user-count"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("No token");
+      return fetchAdminUserCount(token);
+    },
+    staleTime: 60_000,
+  });
 
   return (
     <div className="m-3 rounded-2xl bg-[#f5f0ff] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
       <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6f6a93]">
         {t("admin.activeUsers")}
       </p>
-      <div className="mt-3 flex items-start justify-between gap-3">
+      <div className="mt-3 flex items-start gap-3">
+        <svg viewBox="0 0 24 24" className="h-5 w-5 mt-1 text-[#5836d6]" fill="currentColor">
+          <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+        </svg>
         <div>
-          <div className="flex items-center gap-2">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5 text-[#5836d6]"
-              fill="currentColor"
-            >
-              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-            </svg>
-            <p className="text-3xl font-extrabold leading-none text-[#100b2f]">
-              128
-            </p>
-          </div>
-          <p className="mt-1 text-xs font-medium text-[#5836d6]">
-            {t("admin.activeUsersChange")}
+          <p className="text-3xl font-extrabold leading-none text-[#100b2f]">
+            {data?.activeCount ?? "–"}
           </p>
-        </div>
-
-        <div className="mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-            <path d="M12 4l6 6h-4v10h-4V10H6l6-6z" />
-          </svg>
+          <p className="mt-1 text-xs font-medium text-[#5836d6]">
+            {t("admin.activeLast30Days")}
+          </p>
+          <p className="mt-0.5 text-[10px] text-[#9b96b8]">
+            {t("admin.totalRegistered")}: {data?.count ?? "–"}
+          </p>
         </div>
       </div>
       <div className="mt-3">
@@ -114,6 +118,7 @@ export default function AdminPage() {
   const { t } = useTranslation();
   const isAdmin = profile?.isAdmin === true;
   const { isLoading, error } = useAdminPage(isAdmin);
+
 
   const [activeView, setActiveView] = useState<AdminView>(resolveInitialView);
   const [searchTerm, setSearchTerm] = useState("");
@@ -256,7 +261,7 @@ export default function AdminPage() {
     }
   };
 
-  const userName = user?.firstName ?? user?.fullName ?? "Admin";
+  const userName = user?.firstName ?? user?.fullName ?? t("admin.defaultUserName");
   const userAvatar = user?.imageUrl;
 
   return (
@@ -322,7 +327,7 @@ export default function AdminPage() {
             type="button"
             onClick={() => navigate({ to: "/" })}
             className="mr-2 rounded-md px-3 py-2 text-sm font-semibold text-[#5836d6] hover:bg-[#f5f0ff]"
-            aria-label="Back to home"
+            aria-label={t("admin.backToHomeAriaLabel")}
           >
             ← {t("admin.goBackHome")}
           </button>
@@ -387,7 +392,7 @@ export default function AdminPage() {
                 type="button"
                 className="rounded-full border border-[#d8ccff] bg-white px-3 py-1.5 text-xs font-bold text-[#5836d6] transition hover:bg-[#f5f0ff] active:scale-95"
               >
-                Logga ut
+                {t("auth.logout")}
               </button>
             </SignOutButton>
           </div>
