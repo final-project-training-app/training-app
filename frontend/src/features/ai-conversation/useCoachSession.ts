@@ -524,7 +524,7 @@ export function useCoachSession(
     }
 
     stopRingback();
-    startGymAmbience();
+    startGymAmbience(session.trainer?.ambience);
     setSessionStep("waiting_instruction_approval");
     sendCoachPrompt("Starta samtalet.");
   }, [

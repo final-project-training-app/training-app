@@ -9,5 +9,6 @@ public record TrainerResponseDto(
     String language,
     String imageSelect,
     String imageCall,
-    String imageStart
+    String imageStart,
+    String ambience
 ) {}

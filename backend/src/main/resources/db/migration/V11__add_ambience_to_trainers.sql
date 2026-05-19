@@ -1,0 +1,2 @@
+ALTER TABLE trainers
+    ADD COLUMN IF NOT EXISTS ambience VARCHAR(255);

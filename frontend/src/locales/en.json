@@ -157,6 +157,8 @@
     "prompt": "System prompt",
     "systemPrompt": "System prompt",
     "promptPlaceholder": "Enter system prompt",
+    "ambience": "Background sound (filename)",
+    "ambiencePlaceholder": "e.g. gym-ambience-loop.mp3",
     "imageUrls": "Image URLs",
     "imageSelectUrl": "Select image URL",
     "imageCallUrl": "Call image URL",

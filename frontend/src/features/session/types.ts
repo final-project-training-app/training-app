@@ -15,6 +15,7 @@ export type Trainer = {
   imageSelect?: string | null;
   imageCall?: string | null;
   imageStart?: string | null;
+  ambience?: string | null;
 };
 
 export type CoachCallSession = {

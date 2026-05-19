@@ -156,6 +156,8 @@
     "prompt": "System-prompt",
     "systemPrompt": "System-prompt",
     "promptPlaceholder": "Ange system-prompt",
+    "ambience": "Bakgrundsljud (filnamn)",
+    "ambiencePlaceholder": "t.ex. gym-ambience-loop.mp3",
     "imageUrls": "Bild-URL:er",
     "imageSelectUrl": "Välj bild-URL",
     "imageCallUrl": "Samtalsbild-URL",
