@@ -1,10 +1,13 @@
 package com.example.trainingapp.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import com.example.trainingapp.dto.WorkoutRequestDTO;
 import com.example.trainingapp.dto.WorkoutResponseDTO;
 import com.example.trainingapp.entity.Trainer;
+import com.example.trainingapp.service.GeminiWorkoutService;
 import com.example.trainingapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -27,10 +30,12 @@ public class WorkoutController {
 
     private final WorkoutService workoutService;
     private final UserService userService;
+    private final GeminiWorkoutService geminiWorkoutService;
 
-    public WorkoutController(WorkoutService workoutService, UserService userService) {
+    public WorkoutController(WorkoutService workoutService, UserService userService, GeminiWorkoutService geminiWorkoutService) {
         this.workoutService = workoutService;
         this.userService = userService;
+        this.geminiWorkoutService = geminiWorkoutService;
     }
 
     private Workout toEntity(WorkoutRequestDTO request) {
@@ -121,4 +126,4 @@ public class WorkoutController {
         workoutService.deleteWorkout(id);
         return ResponseEntity.noContent().build();
     }
-}
+} 

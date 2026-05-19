@@ -37,11 +37,42 @@ export default function useCurrentWorkout() {
   const filteredWorkouts = useMemo(() => {
     if (!trainerId || level == null) return [];
     const desiredLevel = Number(level);
-    return (workouts ?? []).filter((w: BackendWorkoutResponse) => {
-      const trainerMatch = w.trainer?.id === trainerId;
-      const workoutLevel = Number(w.level);
-      return trainerMatch && workoutLevel === desiredLevel;
-    });
+
+    const byTrainer = (workouts ?? []).filter(
+      (w: BackendWorkoutResponse) => w.trainer?.id === trainerId,
+    );
+
+    // exact matches first
+    const exact = byTrainer.filter((w) => Number(w.level) === desiredLevel);
+    if (exact.length > 0) return exact;
+
+    // if no workouts for trainer at all
+    if (byTrainer.length === 0) return [];
+
+    // compute unique sorted numeric levels available for this trainer
+    const levels = Array.from(
+      new Set(
+        byTrainer
+          .map((w) => Number(w.level))
+          .filter((n) => Number.isFinite(n)),
+      ),
+    ).sort((a, b) => a - b);
+
+    // try closest lower level
+    const lower = levels.filter((l) => l < desiredLevel);
+    if (lower.length > 0) {
+      const chosen = lower[lower.length - 1]; // max lower
+      return byTrainer.filter((w) => Number(w.level) === chosen);
+    }
+
+    // otherwise choose closest higher level
+    const higher = levels.filter((l) => l > desiredLevel);
+    if (higher.length > 0) {
+      const chosen = higher[0]; // min higher
+      return byTrainer.filter((w) => Number(w.level) === chosen);
+    }
+
+    return [];
   }, [workouts, trainerId, level]);
 
   // currentWorkout id (string) — first matching workout if any

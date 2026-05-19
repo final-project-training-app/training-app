@@ -2,8 +2,10 @@ package com.example.trainingapp.service;
 
 import com.example.trainingapp.dto.WorkoutResponseDTO;
 import com.example.trainingapp.entity.ActivityLog;
+import com.example.trainingapp.entity.Trainer;
 import com.example.trainingapp.entity.Workout;
 import com.example.trainingapp.repository.ActivityLogRepository;
+import com.example.trainingapp.repository.TrainerRepository;
 import com.example.trainingapp.repository.WorkoutRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +24,7 @@ public class WorkoutService {
     private final WorkoutRepository workoutRepository;
     private final ActivityLogRepository activityLogRepository;
 
-    public WorkoutService(WorkoutRepository workoutRepository, ActivityLogRepository activityLogRepository) {
+    public WorkoutService(WorkoutRepository workoutRepository, ActivityLogRepository activityLogRepository, TrainerRepository trainerRepository) {
         this.workoutRepository = workoutRepository;
         this.activityLogRepository = activityLogRepository;
     }
@@ -37,6 +39,7 @@ public class WorkoutService {
 
         return workout.getWorkoutAudio();
     }
+
 
     @Transactional
     public List<WorkoutResponseDTO> getAllWorkouts() {
