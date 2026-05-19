@@ -430,7 +430,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-(--brand-muted)">Loading workouts...</p>;
+    return <p className="text-sm text-(--brand-muted)">{t("workoutsAdmin.loading")}</p>;
   }
 
   if (isError) {
@@ -558,11 +558,11 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
           onChange={(event) => setSortBy(event.target.value as SortBy)}
           className="rounded-lg border border-[#ece5ff] px-3 py-1.5 text-xs font-semibold text-[#6f6a93] hover:border-[#5836d6]"
         >
-          <option value="newest">Sort: Newest</option>
-          <option value="name-asc">Sort: Name A-Z</option>
-          <option value="name-desc">Sort: Name Z-A</option>
-          <option value="duration-asc">Sort: Duration ↑</option>
-          <option value="duration-desc">Sort: Duration ↓</option>
+          <option value="newest">{t("workoutsAdmin.sortNewest")}</option>
+          <option value="name-asc">{t("workoutsAdmin.sortNameAsc")}</option>
+          <option value="name-desc">{t("workoutsAdmin.sortNameDesc")}</option>
+          <option value="duration-asc">{t("workoutsAdmin.sortDurationAsc")}</option>
+          <option value="duration-desc">{t("workoutsAdmin.sortDurationDesc")}</option>
         </select>
       </div>
 
@@ -657,8 +657,12 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
           <div className="flex flex-wrap items-center justify-between gap-2 px-1">
             <p className="text-xs text-[#9b96b8]">
               {sortedWorkouts.length === 0
-                ? "No results"
-                : `Showing ${pageStart}–${pageEnd} of ${sortedWorkouts.length} workouts`}
+                ? t("workoutsAdmin.noWorkoutsFound")
+                : t("workoutsAdmin.showing", {
+                    start: pageStart,
+                    end: pageEnd,
+                    total: sortedWorkouts.length,
+                  })}
             </p>
 
             {totalPages > 1 && (
@@ -671,7 +675,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   disabled={currentPage === 1}
                   className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
                 >
-                  ← Prev
+                  ← {t("workoutsAdmin.prev")}
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
@@ -699,7 +703,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   disabled={currentPage === totalPages}
                   className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
                 >
-                  Next →
+                  {t("workoutsAdmin.next")} →
                 </button>
               </div>
             )}
@@ -746,7 +750,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                     {selectedWorkout.name}
                   </h3>
                   <p className="text-xs text-[#9b96b8]">
-                    Level {selectedWorkout.level ?? "-"}
+                    {t("workoutsAdmin.level")} {selectedWorkout.level ?? "-"}
                   </p>
                 </div>
 
@@ -782,9 +786,9 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
 
                 {selectedWorkout.description && (
                   <div>
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#9b96b8]">
-                      Description
-                    </p>
+                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+                       {t("workoutsAdmin.description")}
+                     </p>
                     <p className="text-sm leading-relaxed text-[#3d3860]">
                       {selectedWorkout.description}
                     </p>

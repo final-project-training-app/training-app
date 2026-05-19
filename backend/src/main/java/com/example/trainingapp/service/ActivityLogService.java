@@ -104,4 +104,9 @@ public class ActivityLogService {
 
         return streak;
     }
+
+    public long getActiveUserCount() {
+        LocalDateTime since = LocalDateTime.now().minusDays(30);
+        return activityLogRepository.countDistinctActiveUsersSince(since);
+    }
 }

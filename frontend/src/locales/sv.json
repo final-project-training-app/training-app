@@ -27,7 +27,12 @@
       "feedback": "Feedback"
     },
     "activeUsers": "Aktiva användare",
+    "activeUsersUnavailable": "--",
     "activeUsersChange": "12% från igår",
+    "defaultUserName": "Admin",
+    "backToHomeAriaLabel": "Tillbaka till startsidan",
+    "totalRegistered": "Totalt registrerade",
+    "activeLast30Days": "Aktiva senaste 30 dagarna",
     "totalWorkouts": "Totala pass",
     "allWorkoutsInApp": "Alla pass i appen",
     "goodFeedback": "Bra feedback",
@@ -219,6 +224,13 @@
     "allCategories": "Alla kategorier",
     "allLevels": "Alla nivåer",
     "allTrainers": "Alla tränare",
+    "loading": "Laddar pass...",
+    "description": "Beskrivning",
+    "sortNewest": "Sortera: Nyast",
+    "sortNameAsc": "Sortera: Namn A–Ö",
+    "sortNameDesc": "Sortera: Namn Ö–A",
+    "sortDurationAsc": "Sortera: Längd ↑",
+    "sortDurationDesc": "Sortera: Längd ↓",
     "seconds": "sek",
     "namePlaceholder": "t.ex. Axellyft",
     "descriptionPlaceholder": "Kort beskrivning av passet...",
@@ -230,7 +242,10 @@
     "instructionsAudio": "Instruktionsljud URL",
     "saving": "Sparar…",
     "save": "Spara",
-    "noWorkoutsFound": "Inga pass hittades"
+    "noWorkoutsFound": "Inga pass hittades",
+    "showing": "Visar {{start}}–{{end}} av {{total}} pass",
+    "prev": "Föregående",
+    "next": "Nästa"
   },
   "intensitySlider": {
     "0": "Mycket Lätt",
