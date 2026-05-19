@@ -41,7 +41,7 @@ class TrainerServiceTest {
         trainer.setIntro("Intro");
         trainer.setLanguage("en");
 
-        trainerRequest = new TrainerRequestDto("Alice Coach", "Prompt", "Voice", "Intro", "en", null, null, null);
+        trainerRequest = new TrainerRequestDto("Alice Coach", "Prompt", "Voice", "Intro", "en", null, null, null, null);
     }
 
     @Test
