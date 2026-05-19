@@ -3,6 +3,8 @@ package com.example.trainingapp.dto;
 public record WorkoutRequestDTO(
         String name,
         String description,
+        String dashboardName,
+        String dashboardDescription,
         Integer level,
         String type,
         Integer durationSeconds,

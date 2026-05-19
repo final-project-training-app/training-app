@@ -162,7 +162,7 @@ public class TrainerService {
         validateId(userId);
 
         // 1. Verify workouts matching this specific trainer exist
-        List<Workout> trainerWorkouts = workoutRepository.findByTrainerId(trainerId);
+        List<Workout> trainerWorkouts = workoutRepository.findByTrainerIdAndEnabledTrue(trainerId);
         if (trainerWorkouts.isEmpty()) {
             throw new ResponseStatusException(NOT_FOUND, "No workouts found for trainer ID: " + trainerId);
         }
@@ -183,7 +183,7 @@ public class TrainerService {
                         String reasoning = aiResultNode.path("reasoning").asText("No reasoning provided.");
 
                         // 4. Validate entity integrity if a match was successfully found
-                        if (workoutId != null && !workoutRepository.existsById(workoutId)) {
+                        if (workoutId != null && !workoutRepository.existsByIdAndEnabledTrue(workoutId)) {
                             throw new ResponseStatusException(INTERNAL_SERVER_ERROR,
                                     "AI recommended a workout ID (" + workoutId + ") that does not exist in the database.");
                         }

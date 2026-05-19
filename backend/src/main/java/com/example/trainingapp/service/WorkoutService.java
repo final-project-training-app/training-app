@@ -42,17 +42,25 @@ public class WorkoutService {
 
 
     @Transactional
-    public List<WorkoutResponseDTO> getAllWorkouts() {
-        return workoutRepository.findAll()
+    public List<WorkoutResponseDTO> getAllWorkouts(boolean includeDisabled) {
+        List<Workout> workouts = includeDisabled
+                ? workoutRepository.findAll()
+                : workoutRepository.findByEnabledTrue();
+
+        return workouts
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public WorkoutResponseDTO getWorkoutById(Long id) {
+    public WorkoutResponseDTO getWorkoutById(Long id, boolean includeDisabled) {
         Workout workout = workoutRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Workout not found"));
+
+        if (!includeDisabled && Boolean.FALSE.equals(workout.getEnabled())) {
+            throw new ResponseStatusException(NOT_FOUND, "Workout not found");
+        }
 
         return mapToResponse(workout);
     }
@@ -60,7 +68,7 @@ public class WorkoutService {
     @Transactional
     public WorkoutResponseDTO startWorkout(Long id, Long userId) {
         // Reuse the logic from getWorkoutById to ensure mapping and session handling
-        WorkoutResponseDTO workout = getWorkoutById(id);
+        WorkoutResponseDTO workout = getWorkoutById(id, false);
 
         if (userId != null) {
             ActivityLog activityLog = new ActivityLog();
@@ -90,7 +98,20 @@ public class WorkoutService {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Workout not found"));
 
         workout.setId(existing.getId());
+        workout.setEnabled(existing.getEnabled());
         Workout updated = workoutRepository.save(workout);
+        return mapToResponse(updated);
+    }
+
+    @Transactional
+    public WorkoutResponseDTO setWorkoutEnabled(Long id, boolean enabled) {
+        validateId(id);
+
+        Workout existing = workoutRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Workout not found"));
+
+        existing.setEnabled(enabled);
+        Workout updated = workoutRepository.save(existing);
         return mapToResponse(updated);
     }
 
@@ -117,6 +138,8 @@ public class WorkoutService {
                 workout.getId(),
                 workout.getName(),
                 workout.getDescription(),
+                workout.getDashboardName(),
+                workout.getDashboardDescription(),
                 workout.getLevel(),
                 workout.getType(),
                 workout.getDurationSeconds(),
@@ -131,6 +154,7 @@ public class WorkoutService {
                 workout.getLowImpact(),
                 workout.getSeated(),
                 workout.getBeginnerFriendly(),
+                workout.getEnabled(),
                 trainerDTO
         );
     }

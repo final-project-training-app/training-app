@@ -4,6 +4,8 @@ public record WorkoutResponseDTO(
         Long id,
         String name,
         String description,
+        String dashboardName,
+        String dashboardDescription,
         Integer level,
         String type,
         Integer durationSeconds,
@@ -18,6 +20,7 @@ public record WorkoutResponseDTO(
         Boolean lowImpact,
         Boolean seated,
         Boolean beginnerFriendly,
+        Boolean enabled,
         TrainerIdDTO trainer
 ) {
     public record TrainerIdDTO(Long id) {

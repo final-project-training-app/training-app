@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import com.example.trainingapp.dto.WorkoutRequestDTO;
+import com.example.trainingapp.dto.WorkoutEnabledRequestDTO;
 import com.example.trainingapp.dto.WorkoutResponseDTO;
 import com.example.trainingapp.entity.Trainer;
 import com.example.trainingapp.service.GeminiWorkoutService;
@@ -42,6 +43,8 @@ public class WorkoutController {
         Workout workout = new Workout();
         workout.setName(request.name());
         workout.setDescription(request.description());
+        workout.setDashboardName(request.dashboardName());
+        workout.setDashboardDescription(request.dashboardDescription());
         workout.setLevel(request.level());
         workout.setType(request.type());
         workout.setDurationSeconds(request.durationSeconds());
@@ -77,20 +80,28 @@ public class WorkoutController {
         return userService.isAdmin(getJwtOrThrow(authentication).getSubject());
     }
 
+    private boolean isAdminIfAuthenticated(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return false;
+        }
+        return userService.isAdmin(jwt.getSubject());
+    }
+
     @GetMapping("/{id}/audio")
     public ResponseEntity<String> getWorkoutAudio(@PathVariable Long id) {
         return ResponseEntity.ok().body(workoutService.getWorkoutAudioUrl(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<WorkoutResponseDTO>> getAllWorkouts() {
-
-        return ResponseEntity.ok().body(workoutService.getAllWorkouts());
+    public ResponseEntity<List<WorkoutResponseDTO>> getAllWorkouts(Authentication authentication) {
+        boolean includeDisabled = isAdminIfAuthenticated(authentication);
+        return ResponseEntity.ok().body(workoutService.getAllWorkouts(includeDisabled));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<WorkoutResponseDTO> getWorkoutById(@PathVariable Long id) {
-        return ResponseEntity.ok().body(workoutService.getWorkoutById(id));
+    public ResponseEntity<WorkoutResponseDTO> getWorkoutById(@PathVariable Long id, Authentication authentication) {
+        boolean includeDisabled = isAdminIfAuthenticated(authentication);
+        return ResponseEntity.ok().body(workoutService.getWorkoutById(id, includeDisabled));
     }
 
     @PostMapping("/{id}/start")
@@ -126,4 +137,19 @@ public class WorkoutController {
         workoutService.deleteWorkout(id);
         return ResponseEntity.noContent().build();
     }
-} 
+
+    @PatchMapping("/{id}/enabled")
+    public ResponseEntity<WorkoutResponseDTO> setWorkoutEnabled(
+            @PathVariable Long id,
+            @RequestBody WorkoutEnabledRequestDTO request,
+            Authentication authentication
+    ) {
+        if (!isAdmin(authentication)) {
+            return ResponseEntity.status(403).build();
+        }
+        if (request.enabled() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(workoutService.setWorkoutEnabled(id, request.enabled()));
+    }
+}

@@ -13,6 +13,8 @@ type TrainerOption = {
 type WorkoutForm = {
   name: string;
   description: string;
+  dashboardName: string;
+  dashboardDescription: string;
   level: number;
   type: string;
   durationSeconds: number;
@@ -34,6 +36,8 @@ type WorkoutResponse = {
   id: number;
   name?: string;
   description?: string;
+  dashboardName?: string | null;
+  dashboardDescription?: string | null;
   level?: number;
   type?: string;
   durationSeconds?: number;
@@ -76,6 +80,8 @@ const isValidUrl = (url: string): boolean => {
 const emptyForm: WorkoutForm = {
   name: "",
   description: "",
+  dashboardName: "",
+  dashboardDescription: "",
   level: 2,
   type: "",
   durationSeconds: 0,
@@ -131,6 +137,8 @@ export default function EditWorkoutPage({
         setForm({
           name: workoutData.name ?? "",
           description: workoutData.description ?? "",
+          dashboardName: workoutData.dashboardName ?? "",
+          dashboardDescription: workoutData.dashboardDescription ?? "",
           level: workoutData.level ?? 2,
           type: workoutData.type ?? "",
           durationSeconds: workoutData.durationSeconds ?? 0,
@@ -242,6 +250,8 @@ export default function EditWorkoutPage({
         {
           name: form.name,
           description: form.description,
+          dashboardName: form.dashboardName || null,
+          dashboardDescription: form.dashboardDescription || null,
           level: form.level,
           type: form.type,
           durationSeconds: form.durationSeconds,
@@ -372,6 +382,34 @@ export default function EditWorkoutPage({
               className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
             />
           </label>
+
+          {/* Dashboard Display (English) */}
+          <div className="rounded-xl border border-(--brand-border) bg-(--brand-surface-glass) p-4 flex flex-col gap-4">
+            <div>
+              <h3 className="text-base font-semibold">{t("workoutsAdmin.dashboardSection")}</h3>
+              <p className="text-sm text-(--brand-muted)">{t("workoutsAdmin.dashboardSectionHint")}</p>
+            </div>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm opacity-80">{t("workoutsAdmin.dashboardName")}</span>
+              <input
+                name="dashboardName"
+                placeholder={t("workoutsAdmin.dashboardNamePlaceholder")}
+                value={form.dashboardName}
+                onChange={handleChange}
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm opacity-80">{t("workoutsAdmin.dashboardDescription")}</span>
+              <textarea
+                name="dashboardDescription"
+                placeholder={t("workoutsAdmin.dashboardDescriptionPlaceholder")}
+                value={form.dashboardDescription}
+                onChange={handleChange}
+                className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
+              />
+            </label>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="flex flex-col gap-1">

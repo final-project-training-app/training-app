@@ -1,0 +1,7 @@
+ALTER TABLE workouts
+    ADD COLUMN IF NOT EXISTS enabled BOOLEAN NOT NULL DEFAULT TRUE;
+
+UPDATE workouts
+SET enabled = TRUE
+WHERE enabled IS NULL;
+
