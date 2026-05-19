@@ -7,6 +7,7 @@ import {
   createWorkoutWithToken,
   deleteWorkout,
   fetchWorkouts,
+  setWorkoutEnabledWithToken,
   updateWorkout,
 } from "../../api/workouts";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -38,6 +39,7 @@ type Workout = {
   lowImpact?: boolean;
   seated?: boolean;
   beginnerFriendly?: boolean;
+  enabled?: boolean;
   trainer?: { id?: number; name?: string } | null;
 };
 
@@ -199,9 +201,13 @@ function PaginationControls({
 function WorkoutDetailsPanel({
   workout,
   onEdit,
+  onToggleEnabled,
+  isTogglingEnabled,
 }: {
   workout: Workout;
   onEdit: () => void;
+  onToggleEnabled: () => void;
+  isTogglingEnabled: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -239,6 +245,11 @@ function WorkoutDetailsPanel({
           <h3 className="text-lg font-bold text-[#100b2f]">{workout.name}</h3>
           <p className="text-xs text-[#9b96b8]">
             {t("workoutsAdmin.level")} {workout.level ?? "-"}
+          </p>
+          <p className="mt-1 text-xs font-semibold text-[#6f6a93]">
+            {workout.enabled === false
+              ? t("workoutsAdmin.statusDisabled")
+              : t("workoutsAdmin.statusEnabled")}
           </p>
         </div>
 
@@ -286,6 +297,18 @@ function WorkoutDetailsPanel({
           className="w-full rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] active:scale-95"
         >
           {t("workoutsAdmin.editWorkout")}
+        </button>
+        <button
+          type="button"
+          onClick={onToggleEnabled}
+          disabled={isTogglingEnabled}
+          className="w-full rounded-xl border border-[#d8ccff] bg-white py-2.5 text-sm font-semibold text-[#5836d6] transition hover:bg-[#f5f0ff] disabled:opacity-60"
+        >
+          {isTogglingEnabled
+            ? t("workoutsAdmin.updatingStatus")
+            : workout.enabled === false
+              ? t("workoutsAdmin.enableWorkout")
+              : t("workoutsAdmin.disableWorkout")}
         </button>
       </div>
     </div>
@@ -527,6 +550,26 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
     },
   });
 
+  const toggleEnabledMutation = useMutation({
+    mutationFn: async ({ id, enabled }: { id: number; enabled: boolean }) => {
+      const token = await getToken();
+      if (!token) throw new Error("Missing Clerk token");
+      return setWorkoutEnabledWithToken(id, enabled, token);
+    },
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ["workouts"] });
+      showToast(
+        variables.enabled
+          ? t("workoutsAdmin.toastEnabled")
+          : t("workoutsAdmin.toastDisabled"),
+        { type: "success" },
+      );
+    },
+    onError: () => {
+      showToast(t("workoutsAdmin.toastStatusFailed"), { type: "error" });
+    },
+  });
+
   const validate = () => {
     const nextErrors: string[] = [];
 
@@ -764,6 +807,11 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                           {workout.type}
                         </span>
                       )}
+                      {workout.enabled === false && (
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-600">
+                          {t("workoutsAdmin.statusDisabled")}
+                        </span>
+                      )}
                       <span className="text-xs text-[#9b96b8]">
                         {t("workoutsAdmin.level")} {workout.level ?? "-"}
                       </span>
@@ -833,7 +881,18 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
 
         <aside className="h-fit rounded-2xl border border-[#ece5ff] bg-white shadow-sm xl:sticky xl:top-5">
           {mode === "view" && selectedWorkout != null && (
-            <WorkoutDetailsPanel workout={selectedWorkout} onEdit={openEdit} />
+            <WorkoutDetailsPanel
+              workout={selectedWorkout}
+              onEdit={openEdit}
+              onToggleEnabled={() => {
+                if (selectedWorkout.id == null) return;
+                toggleEnabledMutation.mutate({
+                  id: selectedWorkout.id,
+                  enabled: !(selectedWorkout.enabled ?? true),
+                });
+              }}
+              isTogglingEnabled={toggleEnabledMutation.isPending}
+            />
           )}
 
           {(mode === "create" || mode === "edit") && (

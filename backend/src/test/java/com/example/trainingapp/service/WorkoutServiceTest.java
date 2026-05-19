@@ -65,7 +65,7 @@ class WorkoutServiceTest {
     void getAllWorkoutsReturnsRepositoryResults() {
         when(workoutRepository.findAll()).thenReturn(List.of(workout));
 
-        assertEquals(1, workoutService.getAllWorkouts().size());
+        assertEquals(1, workoutService.getAllWorkouts(true).size());
     }
 
     @Test

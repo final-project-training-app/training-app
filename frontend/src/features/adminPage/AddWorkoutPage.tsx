@@ -13,6 +13,8 @@ type TrainerOption = {
 type WorkoutForm = {
   name: string;
   description: string;
+  dashboardName: string;
+  dashboardDescription: string;
   level: number;
   type: string;
   durationSeconds: number;
@@ -55,6 +57,8 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
   const [form, setForm] = useState<WorkoutForm>({
     name: "",
     description: "",
+    dashboardName: "",
+    dashboardDescription: "",
     level: 2,
     type: "",
     durationSeconds: 0,
@@ -194,6 +198,8 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
       await mutateAsync({
         name: form.name,
         description: form.description,
+        dashboardName: form.dashboardName || null,
+        dashboardDescription: form.dashboardDescription || null,
         level: form.level,
         type: form.type,
         durationSeconds: form.durationSeconds,
@@ -334,6 +340,34 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                 className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
               />
             </label>
+          </div>
+
+          {/* Dashboard Display (English) */}
+          <div>
+            <h2 className="text-xl font-semibold mb-1">{t("workoutsAdmin.dashboardSection")}</h2>
+            <p className="text-sm text-(--brand-muted) mb-4">{t("workoutsAdmin.dashboardSectionHint")}</p>
+            <div className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">{t("workoutsAdmin.dashboardName")}</span>
+                <input
+                  name="dashboardName"
+                  placeholder={t("workoutsAdmin.dashboardNamePlaceholder")}
+                  value={form.dashboardName}
+                  onChange={handleChange}
+                  className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-sm opacity-80">{t("workoutsAdmin.dashboardDescription")}</span>
+                <textarea
+                  name="dashboardDescription"
+                  placeholder={t("workoutsAdmin.dashboardDescriptionPlaceholder")}
+                  value={form.dashboardDescription}
+                  onChange={handleChange}
+                  className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
+                />
+              </label>
+            </div>
           </div>
 
           {/* Media */}

@@ -13,6 +13,8 @@ class WorkoutRequestDTOTest {
         WorkoutRequestDTO dto = new WorkoutRequestDTO(
                 "Push Ups",
                 "Upper body",
+                "Push Ups",
+                "Upper body dashboard",
                 1,
                 "strength",
                 300,
@@ -31,6 +33,7 @@ class WorkoutRequestDTOTest {
         );
 
         assertEquals("Push Ups", dto.name());
+        assertEquals("Push Ups", dto.dashboardName());
         assertEquals(300, dto.durationSeconds());
         assertTrue(dto.beginnerFriendly());
         assertEquals(7L, dto.trainer().id());
