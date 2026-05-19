@@ -101,8 +101,8 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
         if (!isMounted) return;
 
         console.error(error);
-        setTrainersError("Could not load trainers.");
-        onStatusChange?.("Failed to load trainers.", { type: "error" });
+        setTrainersError(t("workoutsAdmin.trainersLoadFailed"));
+        onStatusChange?.(t("workoutsAdmin.trainersLoadFailed"), { type: "error" });
       } finally {
         if (isMounted) {
           setTrainersLoading(false);
@@ -145,36 +145,38 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
   const validate = () => {
     const newErrors: string[] = [];
 
-    if (!form.name) newErrors.push("Name is required");
-    if (!form.description) newErrors.push("Description is required");
-    if (!form.type) newErrors.push("Type is required");
+    if (!form.name) newErrors.push(t("workoutsAdmin.validation.nameRequired"));
+    if (!form.description) newErrors.push(t("workoutsAdmin.validation.descriptionRequired"));
+    if (!form.type) newErrors.push(t("workoutsAdmin.validation.typeRequired"));
     if (form.durationSeconds <= 0)
-      newErrors.push("Duration must be greater than 0");
+      newErrors.push(t("workoutsAdmin.validation.durationPositive"));
     if (form.level < 0 || form.level > 4)
-      newErrors.push("Level must be between 0 and 4");
-    if (!form.trainerId) newErrors.push("Trainer is required");
+      newErrors.push(t("workoutsAdmin.validation.levelRange"));
+    if (!form.trainerId) newErrors.push(t("workoutsAdmin.validation.trainerRequired"));
     if (!form.instructionsAudio)
-      newErrors.push("Instructions Audio is required");
+      newErrors.push(t("workoutsAdmin.validation.instructionsAudioRequired"));
     else if (!isValidUrl(form.instructionsAudio))
-      newErrors.push("Instructions Audio must be a valid URL");
-    if (!form.workoutAudio) newErrors.push("Workout Audio is required");
+      newErrors.push(t("workoutsAdmin.validation.instructionsAudioUrl"));
+    if (!form.workoutAudio)
+      newErrors.push(t("workoutsAdmin.validation.workoutAudioRequired"));
     else if (!isValidUrl(form.workoutAudio))
-      newErrors.push("Workout Audio must be a valid URL");
+      newErrors.push(t("workoutsAdmin.validation.workoutAudioUrl"));
     if (!form.instructionsImage)
-      newErrors.push("Instructions Image is required");
+      newErrors.push(t("workoutsAdmin.validation.instructionsImageRequired"));
     else if (!isValidUrl(form.instructionsImage))
-      newErrors.push("Instructions Image must be a valid URL");
-    if (!form.workoutImage) newErrors.push("Workout Image is required");
+      newErrors.push(t("workoutsAdmin.validation.instructionsImageUrl"));
+    if (!form.workoutImage)
+      newErrors.push(t("workoutsAdmin.validation.workoutImageRequired"));
     else if (!isValidUrl(form.workoutImage))
-      newErrors.push("Workout Image must be a valid URL");
+      newErrors.push(t("workoutsAdmin.validation.workoutImageUrl"));
 
     if (form.instructionsVideo && !isValidUrl(form.instructionsVideo))
-      newErrors.push("Instructions Video must be a valid URL");
+      newErrors.push(t("workoutsAdmin.validation.instructionsVideoUrl"));
 
     const start = form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null;
     const stop = form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null;
     if (start !== null && stop !== null && start >= stop)
-      newErrors.push("Instructions Video Start must be less than Stop");
+      newErrors.push(t("workoutsAdmin.validation.videoStartBeforeStop"));
 
     setErrors(newErrors);
     return newErrors.length === 0;
@@ -186,7 +188,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
     if (!validate()) return;
 
     setSuccess(false);
-    onStatusChange?.("Saving workout...", { type: "info" });
+    onStatusChange?.(t("workoutsAdmin.toastSaving"), { type: "info" });
 
     try {
       await mutateAsync({
@@ -212,13 +214,13 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
       });
 
       setSuccess(true);
-      onStatusChange?.("Workout saved.", { type: "success" });
+      onStatusChange?.(t("workoutsAdmin.toastSaved"), { type: "success" });
 
       // optional reset
       // setForm(initialState)
     } catch (err) {
       console.error(err);
-      onStatusChange?.("Failed to save workout.", { type: "error" });
+      onStatusChange?.(t("workoutsAdmin.toastSaveFailed"), { type: "error" });
     }
   }
   return (
@@ -231,7 +233,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
           <button
             type="button"
             onClick={() => {
-              onStatusChange?.("Cancelling...", { type: "info" });
+              onStatusChange?.(t("workoutsAdmin.canceling"), { type: "info" });
               onBack?.();
             }}
             className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
@@ -243,13 +245,13 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
           {/* Basic Info */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Basic Info</h2>
+            <h2 className="text-xl font-semibold mb-4">{t("workoutsAdmin.basicInfo")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Name *</span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.name")} *</span>
                 <input
                   name="name"
-                  placeholder="Morning Yoga"
+                  placeholder={t("workoutsAdmin.namePlaceholder")}
                   value={form.name}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
@@ -257,10 +259,10 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Type *</span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.type")} *</span>
                 <input
                   name="type"
-                  placeholder="Strength, Cardio..."
+                  placeholder={t("workoutsAdmin.typePlaceholder")}
                   value={form.type}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3 focus:outline-none focus:ring-2 focus:ring-(--brand-primary)"
@@ -268,7 +270,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Trainer *</span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.trainer")} *</span>
                 <select
                   name="trainerId"
                   value={form.trainerId}
@@ -278,8 +280,8 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                 >
                   <option value="">
                     {trainersLoading
-                      ? "Loading trainers..."
-                      : "Choose a trainer"}
+                      ? t("workoutsAdmin.loadingTrainers")
+                      : t("workoutsAdmin.chooseTrainer")}
                   </option>
                   {trainers.map((trainer) => (
                     <option key={trainer.id} value={trainer.id}>
@@ -293,7 +295,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Level *</span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.level")} *</span>
                 <input
                   type="number"
                   name="level"
@@ -306,7 +308,7 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">Duration (seconds) *</span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.duration")} *</span>
                 <input
                   type="number"
                   name="durationSeconds"
@@ -321,12 +323,12 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
 
           {/* Instructions */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Description</h2>
+            <h2 className="text-xl font-semibold mb-4">{t("workoutsAdmin.description")}</h2>
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">Description *</span>
+              <span className="text-sm opacity-80">{t("workoutsAdmin.description")} *</span>
               <textarea
                 name="description"
-                placeholder="Describe the workout..."
+                placeholder={t("workoutsAdmin.descriptionPlaceholder")}
                 value={form.description}
                 onChange={handleChange}
                 className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
@@ -336,15 +338,13 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
 
           {/* Media */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Media</h2>
+            <h2 className="text-xl font-semibold mb-4">{t("workoutsAdmin.media")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">
-                  Instructions Audio * (URL)
-                </span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.instructionsAudio")} *</span>
                 <input
                   name="instructionsAudio"
-                  placeholder="https://example.com/audio.mp3"
+                  placeholder={t("workoutsAdmin.urlPlaceholder")}
                   value={form.instructionsAudio}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3"
@@ -352,12 +352,10 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">
-                  Workout Audio * (URL)
-                </span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.workoutAudio")} *</span>
                 <input
                   name="workoutAudio"
-                  placeholder="https://example.com/audio.mp3"
+                  placeholder={t("workoutsAdmin.urlPlaceholder")}
                   value={form.workoutAudio}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3"
@@ -365,12 +363,10 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">
-                  Instructions Image * (URL)
-                </span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.instructionsImage")} *</span>
                 <input
                   name="instructionsImage"
-                  placeholder="https://example.com/image.jpg"
+                  placeholder={t("workoutsAdmin.urlPlaceholder")}
                   value={form.instructionsImage}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3"
@@ -378,12 +374,10 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">
-                  Workout Image * (URL)
-                </span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.workoutImage")} *</span>
                 <input
                   name="workoutImage"
-                  placeholder="https://example.com/image.jpg"
+                  placeholder={t("workoutsAdmin.urlPlaceholder")}
                   value={form.workoutImage}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3"
@@ -391,12 +385,10 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1 md:col-span-2">
-                <span className="text-sm opacity-80">
-                  Instructions Video (URL, optional)
-                </span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.instructionsVideoOptional")}</span>
                 <input
                   name="instructionsVideo"
-                  placeholder="https://example.com/video.mp4"
+                  placeholder={t("workoutsAdmin.videoPlaceholder")}
                   value={form.instructionsVideo}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3"
@@ -404,14 +396,12 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">
-                  Video Start (seconds after audio begins, optional)
-                </span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.videoStartSeconds")}</span>
                 <input
                   name="instructionsVideoStart"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  placeholder="e.g. 11"
+                  placeholder={t("workoutsAdmin.videoStartPlaceholder")}
                   value={form.instructionsVideoStart}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3"
@@ -419,14 +409,12 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-80">
-                  Video Stop (seconds after audio begins, optional)
-                </span>
+                <span className="text-sm opacity-80">{t("workoutsAdmin.videoStopSeconds")}</span>
                 <input
                   name="instructionsVideoStop"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  placeholder="e.g. 31"
+                  placeholder={t("workoutsAdmin.videoStopPlaceholder")}
                   value={form.instructionsVideoStop}
                   onChange={handleChange}
                   className="rounded-lg border border-(--brand-border) bg-white p-3"
@@ -437,13 +425,13 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
 
           {/* Options */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Options</h2>
+            <h2 className="text-xl font-semibold mb-4">{t("workoutsAdmin.options")}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { name: "kneeFriendly", label: "Knee Friendly" },
-                { name: "lowImpact", label: "Low Impact" },
-                { name: "seated", label: "Seated" },
-                { name: "beginnerFriendly", label: "Beginner" },
+                { name: "kneeFriendly", label: t("exercisePanel.kneeFriendly") },
+                { name: "lowImpact", label: t("exercisePanel.lowImpact") },
+                { name: "seated", label: t("exercisePanel.seated") },
+                { name: "beginnerFriendly", label: t("exercisePanel.beginnerFriendly") },
               ].map((item) => (
                 <label
                   key={item.name}
@@ -475,12 +463,12 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
             <button
               type="button"
               onClick={() => {
-                onStatusChange?.("Cancelling...");
+                onStatusChange?.(t("workoutsAdmin.canceling"));
                 onBack?.();
               }}
               className="rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-3 text-sm font-medium"
             >
-              Cancel
+              {t("workoutsAdmin.cancel")}
             </button>
 
             <button
@@ -492,15 +480,15 @@ export default function AddWorkoutPage({ onBack, onStatusChange }: Props) {
                   : "bg-(--brand-primary) hover:bg-(--brand-primary)/90"
               }`}
             >
-              {isSubmitting ? (
+                  {isSubmitting ? (
                 <>
                   <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving...
+                  {t("workoutsAdmin.saving")}
                 </>
               ) : success ? (
-                "Saved"
+                t("workoutsAdmin.saved")
               ) : (
-                "Save"
+                t("workoutsAdmin.save")
               )}
             </button>
           </div>

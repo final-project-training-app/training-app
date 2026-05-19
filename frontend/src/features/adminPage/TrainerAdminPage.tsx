@@ -181,7 +181,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
         setForm(toForm(data));
       } catch (err) {
         if (!active) return;
-        showToast((err as Error).message || "Failed to load trainer.", {
+        showToast((err as Error).message || t("trainerAdmin.toastLoadFailed"), {
           type: "error",
         });
         setMode("view");
@@ -216,10 +216,10 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
       const createdId = (saved as Trainer)?.id;
       if (typeof createdId === "number") setSelectedId(createdId);
       setMode("view");
-      showToast("Trainer created.", { type: "success" });
+      showToast(t("trainerAdmin.toastCreated"), { type: "success" });
     },
     onError: (err) => {
-      const msg = (err as Error).message || "Failed to save trainer.";
+      const msg = (err as Error).message || t("trainerAdmin.toastSaveFailed");
       setSubmitError(msg);
       showToast(msg, { type: "error" });
     },
@@ -250,10 +250,10 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
       await queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
       setSubmitError(null);
       setMode("view");
-      showToast("Trainer updated.", { type: "success" });
+      showToast(t("trainerAdmin.toastUpdated"), { type: "success" });
     },
     onError: (err) => {
-      const msg = (err as Error).message || "Failed to update trainer.";
+      const msg = (err as Error).message || t("trainerAdmin.toastUpdateFailed");
       setSubmitError(msg);
       showToast(msg, { type: "error" });
     },
@@ -268,10 +268,10 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin-trainers"] });
       setMode("view");
-      showToast("Trainer deleted.", { type: "success" });
+      showToast(t("trainerAdmin.toastDeleted"), { type: "success" });
     },
     onError: (err) => {
-      showToast((err as Error).message || "Failed to delete.", {
+      showToast((err as Error).message || t("trainerAdmin.toastDeleteFailed"), {
         type: "error",
       });
     },
@@ -279,17 +279,17 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
 
   const validate = () => {
     const next: FieldErrors = {};
-    if (!form.name.trim()) next.name = "Name is required";
-    if (!form.prompt.trim()) next.prompt = "Prompt is required";
-    if (!form.voice.trim()) next.voice = "Voice is required";
-    if (!form.intro.trim()) next.intro = "Intro is required";
-    if (!form.language.trim()) next.language = "Language is required";
+    if (!form.name.trim()) next.name = t("trainerAdmin.validation.nameRequired");
+    if (!form.prompt.trim()) next.prompt = t("trainerAdmin.validation.promptRequired");
+    if (!form.voice.trim()) next.voice = t("trainerAdmin.validation.voiceRequired");
+    if (!form.intro.trim()) next.intro = t("trainerAdmin.validation.introRequired");
+    if (!form.language.trim()) next.language = t("trainerAdmin.validation.languageRequired");
     if (form.imageSelect.trim() && !isHttpUrl(form.imageSelect.trim()))
-      next.imageSelect = "Must be a valid https:// URL";
+      next.imageSelect = t("trainerAdmin.validation.httpsUrlRequired");
     if (form.imageCall.trim() && !isHttpUrl(form.imageCall.trim()))
-      next.imageCall = "Must be a valid https:// URL";
+      next.imageCall = t("trainerAdmin.validation.httpsUrlRequired");
     if (form.imageStart.trim() && !isHttpUrl(form.imageStart.trim()))
-      next.imageStart = "Must be a valid https:// URL";
+      next.imageStart = t("trainerAdmin.validation.httpsUrlRequired");
     setFieldErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -321,7 +321,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
     event.preventDefault();
     setSubmitError(null);
     if (!validate()) return;
-    showToast("Saving…", { type: "info" });
+    showToast(t("trainerAdmin.saving"), { type: "info" });
     if (mode === "edit" && selectedId != null) {
       await updateMutation.mutateAsync({ id: selectedId, payload: form });
     } else {
@@ -330,7 +330,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-[#6f6a93]">Loading trainers…</p>;
+    return <p className="text-sm text-[#6f6a93]">{t("trainerAdmin.loading")}</p>;
   }
 
   if (isError) {
@@ -505,9 +505,6 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                   <h3 className="text-xl font-bold text-[#100b2f]">
                     {selectedTrainer.name}
                   </h3>
-                  <p className="mt-0.5 text-xs text-[#9b96b8]">
-                    Trainer #{selectedTrainer.id}
-                  </p>
                   <p className="mt-0.5 text-xs text-[#9b96b8]">
                     {t("trainerAdmin.trainerId", { id: selectedTrainer.id })}
                   </p>

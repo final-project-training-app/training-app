@@ -51,7 +51,7 @@ function SkeletonRow() {
 
 export default function FeedbackAdminPage() {
   const { getToken } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<
     "" | "GOOD" | "NEEDS_REVIEW" | "BAD"
@@ -167,8 +167,10 @@ export default function FeedbackAdminPage() {
     },
   };
 
-  if (isError)
+  if (isError) {
     return <p className="text-sm text-red-500">{(error as Error).message}</p>;
+  }
+
   const toggleWorkoutComments = (workoutId: number) => {
     setExpandedWorkoutIds((current) =>
       current.includes(workoutId)
@@ -176,8 +178,6 @@ export default function FeedbackAdminPage() {
         : [...current, workoutId],
     );
   };
-
-  if (isError) return <p className="text-sm text-red-500">{(error as Error).message}</p>;
 
   return (
     <section className="space-y-5">
@@ -293,7 +293,7 @@ export default function FeedbackAdminPage() {
           }}
           className="rounded-lg border border-[#ece5ff] bg-white py-2 pl-3 pr-6 text-xs font-semibold text-[#6f6a93] outline-none transition hover:border-[#c4b8f5]"
         >
-          <option value="status">Issue severity</option>
+          <option value="status">{t("feedbackAdmin.issueSeverity")}</option>
           <option value="rating">{t("feedbackAdmin.highestRating")}</option>
           <option value="feedback">{t("feedbackAdmin.mostFeedback")}</option>
           <option value="name">{t("feedbackAdmin.alphaSort")}</option>
@@ -379,7 +379,14 @@ export default function FeedbackAdminPage() {
                         onClick={() => toggleWorkoutComments(row.workoutId)}
                         className="rounded-full border border-[#ece5ff] bg-[#faf8ff] px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f0ebff]"
                       >
-                        {expandedWorkoutIds.includes(row.workoutId) ? "Hide comments" : `Show comments (${feedbackByWorkout.get(row.workoutId)?.filter((item) => item.comment?.trim()).length ?? 0})`}
+                        {expandedWorkoutIds.includes(row.workoutId)
+                          ? t("feedbackAdmin.hideComments")
+                          : t("feedbackAdmin.showComments", {
+                              count:
+                                feedbackByWorkout
+                                  .get(row.workoutId)
+                                  ?.filter((item) => item.comment?.trim()).length ?? 0,
+                            })}
                       </button>
                     </div>
                   </div>
@@ -441,15 +448,17 @@ export default function FeedbackAdminPage() {
                     <div className="mt-4 border-t border-[#f0ebff] pt-4">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-xs font-bold uppercase tracking-wider text-[#b0a8d0]">
-                          Recent comments
+                          {t("feedbackAdmin.recentComments")}
                         </p>
                         <p className="text-xs text-[#9b96b8]">
-                          Newest first
+                          {t("feedbackAdmin.newestFirst")}
                         </p>
                       </div>
 
                       {isRecentLoading ? (
-                        <p className="mt-3 text-sm text-[#6f6a93]">Loading comments...</p>
+                        <p className="mt-3 text-sm text-[#6f6a93]">
+                          {t("feedbackAdmin.loadingComments")}
+                        </p>
                       ) : (
                         (() => {
                           const comments = (feedbackByWorkout.get(row.workoutId) ?? []).filter(
@@ -459,7 +468,7 @@ export default function FeedbackAdminPage() {
                           if (comments.length === 0) {
                             return (
                               <p className="mt-3 rounded-xl bg-[#faf8ff] px-3 py-3 text-sm text-[#9b96b8]">
-                                No written comments yet for this workout.
+                                {t("feedbackAdmin.noWrittenComments")}
                               </p>
                             );
                           }
@@ -476,10 +485,10 @@ export default function FeedbackAdminPage() {
                                   </p>
 
                                   <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-semibold text-[#6f6a93]">
-                                    {feedback.rating != null && <span className="rounded-full bg-white px-2 py-1">Rating {feedback.rating}</span>}
-                                    {feedback.liked != null && <span className="rounded-full bg-white px-2 py-1">{feedback.liked ? "Liked" : "Disliked"}</span>}
+                                    {feedback.rating != null && <span className="rounded-full bg-white px-2 py-1">{t("feedbackAdmin.ratingValue", { value: feedback.rating })}</span>}
+                                    {feedback.liked != null && <span className="rounded-full bg-white px-2 py-1">{feedback.liked ? t("feedbackAdmin.liked") : t("feedbackAdmin.disliked")}</span>}
                                     {feedback.difficulty && <span className="rounded-full bg-white px-2 py-1">{feedback.difficulty}</span>}
-                                    {feedback.createdAt && <span className="rounded-full bg-white px-2 py-1">{new Date(feedback.createdAt).toLocaleString()}</span>}
+                                    {feedback.createdAt && <span className="rounded-full bg-white px-2 py-1">{new Date(feedback.createdAt).toLocaleString(i18n.language)}</span>}
                                   </div>
                                 </div>
                               ))}

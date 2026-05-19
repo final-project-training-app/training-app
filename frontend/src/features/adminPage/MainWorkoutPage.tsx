@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/react";
 import { useTranslation } from "react-i18next";
 /* eslint-disable react-hooks/set-state-in-effect */
@@ -117,6 +117,179 @@ function isValidUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function FilterSelect({
+  value,
+  onChange,
+  children,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  children: ReactNode;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+        value
+          ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]"
+          : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
+      }`}
+    >
+      {children}
+    </select>
+  );
+}
+
+function PaginationControls({
+  currentPage,
+  totalPages,
+  onChange,
+  prevLabel,
+  nextLabel,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onChange: (page: number) => void;
+  prevLabel: string;
+  nextLabel: string;
+}) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+        className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
+      >
+        ← {prevLabel}
+      </button>
+
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+        <button
+          key={page}
+          type="button"
+          onClick={() => onChange(page)}
+          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+            currentPage === page
+              ? "bg-[#5836d6] text-white shadow-sm"
+              : "border border-[#ece5ff] bg-white text-[#5836d6] hover:bg-[#f3eeff]"
+          }`}
+        >
+          {page}
+        </button>
+      ))}
+
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+        className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
+      >
+        {nextLabel} →
+      </button>
+    </div>
+  );
+}
+
+function WorkoutDetailsPanel({
+  workout,
+  onEdit,
+}: {
+  workout: Workout;
+  onEdit: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="space-y-0">
+      <div className="relative h-44 w-full overflow-hidden rounded-t-2xl bg-[#ece5ff]">
+        {workout.workoutImage || workout.instructionsImage ? (
+          <img
+            src={workout.workoutImage || workout.instructionsImage}
+            alt={workout.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-5xl">
+            🏋️
+          </div>
+        )}
+        <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
+        <button
+          type="button"
+          onClick={onEdit}
+          className="absolute right-3 top-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#5836d6] shadow-sm backdrop-blur-sm transition hover:bg-white"
+        >
+          ✏️ {t("workoutsAdmin.edit")}
+        </button>
+        {workout.type && (
+          <span className="absolute bottom-3 left-3 rounded-full bg-[#5836d6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+            {workout.type}
+          </span>
+        )}
+      </div>
+
+      <div className="p-4 space-y-4">
+        <div>
+          <h3 className="text-lg font-bold text-[#100b2f]">{workout.name}</h3>
+          <p className="text-xs text-[#9b96b8]">
+            {t("workoutsAdmin.level")} {workout.level ?? "-"}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+              {t("workoutsAdmin.duration")}
+            </p>
+            <p className="mt-1 text-base font-bold text-[#100b2f]">
+              {workout.durationSeconds ?? "-"} {t("workoutsAdmin.seconds")}
+            </p>
+          </div>
+          <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+              {t("workoutsAdmin.level")}
+            </p>
+            <p className="mt-1 text-base font-bold text-[#100b2f]">
+              {workout.level ?? "-"}
+            </p>
+          </div>
+          <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+              {t("workoutsAdmin.type")}
+            </p>
+            <p className="mt-1 truncate text-base font-bold text-[#100b2f]">
+              {workout.type ? workout.type.toUpperCase() : "-"}
+            </p>
+          </div>
+        </div>
+
+        {workout.description && (
+          <div>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#9b96b8]">
+              {t("workoutsAdmin.description")}
+            </p>
+            <p className="text-sm leading-relaxed text-[#3d3860]">
+              {workout.description}
+            </p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={onEdit}
+          className="w-full rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] active:scale-95"
+        >
+          {t("workoutsAdmin.editWorkout")}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function MainWorkoutPage({ searchTerm = "" }: Props) {
@@ -322,12 +495,17 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
 
       setMode("view");
       setErrors([]);
-      showToast(mode === "create" ? "Workout created." : "Workout updated.", {
+      showToast(
+        mode === "create"
+          ? t("workoutsAdmin.toastCreated")
+          : t("workoutsAdmin.toastUpdated"),
+        {
         type: "success",
-      });
+        },
+      );
     },
     onError: () => {
-      showToast("Failed to save workout.", { type: "error" });
+      showToast(t("workoutsAdmin.toastSaveFailed"), { type: "error" });
     },
   });
 
@@ -341,46 +519,46 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
       await queryClient.invalidateQueries({ queryKey: ["workouts"] });
       setMode("view");
       setConfirmDelete(false);
-      showToast("Workout deleted.", { type: "success" });
+      showToast(t("workoutsAdmin.toastDeleted"), { type: "success" });
     },
     onError: () => {
       setConfirmDelete(false);
-      showToast("Failed to delete workout.", { type: "error" });
+      showToast(t("workoutsAdmin.toastDeleteFailed"), { type: "error" });
     },
   });
 
   const validate = () => {
     const nextErrors: string[] = [];
 
-    if (!form.name.trim()) nextErrors.push("Name is required");
+    if (!form.name.trim()) nextErrors.push(t("workoutsAdmin.validation.nameRequired"));
     if (form.level < 0 || form.level > 4) {
-      nextErrors.push("Level must be between 0 and 4");
+      nextErrors.push(t("workoutsAdmin.validation.levelRange"));
     }
     if (form.durationSeconds < 0) {
-      nextErrors.push("Duration cannot be negative");
+      nextErrors.push(t("workoutsAdmin.validation.durationPositive"));
     }
 
     if (!isValidUrl(form.instructionsAudio)) {
-      nextErrors.push("Instructions audio must be a valid URL");
+      nextErrors.push(t("workoutsAdmin.validation.instructionsAudioUrl"));
     }
     if (!isValidUrl(form.workoutAudio)) {
-      nextErrors.push("Workout audio must be a valid URL");
+      nextErrors.push(t("workoutsAdmin.validation.workoutAudioUrl"));
     }
     if (!isValidUrl(form.instructionsImage)) {
-      nextErrors.push("Instructions image must be a valid URL");
+      nextErrors.push(t("workoutsAdmin.validation.instructionsImageUrl"));
     }
     if (!isValidUrl(form.workoutImage)) {
-      nextErrors.push("Workout image must be a valid URL");
+      nextErrors.push(t("workoutsAdmin.validation.workoutImageUrl"));
     }
 
     if (form.instructionsVideo && !isValidUrl(form.instructionsVideo)) {
-      nextErrors.push("Instructions video must be a valid URL");
+      nextErrors.push(t("workoutsAdmin.validation.instructionsVideoUrl"));
     }
 
     const vStart = form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null;
     const vStop = form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null;
     if (vStart !== null && vStop !== null && vStart >= vStop) {
-      nextErrors.push("Video Start must be less than Video Stop");
+      nextErrors.push(t("workoutsAdmin.validation.videoStartBeforeStop"));
     }
 
     setErrors(nextErrors);
@@ -390,7 +568,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!validate()) return;
-    showToast("Saving workout...", { type: "info" });
+    showToast(t("workoutsAdmin.toastSaving"), { type: "info" });
     await saveMutation.mutateAsync();
   };
 
@@ -487,56 +665,32 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#ece5ff] bg-white px-4 py-3 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={filterType}
-            onChange={(event) => setFilterType(event.target.value)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-              filterType
-                ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]"
-                : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
-            }`}
-          >
+          <FilterSelect value={filterType} onChange={setFilterType}>
             <option value="">{t("workoutsAdmin.allCategories")}</option>
             {uniqueTypes.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
             ))}
-          </select>
+          </FilterSelect>
 
-          <select
-            value={filterLevel}
-            onChange={(event) => setFilterLevel(event.target.value)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-              filterLevel
-                ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]"
-                : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
-            }`}
-          >
+          <FilterSelect value={filterLevel} onChange={setFilterLevel}>
             <option value="">{t("workoutsAdmin.allLevels")}</option>
             {uniqueLevels.map((l) => (
               <option key={l} value={String(l)}>
                 {t("workoutsAdmin.level")} {l}
               </option>
             ))}
-          </select>
+          </FilterSelect>
 
-          <select
-            value={filterTrainerId}
-            onChange={(event) => setFilterTrainerId(event.target.value)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
-              filterTrainerId
-                ? "border-[#5836d6] bg-[#f0ebff] text-[#5836d6]"
-                : "border-[#ece5ff] text-[#6f6a93] hover:border-[#5836d6]"
-            }`}
-          >
+          <FilterSelect value={filterTrainerId} onChange={setFilterTrainerId}>
             <option value="">{t("workoutsAdmin.allTrainers")}</option>
             {trainers.map((tr) => (
               <option key={tr.id} value={String(tr.id)}>
                 {tr.name}
               </option>
             ))}
-          </select>
+          </FilterSelect>
 
           {(filterType || filterLevel || filterTrainerId) && (
             <button
@@ -666,144 +820,20 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
             </p>
 
             {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
-                >
-                  ← {t("workoutsAdmin.prev")}
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      onClick={() => setCurrentPage(page)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                        currentPage === page
-                          ? "bg-[#5836d6] text-white shadow-sm"
-                          : "border border-[#ece5ff] bg-white text-[#5836d6] hover:bg-[#f3eeff]"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ),
-                )}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="rounded-lg border border-[#ece5ff] bg-white px-3 py-1.5 text-xs font-semibold text-[#5836d6] transition hover:bg-[#f3eeff] disabled:opacity-30"
-                >
-                  {t("workoutsAdmin.next")} →
-                </button>
-              </div>
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onChange={setCurrentPage}
+                prevLabel={t("workoutsAdmin.prev")}
+                nextLabel={t("workoutsAdmin.next")}
+              />
             )}
           </div>
         </div>
 
         <aside className="h-fit rounded-2xl border border-[#ece5ff] bg-white shadow-sm xl:sticky xl:top-5">
           {mode === "view" && selectedWorkout != null && (
-            <div className="space-y-0">
-              <div className="relative h-44 w-full overflow-hidden rounded-t-2xl bg-[#ece5ff]">
-                {selectedWorkout.workoutImage ||
-                selectedWorkout.instructionsImage ? (
-                  <img
-                    src={
-                      selectedWorkout.workoutImage ||
-                      selectedWorkout.instructionsImage
-                    }
-                    alt={selectedWorkout.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-5xl">
-                    🏋️
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
-                <button
-                  type="button"
-                  onClick={openEdit}
-                  className="absolute right-3 top-3 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#5836d6] shadow-sm backdrop-blur-sm transition hover:bg-white"
-                >
-                  ✏️ {t("workoutsAdmin.edit")}
-                </button>
-                {selectedWorkout.type && (
-                  <span className="absolute bottom-3 left-3 rounded-full bg-[#5836d6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-                    {selectedWorkout.type}
-                  </span>
-                )}
-              </div>
-
-              <div className="p-4 space-y-4">
-                <div>
-                  <h3 className="text-lg font-bold text-[#100b2f]">
-                    {selectedWorkout.name}
-                  </h3>
-                  <p className="text-xs text-[#9b96b8]">
-                    {t("workoutsAdmin.level")} {selectedWorkout.level ?? "-"}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
-                      {t("workoutsAdmin.duration")}
-                    </p>
-                    <p className="mt-1 text-base font-bold text-[#100b2f]">
-                      {selectedWorkout.durationSeconds ?? "-"}{" "}
-                      {t("workoutsAdmin.seconds")}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
-                      {t("workoutsAdmin.level")}
-                    </p>
-                    <p className="mt-1 text-base font-bold text-[#100b2f]">
-                      {selectedWorkout.level ?? "-"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-[#ece5ff] bg-[#f8f5ff] p-3 text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9b96b8]">
-                      {t("workoutsAdmin.type")}
-                    </p>
-                    <p className="mt-1 truncate text-base font-bold text-[#100b2f]">
-                      {selectedWorkout.type
-                        ? selectedWorkout.type.toUpperCase()
-                        : "-"}
-                    </p>
-                  </div>
-                </div>
-
-                {selectedWorkout.description && (
-                  <div>
-                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#9b96b8]">
-                       {t("workoutsAdmin.description")}
-                     </p>
-                    <p className="text-sm leading-relaxed text-[#3d3860]">
-                      {selectedWorkout.description}
-                    </p>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={openEdit}
-                  className="w-full rounded-xl bg-[#5836d6] py-2.5 text-sm font-semibold text-white transition hover:bg-[#4527b8] active:scale-95"
-                >
-                  {t("workoutsAdmin.editWorkout")}
-                </button>
-              </div>
-            </div>
+            <WorkoutDetailsPanel workout={selectedWorkout} onEdit={openEdit} />
           )}
 
           {(mode === "create" || mode === "edit") && (
@@ -948,7 +978,9 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-[#6f6a93]">Instructions video URL (optional)</label>
+                    <label className="text-xs font-semibold text-[#6f6a93]">
+                      {t("workoutsAdmin.instructionsVideoOptional")}
+                    </label>
                     <input
                       name="instructionsVideo"
                       value={form.instructionsVideo}
@@ -959,26 +991,30 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-[#6f6a93]">Video start (sec)</label>
+                      <label className="text-xs font-semibold text-[#6f6a93]">
+                        {t("workoutsAdmin.videoStartSeconds")}
+                      </label>
                       <input
                         name="instructionsVideoStart"
                         inputMode="numeric"
                         pattern="[0-9]*"
                         value={form.instructionsVideoStart}
                         onChange={onFormChange}
-                        placeholder="e.g. 11"
+                        placeholder={t("workoutsAdmin.videoStartPlaceholder")}
                         className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-[#6f6a93]">Video stop (sec)</label>
+                      <label className="text-xs font-semibold text-[#6f6a93]">
+                        {t("workoutsAdmin.videoStopSeconds")}
+                      </label>
                       <input
                         name="instructionsVideoStop"
                         inputMode="numeric"
                         pattern="[0-9]*"
                         value={form.instructionsVideoStop}
                         onChange={onFormChange}
-                        placeholder="e.g. 31"
+                        placeholder={t("workoutsAdmin.videoStopPlaceholder")}
                         className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
                       />
                     </div>
@@ -1023,10 +1059,10 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
               <span className="text-4xl">👆</span>
               <p className="text-sm font-semibold text-[#100b2f]">
-                Select a workout
+                {t("workoutsAdmin.selectWorkout")}
               </p>
               <p className="text-xs text-[#9b96b8]">
-                Click any row to see details here
+                {t("workoutsAdmin.clickWorkoutHint")}
               </p>
             </div>
           )}
