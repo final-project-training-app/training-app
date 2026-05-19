@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useCoachSession } from "../ai-conversation";
 import { SessionCall } from "./components/SessionCall";
 import { useCoachCallSession } from "./query";
 import type { CoachCallSession, SessionPanel } from "./types";
-import { useCoachSession } from "../ai-conversation";
-import type { CoachSessionStep } from "../ai-conversation";
 
 const LOADING_SESSION: CoachCallSession = {
   id: "",
@@ -39,7 +38,6 @@ export function SessionPage({
     return (
       <SessionCall
         session={LOADING_SESSION}
-        coachStatusLabel={t("sessionPage.calling")}
         elapsedSeconds={0}
         activePanel="none"
         isLoading={true}
@@ -68,36 +66,11 @@ function ReadySessionPage({
 }) {
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [callAnsweredAt, setCallAnsweredAt] = useState<number | null>(null);
   const [isEnding, setIsEnding] = useState(false);
-  const { t } = useTranslation();
-
-  function getCoachStatusLabel(step: CoachSessionStep) {
-    switch (step) {
-      case "idle":
-        return t("sessionPage.status.idle");
-      case "live_intro":
-        return t("sessionPage.status.liveIntro");
-      case "waiting_instruction_approval":
-        return t("sessionPage.status.waitingInstructionApproval");
-      case "playing_instructions":
-        return t("sessionPage.status.playingInstructions");
-      case "asking_ready":
-        return t("sessionPage.status.askingReady");
-      case "playing_workout":
-        return t("sessionPage.status.playingWorkout");
-      case "collecting_feedback":
-        return t("sessionPage.status.collectingFeedback");
-      case "completed":
-        return t("sessionPage.status.completed");
-      case "error":
-        return t("sessionPage.status.error");
-    }
-  }
+  const callAnsweredAtRef = useRef<number | null>(null);
 
   const {
     step,
-    error,
     debugEvents,
     hangUp,
     getCurrentRms,
@@ -121,12 +94,12 @@ function ReadySessionPage({
   const isCallAnswered = step !== "idle" && step !== "live_intro";
 
   useEffect(() => {
-    if (!isCallAnswered || callAnsweredAt !== null) return;
-    setCallAnsweredAt(Date.now());
-    setElapsedSeconds(0);
-  }, [callAnsweredAt, isCallAnswered]);
+    if (!isCallAnswered || callAnsweredAtRef.current !== null) return;
+    callAnsweredAtRef.current = Date.now();
+  }, [isCallAnswered]);
 
   useEffect(() => {
+    const callAnsweredAt = callAnsweredAtRef.current;
     if (callAnsweredAt === null) return;
     if (step === "completed" || step === "idle" || step === "error") return;
 
@@ -137,7 +110,7 @@ function ReadySessionPage({
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [callAnsweredAt, step]);
+  }, [step]);
 
   useEffect(() => {
     if (step !== "completed") return;
@@ -159,7 +132,6 @@ function ReadySessionPage({
     <SessionCall
       session={session}
       workoutName={session.name ?? session.workoutName}
-      coachStatusLabel={error ?? getCoachStatusLabel(step)}
       elapsedSeconds={elapsedSeconds}
       activePanel={activePanel}
       debugEvents={debugEvents}

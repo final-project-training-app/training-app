@@ -67,7 +67,6 @@ function VolumeMeter({ getCurrentRms }: { getCurrentRms: () => number }) {
 type SessionCallProps = {
   session: CoachCallSession;
   workoutName?: string;
-  coachStatusLabel: string;
   elapsedSeconds: number;
   activePanel: SessionPanel;
   debugEvents?: CoachSessionDebugEvent[];
@@ -171,7 +170,6 @@ function ControlButton({
 export function SessionCall({
   session,
   workoutName,
-  coachStatusLabel,
   elapsedSeconds,
   activePanel,
   debugEvents = [],
@@ -292,10 +290,6 @@ export function SessionCall({
             {isLoading
               ? ""
               : displayWorkoutName || t("sessionCall.workoutMissing")}
-          </p>
-
-          <p className="mt-1 max-w-[320px] text-[clamp(10px,1.25cqh,13px)] font-bold text-[#8a83aa]">
-            {coachStatusLabel}
           </p>
 
           <p className="mt-[clamp(0.55rem,1.4cqh,1rem)] text-[clamp(14px,1.8cqh,18px)] font-bold tabular-nums tracking-[0.22em] text-[#8a83aa]">
