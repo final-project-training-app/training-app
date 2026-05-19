@@ -3,13 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { getCoachCallSession, getTrainer } from "./api";
 
 export function coachCallSessionQueryOptions(
-  workoutId: string,
+  workoutId: string | undefined,
   token?: string | null,
 ) {
   return {
     queryKey: [
       "coach-call-session",
-      workoutId,
+      workoutId ?? "no-workout",
       token ? "auth" : "guest",
     ] as const,
     queryFn: () => getCoachCallSession(workoutId, token),
@@ -17,13 +17,13 @@ export function coachCallSessionQueryOptions(
   };
 }
 
-export function useCoachCallSession(workoutId: string) {
+export function useCoachCallSession(workoutId: string | undefined) {
   const { getToken, isLoaded, isSignedIn } = useAuth();
 
   return useQuery({
     queryKey: [
       "coach-call-session",
-      workoutId,
+      workoutId ?? "no-workout",
       isLoaded ? (isSignedIn ? "auth" : "guest") : "auth-loading",
     ] as const,
     queryFn: async () => {

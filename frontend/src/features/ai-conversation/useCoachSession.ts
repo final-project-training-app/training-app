@@ -17,6 +17,8 @@ import {
   stopSessionAudio,
 } from "./audio/sessionAudio";
 import {
+  ALREADY_COMPLETED_TODAY_INSTRUCTION,
+  ALREADY_COMPLETED_TOOLS,
   COACH_PROMPTS,
   buildUserContext,
   liveSystemInstruction,
@@ -45,22 +47,31 @@ import useCurrentUser from "../../hooks/useCurrentUser";
 function buildSessionInstruction(
   session: CoachCallSession,
   trainerPrompt?: string | null,
+  alreadyCompletedToday?: boolean,
 ) {
   const userContext = buildUserContext(session);
+  const trainerIdentity = trainerPrompt?.trim()
+    ? `\n\nTrainer identity and style (apply this throughout the conversation):\n${trainerPrompt.trim()}`
+    : "";
+
+  if (alreadyCompletedToday) {
+    return `${userContext} ${ALREADY_COMPLETED_TODAY_INSTRUCTION}${trainerIdentity}`;
+  }
+
   const base = `${userContext} ${liveSystemInstruction}`;
-  if (!trainerPrompt?.trim()) return base;
-  return `Trainer prompt:\n${trainerPrompt.trim()}\n\n${base}`;
+  return `${base}${trainerIdentity}`;
 }
 
 export function useCoachSession(
   options: UseCoachSessionOptions & {
     trainerId?: string;
     session: CoachCallSession;
+    alreadyCompletedToday?: boolean;
   },
 ) {
   const { session, autoStart = true } = options;
 
-  const { userId, voice, coachPrompt, updateProfile } = useCurrentUser();
+  const { userId, voice, coachPrompt, updateProfile, isTrainerLoading: isCurrentUserTrainerLoading } = useCurrentUser();
   const {
     data: trainer,
     isLoading: isTrainerLoading,
@@ -68,8 +79,8 @@ export function useCoachSession(
   } = useTrainer(options.trainerId ?? "1");
 
   const sessionInstruction = useMemo(
-    () => buildSessionInstruction(session, coachPrompt),
-    [session, coachPrompt],
+    () => buildSessionInstruction(session, coachPrompt, options.alreadyCompletedToday),
+    [session, coachPrompt, options.alreadyCompletedToday],
   );
 
   useEffect(() => {
@@ -149,6 +160,10 @@ export function useCoachSession(
     setDebugEvents((current) => [event, ...current].slice(0, 12));
   }, []);
 
+  const sessionTools = options.alreadyCompletedToday
+    ? [...coachLiveTools, ...ALREADY_COMPLETED_TOOLS]
+    : [...coachLiveTools, ...SESSION_CONTROL_TOOLS];
+
   const {
     geminiConnect,
     geminiDisconnect,
@@ -166,7 +181,7 @@ export function useCoachSession(
     setSpeakerMuted,
   } = useGeminiLive({
     token,
-    tools: [...coachLiveTools, ...SESSION_CONTROL_TOOLS],
+    tools: sessionTools,
     systemInstruction: sessionInstruction,
     voice: voice,
 
@@ -764,7 +779,7 @@ export function useCoachSession(
   }, [isSpeakerMuted, setSpeakerMuted]);
 
   // must be declared before usage in the auto-start effect
-  const canStartLive = Boolean(voice && trainer?.prompt && !isTrainerLoading);
+  const canStartLive = Boolean(voice && !isTrainerLoading && !isCurrentUserTrainerLoading);
 
   //──────────────────────
   // Auto-start on mount

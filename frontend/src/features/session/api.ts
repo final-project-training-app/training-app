@@ -110,14 +110,12 @@ export async function getWorkouts(): Promise<BackendWorkoutResponse[]> {
 }
 
 export async function getCoachCallSession(
-  workoutId: string,
+  workoutId: string | undefined,
   token?: string | null,
 ): Promise<CoachCallSession> {
-  const workout = await getJson<BackendWorkoutResponse>(
-    `/api/workouts/${workoutId}`,
-  );
-
-  console.log("[session/api] raw workout from backend:", JSON.stringify(workout));
+  const workout = workoutId
+    ? await getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`)
+    : null;
 
   let user: BackendUserResponse | null = null;
   let progress: BackendProgressResponse | null = null;
@@ -168,38 +166,36 @@ export async function getCoachCallSession(
       : null);
 
   return {
-    id: workout.id,
+    id: workout?.id ?? 0,
     isAuthenticated: Boolean(token && user),
 
-    name: workout.dashboardName || workout.name,
-    workoutName: workout.dashboardName || workout.name,
+    name: workout ? (workout.dashboardName || workout.name) : undefined,
+    workoutName: workout ? (workout.dashboardName || workout.name) : undefined,
+    dashboardName: workout?.dashboardName,
+    description: workout ? (workout.dashboardDescription || workout.description) : undefined,
+    dashboardDescription: workout?.dashboardDescription,
+    instructions: workout ? (workout.instructions ?? workout.dashboardDescription ?? workout.description) : undefined,
 
-    dashboardName: workout.dashboardName,
+    level: workout?.level,
+    type: workout?.type,
 
-    description: workout.dashboardDescription || workout.description,
-    dashboardDescription: workout.dashboardDescription,
-    instructions: workout.instructions ?? workout.dashboardDescription ?? workout.description,
+    instructionsAudio: workout?.instructionsAudio,
+    workoutAudio: workout?.workoutAudio,
+    instructionsAudioUrl: workout?.instructionsAudio,
+    workoutAudioUrl: workout?.workoutAudio,
 
-    level: workout.level,
-    type: workout.type,
+    instructionsImage: workout?.instructionsImage,
+    workoutImage: workout?.workoutImage,
+    instructionsVideo: workout?.instructionsVideo,
+    instructionsVideoStart: workout?.instructionsVideoStart,
+    instructionsVideoStop: workout?.instructionsVideoStop,
 
-    instructionsAudio: workout.instructionsAudio,
-    workoutAudio: workout.workoutAudio,
-    instructionsAudioUrl: workout.instructionsAudio,
-    workoutAudioUrl: workout.workoutAudio,
+    kneeFriendly: workout?.kneeFriendly,
+    lowImpact: workout?.lowImpact,
+    seated: workout?.seated,
+    beginnerFriendly: workout?.beginnerFriendly,
 
-    instructionsImage: workout.instructionsImage,
-    workoutImage: workout.workoutImage,
-    instructionsVideo: workout.instructionsVideo,
-    instructionsVideoStart: workout.instructionsVideoStart,
-    instructionsVideoStop: workout.instructionsVideoStop,
-
-    kneeFriendly: workout.kneeFriendly,
-    lowImpact: workout.lowImpact,
-    seated: workout.seated,
-    beginnerFriendly: workout.beginnerFriendly,
-
-    durationSeconds: toDurationSeconds(workout),
+    durationSeconds: workout ? toDurationSeconds(workout) : 0,
 
     trainer: resolvedTrainer,
 

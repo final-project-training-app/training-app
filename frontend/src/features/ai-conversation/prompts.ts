@@ -17,7 +17,9 @@ export const liveSystemInstruction = [
 
 export function buildUserContext(session: CoachCallSession): string {
   const parts: string[] = [];
-  parts.push(`Användarens namn är ${session.userName}.`);
+  if (session.userName) {
+    parts.push(`Användarens namn är ${session.userName}.`);
+  }
   if (session.currentStreak && session.currentStreak > 0) {
     parts.push(`Nuvarande streak: ${session.currentStreak} dag(ar) i rad.`);
   }
@@ -28,7 +30,10 @@ export function buildUserContext(session: CoachCallSession): string {
   if (session.context?.trim()) {
     parts.push(`Bakgrund: ${session.context.trim()}`);
   }
-  parts.push(`Dagens pass heter "${session.workoutName ?? session.name}".`);
+  const workoutName = session.workoutName ?? session.name;
+  if (workoutName) {
+    parts.push(`Dagens pass heter "${workoutName}".`);
+  }
   return parts.join(" ");
 }
 
@@ -45,6 +50,47 @@ export const COACH_PROMPTS = {
   NO_INSTRUCTIONS_AUDIO: "Instruktionsljud saknas för vald workout.",
   NO_WORKOUT_AUDIO: "Workout-ljud saknas.",
 };
+
+export const ALREADY_COMPLETED_TODAY_INSTRUCTION = [
+  "Användaren har redan utfört dagens träningspass. Inled samtalet med en personlig hälsning som att du just blivit uppringd och lyft luren",
+  "När användaren svarat ska du uppmuntra användaren att ringa upp imorgon för att få ett nytt träningspass.",
+  "Du får inte avsluta sessionen om inte användaren indikerat att de vill avsluta.",
+  "När du upplever att användaren förväntar sig att du lägger på ska du kalla på `finish_session`.",
+  "Kalla ALDRIG på `finish_session` medan du pratar.",
+  "Om samtalet avslöjar att användarens intensitetsnivå (1–5) eller bakgrundsbeskrivning (Bakgrund-fältet) borde uppdateras, ange det i `suggested_intensity_level` respektive `suggested_context` när du kallar på `finish_session`.",
+  "`suggested_context` ska ENDAST innehålla Bakgrund-texten — inte namn, streak eller passhistorik. Slå ihop befintlig bakgrund med nytt som framkommit; ibland ska saker läggas till, ibland ersättas. Utelämna parametern om inget behöver ändras.",
+].join(" ");
+
+export const ALREADY_COMPLETED_TOOLS: ToolListUnion = [
+  {
+    functionDeclarations: [
+      {
+        name: "finish_session",
+        description:
+          "Finish the session after the user has indicated that they want to end it and the user expects you to hang up.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            summary: {
+              type: Type.STRING,
+              description: "A short Swedish summary of the user's feedback.",
+            },
+            suggested_intensity_level: {
+              type: Type.INTEGER,
+              description:
+                "Suggested new intensity level (1–5) if the conversation revealed the current level is wrong. Omit if unchanged.",
+            },
+            suggested_context: {
+              type: Type.STRING,
+              description:
+                "The updated value of the 'Bakgrund' field only — the user's personal background and goals. Do NOT include the user's name, streak, or workout history; those are tracked separately. Merge existing background info with anything new learned in the conversation. Omit entirely if nothing changed.",
+            },
+          },
+        },
+      },
+    ],
+  },
+];
 
 export const SESSION_CONTROL_TOOLS: ToolListUnion = [
   {
