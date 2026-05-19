@@ -4,7 +4,9 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+import com.example.trainingapp.dto.RecommendWorkoutDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -111,5 +113,14 @@ public class TrainerController {
         assertAdmin(authentication);
         trainerService.deleteTrainer(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/trainer/{trainerId}/recommend-for/{userId}")
+    public CompletableFuture<ResponseEntity<RecommendWorkoutDTO>> getTrainerAiRecommendation(
+            @PathVariable Long trainerId,
+            @PathVariable Long userId) {
+
+        return trainerService.getAiRecommendedWorkout(trainerId, userId)
+                .thenApply(ResponseEntity::ok);
     }
 }

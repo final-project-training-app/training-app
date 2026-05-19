@@ -4,6 +4,7 @@ import com.example.trainingapp.dto.WorkoutRequestDTO;
 import com.example.trainingapp.dto.WorkoutResponseDTO;
 import com.example.trainingapp.service.UserService;
 import com.example.trainingapp.service.WorkoutService;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.example.trainingapp.service.GeminiWorkoutService;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WorkoutController Tests")
 class WorkoutControllerTest {
@@ -30,9 +33,12 @@ class WorkoutControllerTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private GeminiWorkoutService geminiWorkoutService;
+
     @Test
     void getAllWorkoutsReturnsData() {
-        WorkoutController controller = new WorkoutController(workoutService, userService);
+        WorkoutController controller = new WorkoutController(workoutService, userService, geminiWorkoutService);
 
         WorkoutResponseDTO workout = new WorkoutResponseDTO(
                 1L, "Push Ups", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -48,7 +54,7 @@ class WorkoutControllerTest {
 
     @Test
     void createWorkoutReturnsForbiddenForNonAdmin() {
-        WorkoutController controller = new WorkoutController(workoutService, userService);
+        WorkoutController controller = new WorkoutController(workoutService, userService, geminiWorkoutService);
         WorkoutRequestDTO request = new WorkoutRequestDTO(
                 "Test Workout",
                 "desc",
@@ -80,7 +86,7 @@ class WorkoutControllerTest {
 
     @Test
     void createWorkoutReturnsOkForAdmin() {
-        WorkoutController controller = new WorkoutController(workoutService, userService);
+        WorkoutController controller = new WorkoutController(workoutService, userService, geminiWorkoutService);
         WorkoutRequestDTO request = new WorkoutRequestDTO(
                 "Test Workout",
                 "desc",
@@ -117,7 +123,7 @@ class WorkoutControllerTest {
 
     @Test
     void deleteWorkoutReturnsNoContentForAdmin() {
-        WorkoutController controller = new WorkoutController(workoutService, userService);
+        WorkoutController controller = new WorkoutController(workoutService, userService, geminiWorkoutService);
 
         when(userService.isAdmin("admin_1")).thenReturn(true);
 
@@ -137,4 +143,5 @@ class WorkoutControllerTest {
 
         return auth;
     }
+
 }
