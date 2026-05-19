@@ -195,12 +195,6 @@ export const useGeminiLive = ({
         reconnectAttemptsRef.current = 0;
       }
 
-      const si = systemInstructionRef.current ?? "";
-      console.debug(`[GeminiLive] systemInstruction length=${si.length}, first 400:`, si.substring(0, 400));
-      if (si.length > 400) {
-        console.debug("[GeminiLive] systemInstruction last 300:", si.substring(si.length - 300));
-      }
-
       const session = await ai.live.connect({
         model: LIVE_MODEL,
         config: {

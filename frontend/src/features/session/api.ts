@@ -95,63 +95,6 @@ function toDurationSeconds(workout: BackendWorkoutResponse) {
   return 0;
 }
 
-export async function getAlreadyCompletedSession(
-  token?: string | null,
-): Promise<CoachCallSession> {
-  let user: BackendUserResponse | null = null;
-  let progress: BackendProgressResponse | null = null;
-
-  if (token) {
-    try {
-      user = await getJson<BackendUserResponse>(`/api/users/me/profile`, { token });
-    } catch (error) {
-      console.warn("[session/api] Could not fetch user profile", error);
-    }
-
-    try {
-      progress = await getJson<BackendProgressResponse>(`/api/users/me/progress`, { token });
-    } catch (error) {
-      console.warn("[session/api] Could not fetch user progress", error);
-    }
-  }
-
-  const resolvedTrainerId = user?.trainerId ?? DEFAULT_TRAINER_ID;
-  let trainer: BackendTrainerResponse | null = null;
-  try {
-    trainer = await getTrainer(String(resolvedTrainerId));
-  } catch (error) {
-    console.warn("[session/api] Could not fetch trainer details", error);
-  }
-
-  const resolvedTrainer =
-    toTrainerSummary(trainer) ??
-    (resolvedTrainerId === DEFAULT_TRAINER_ID
-      ? {
-          id: DEFAULT_TRAINER_ID,
-          name: "Eva",
-          prompt: null,
-          voice: null,
-          intro: null,
-          language: null,
-          imageSelect: null,
-          imageCall: null,
-          imageStart: null,
-        }
-      : null);
-
-  return {
-    id: 0,
-    isAuthenticated: Boolean(token && user),
-    durationSeconds: 0,
-    trainer: resolvedTrainer,
-    userName: user?.name,
-    intensityLevel: user?.intensityLevel,
-    context: user?.context,
-    currentStreak: progress?.currentStreak,
-    completedWorkouts: progress?.completedWorkouts,
-  };
-}
-
 export async function getTrainers(): Promise<BackendTrainerResponse[]> {
   return await getJson<BackendTrainerResponse[]>(`/api/trainers`);
 }
@@ -167,14 +110,12 @@ export async function getWorkouts(): Promise<BackendWorkoutResponse[]> {
 }
 
 export async function getCoachCallSession(
-  workoutId: string,
+  workoutId: string | undefined,
   token?: string | null,
 ): Promise<CoachCallSession> {
-  const workout = await getJson<BackendWorkoutResponse>(
-    `/api/workouts/${workoutId}`,
-  );
-
-  console.log("[session/api] raw workout from backend:", JSON.stringify(workout));
+  const workout = workoutId
+    ? await getJson<BackendWorkoutResponse>(`/api/workouts/${workoutId}`)
+    : null;
 
   let user: BackendUserResponse | null = null;
   let progress: BackendProgressResponse | null = null;
@@ -225,38 +166,36 @@ export async function getCoachCallSession(
       : null);
 
   return {
-    id: workout.id,
+    id: workout?.id ?? 0,
     isAuthenticated: Boolean(token && user),
 
-    name: workout.dashboardName || workout.name,
-    workoutName: workout.dashboardName || workout.name,
+    name: workout ? (workout.dashboardName || workout.name) : undefined,
+    workoutName: workout ? (workout.dashboardName || workout.name) : undefined,
+    dashboardName: workout?.dashboardName,
+    description: workout ? (workout.dashboardDescription || workout.description) : undefined,
+    dashboardDescription: workout?.dashboardDescription,
+    instructions: workout ? (workout.instructions ?? workout.dashboardDescription ?? workout.description) : undefined,
 
-    dashboardName: workout.dashboardName,
+    level: workout?.level,
+    type: workout?.type,
 
-    description: workout.dashboardDescription || workout.description,
-    dashboardDescription: workout.dashboardDescription,
-    instructions: workout.instructions ?? workout.dashboardDescription ?? workout.description,
+    instructionsAudio: workout?.instructionsAudio,
+    workoutAudio: workout?.workoutAudio,
+    instructionsAudioUrl: workout?.instructionsAudio,
+    workoutAudioUrl: workout?.workoutAudio,
 
-    level: workout.level,
-    type: workout.type,
+    instructionsImage: workout?.instructionsImage,
+    workoutImage: workout?.workoutImage,
+    instructionsVideo: workout?.instructionsVideo,
+    instructionsVideoStart: workout?.instructionsVideoStart,
+    instructionsVideoStop: workout?.instructionsVideoStop,
 
-    instructionsAudio: workout.instructionsAudio,
-    workoutAudio: workout.workoutAudio,
-    instructionsAudioUrl: workout.instructionsAudio,
-    workoutAudioUrl: workout.workoutAudio,
+    kneeFriendly: workout?.kneeFriendly,
+    lowImpact: workout?.lowImpact,
+    seated: workout?.seated,
+    beginnerFriendly: workout?.beginnerFriendly,
 
-    instructionsImage: workout.instructionsImage,
-    workoutImage: workout.workoutImage,
-    instructionsVideo: workout.instructionsVideo,
-    instructionsVideoStart: workout.instructionsVideoStart,
-    instructionsVideoStop: workout.instructionsVideoStop,
-
-    kneeFriendly: workout.kneeFriendly,
-    lowImpact: workout.lowImpact,
-    seated: workout.seated,
-    beginnerFriendly: workout.beginnerFriendly,
-
-    durationSeconds: toDurationSeconds(workout),
+    durationSeconds: workout ? toDurationSeconds(workout) : 0,
 
     trainer: resolvedTrainer,
 

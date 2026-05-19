@@ -18,6 +18,7 @@ import {
 } from "./audio/sessionAudio";
 import {
   ALREADY_COMPLETED_TODAY_INSTRUCTION,
+  ALREADY_COMPLETED_TOOLS,
   COACH_PROMPTS,
   buildUserContext,
   liveSystemInstruction,
@@ -85,10 +86,6 @@ export function useCoachSession(
   useEffect(() => {
     console.log("Coach prompt:", coachPrompt);
   }, [coachPrompt]);
-
-  useEffect(() => {
-    console.log("[CoachSession] sessionInstruction (first 300):", sessionInstruction.substring(0, 300));
-  }, [sessionInstruction]);
 
   const [step, setStep] = useState<CoachSessionStep>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -163,6 +160,10 @@ export function useCoachSession(
     setDebugEvents((current) => [event, ...current].slice(0, 12));
   }, []);
 
+  const sessionTools = options.alreadyCompletedToday
+    ? [...coachLiveTools, ...ALREADY_COMPLETED_TOOLS]
+    : [...coachLiveTools, ...SESSION_CONTROL_TOOLS];
+
   const {
     geminiConnect,
     geminiDisconnect,
@@ -180,7 +181,7 @@ export function useCoachSession(
     setSpeakerMuted,
   } = useGeminiLive({
     token,
-    tools: [...coachLiveTools, ...SESSION_CONTROL_TOOLS],
+    tools: sessionTools,
     systemInstruction: sessionInstruction,
     voice: voice,
 

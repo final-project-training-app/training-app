@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/react";
 import { useQuery } from "@tanstack/react-query";
-import { getAlreadyCompletedSession, getCoachCallSession, getTrainer } from "./api";
+import { getCoachCallSession, getTrainer } from "./api";
 
 export function coachCallSessionQueryOptions(
   workoutId: string | undefined,
@@ -12,10 +12,7 @@ export function coachCallSessionQueryOptions(
       workoutId ?? "no-workout",
       token ? "auth" : "guest",
     ] as const,
-    queryFn: () =>
-      workoutId
-        ? getCoachCallSession(workoutId, token)
-        : getAlreadyCompletedSession(token),
+    queryFn: () => getCoachCallSession(workoutId, token),
     retry: 1,
   };
 }
@@ -31,7 +28,6 @@ export function useCoachCallSession(workoutId: string | undefined) {
     ] as const,
     queryFn: async () => {
       const token = isLoaded && isSignedIn ? await getToken() : null;
-      if (!workoutId) return getAlreadyCompletedSession(token);
       return getCoachCallSession(workoutId, token);
     },
     enabled: isLoaded,
