@@ -25,6 +25,8 @@ type Workout = {
   id: number;
   name: string;
   description?: string;
+  dashboardName?: string | null;
+  dashboardDescription?: string | null;
   type?: string;
   level?: number;
   durationSeconds?: number;
@@ -46,6 +48,8 @@ type Workout = {
 type WorkoutForm = {
   name: string;
   description: string;
+  dashboardName: string;
+  dashboardDescription: string;
   type: string;
   level: number;
   durationSeconds: number;
@@ -72,6 +76,8 @@ type SortBy =
 const emptyForm: WorkoutForm = {
   name: "",
   description: "",
+  dashboardName: "",
+  dashboardDescription: "",
   type: "",
   level: 1,
   durationSeconds: 60,
@@ -92,6 +98,8 @@ function toForm(workout: Workout): WorkoutForm {
   return {
     name: workout.name ?? "",
     description: workout.description ?? "",
+    dashboardName: workout.dashboardName ?? "",
+    dashboardDescription: workout.dashboardDescription ?? "",
     type: workout.type ?? "",
     level: workout.level ?? 1,
     durationSeconds: workout.durationSeconds ?? 60,
@@ -242,7 +250,7 @@ function WorkoutDetailsPanel({
 
       <div className="p-4 space-y-4">
         <div>
-          <h3 className="text-lg font-bold text-[#100b2f]">{workout.name}</h3>
+          <h3 className="text-lg font-bold text-[#100b2f]">{workout.dashboardName || workout.name}</h3>
           <p className="text-xs text-[#9b96b8]">
             {t("workoutsAdmin.level")} {workout.level ?? "-"}
           </p>
@@ -280,13 +288,13 @@ function WorkoutDetailsPanel({
           </div>
         </div>
 
-        {workout.description && (
+        {(workout.dashboardDescription || workout.description) && (
           <div>
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#9b96b8]">
               {t("workoutsAdmin.description")}
             </p>
             <p className="text-sm leading-relaxed text-[#3d3860]">
-              {workout.description}
+              {workout.dashboardDescription || workout.description}
             </p>
           </div>
         )}
@@ -483,6 +491,8 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
+        dashboardName: form.dashboardName.trim() || null,
+        dashboardDescription: form.dashboardDescription.trim() || null,
         type: form.type.trim(),
         level: form.level,
         durationSeconds: form.durationSeconds,
@@ -799,7 +809,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
 
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-[#100b2f]">
-                      {workout.name}
+                      {workout.dashboardName || workout.name}
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       {workout.type && (
@@ -927,6 +937,19 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-[#6f6a93]">
+                  {t("workoutsAdmin.dashboardName")}
+                </label>
+                <input
+                  name="dashboardName"
+                  value={form.dashboardName}
+                  onChange={onFormChange}
+                  placeholder={t("workoutsAdmin.dashboardNamePlaceholder")}
+                  className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
+                />
+              </div>
+
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-[#6f6a93]">
                   {t("workoutsAdmin.description")}
@@ -937,6 +960,19 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   onChange={onFormChange}
                   placeholder={t("workoutsAdmin.descriptionPlaceholder")}
                   className="min-h-20 w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-[#6f6a93]">
+                  {t("workoutsAdmin.dashboardDescription")}
+                </label>
+                <textarea
+                  name="dashboardDescription"
+                  value={form.dashboardDescription}
+                  onChange={onFormChange}
+                  placeholder={t("workoutsAdmin.dashboardDescriptionPlaceholder")}
+                  className="min-h-16 w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
                 />
               </div>
 
