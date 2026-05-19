@@ -1,4 +1,3 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SessionCall } from "./components/SessionCall";
@@ -9,10 +8,7 @@ import type { CoachSessionStep } from "../ai-conversation";
 
 const LOADING_SESSION: CoachCallSession = { id: "", isAuthenticated: false, durationSeconds: 0 };
 
-export function SessionPage() {
-  const { workoutId } = useParams({ from: "/session/$workoutId" });
-  const navigate = useNavigate();
-
+export function SessionPage({ workoutId, onEnd }: { workoutId: string; onEnd: () => void }) {
   const {
     data: session,
     isLoading,
@@ -45,16 +41,15 @@ export function SessionPage() {
         onTrainingSuite={() => {}}
         onInfo={() => {}}
         onClosePanel={() => {}}
-        onEnd={() => void navigate({ to: "/" })}
+        onEnd={onEnd}
       />
     );
   }
 
-  return <ReadySessionPage session={session} />;
+  return <ReadySessionPage session={session} onEnd={onEnd} />;
 }
 
-function ReadySessionPage({ session }: { session: CoachCallSession }) {
-  const navigate = useNavigate();
+function ReadySessionPage({ session, onEnd }: { session: CoachCallSession; onEnd: () => void }) {
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds] = useState(0);
   const [isEnding, setIsEnding] = useState(false);
@@ -110,14 +105,14 @@ function ReadySessionPage({ session }: { session: CoachCallSession }) {
 
   useEffect(() => {
     if (step !== "completed") return;
-    const timer = setTimeout(() => void navigate({ to: "/" }), 3000);
+    const timer = setTimeout(onEnd, 3000);
     return () => clearTimeout(timer);
-  }, [step, navigate]);
+  }, [step, onEnd]);
 
   function handleEnd() {
     setIsEnding(true);
     hangUp();
-    setTimeout(() => void navigate({ to: "/" }), 3000);
+    setTimeout(onEnd, 3000);
   }
 
   function togglePanel(panel: Exclude<SessionPanel, "none">) {
