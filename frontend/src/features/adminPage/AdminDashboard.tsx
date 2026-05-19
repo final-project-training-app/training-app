@@ -83,11 +83,13 @@ function DonutChart({
   needsReview,
   bad,
   total,
+  totalLabel,
 }: {
   good: number;
   needsReview: number;
   bad: number;
   total: number;
+  totalLabel: string;
 }) {
   const cx = 100,
     cy = 100,
@@ -154,7 +156,7 @@ function DonutChart({
         fontWeight="600"
         fill="#6f6a93"
       >
-        TOTAL
+        {totalLabel}
       </text>
     </svg>
   );
@@ -390,6 +392,7 @@ export default function AdminDashboard({
               needsReview={totals.nrCount}
               bad={totals.badCount}
               total={totals.total}
+              totalLabel={t("admin.totalLabel")}
             />
             <div className="space-y-3">
               <div className="flex items-center gap-2">
