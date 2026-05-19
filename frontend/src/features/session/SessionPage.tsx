@@ -6,9 +6,19 @@ import type { CoachCallSession, SessionPanel } from "./types";
 import { useCoachSession } from "../ai-conversation";
 import type { CoachSessionStep } from "../ai-conversation";
 
-const LOADING_SESSION: CoachCallSession = { id: "", isAuthenticated: false, durationSeconds: 0 };
+const LOADING_SESSION: CoachCallSession = {
+  id: "",
+  isAuthenticated: false,
+  durationSeconds: 0,
+};
 
-export function SessionPage({ workoutId, onEnd }: { workoutId: string; onEnd: () => void }) {
+export function SessionPage({
+  workoutId,
+  onEnd,
+}: {
+  workoutId: string;
+  onEnd: () => void;
+}) {
   const {
     data: session,
     isLoading,
@@ -49,9 +59,16 @@ export function SessionPage({ workoutId, onEnd }: { workoutId: string; onEnd: ()
   return <ReadySessionPage session={session} onEnd={onEnd} />;
 }
 
-function ReadySessionPage({ session, onEnd }: { session: CoachCallSession; onEnd: () => void }) {
+function ReadySessionPage({
+  session,
+  onEnd,
+}: {
+  session: CoachCallSession;
+  onEnd: () => void;
+}) {
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
-  const [elapsedSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [callAnsweredAt, setCallAnsweredAt] = useState<number | null>(null);
   const [isEnding, setIsEnding] = useState(false);
   const { t } = useTranslation();
 
@@ -90,18 +107,37 @@ function ReadySessionPage({ session, onEnd }: { session: CoachCallSession; onEnd
     isSpeakerMuted,
     toggleMicrophoneMuted,
     toggleSpeakerMuted,
-  } =
-    useCoachSession({
-      session,
-      trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
-      autoStart: true,
-    });
+  } = useCoachSession({
+    session,
+    trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
+    autoStart: true,
+  });
 
   const isAiSpeaking =
     currentTurn === "gemini" ||
     step === "playing_instructions" ||
     step === "playing_workout";
   const isUserTurn = currentTurn === "user";
+  const isCallAnswered = step !== "idle" && step !== "live_intro";
+
+  useEffect(() => {
+    if (!isCallAnswered || callAnsweredAt !== null) return;
+    setCallAnsweredAt(Date.now());
+    setElapsedSeconds(0);
+  }, [callAnsweredAt, isCallAnswered]);
+
+  useEffect(() => {
+    if (callAnsweredAt === null) return;
+    if (step === "completed" || step === "idle" || step === "error") return;
+
+    const tick = () => {
+      setElapsedSeconds(Math.floor((Date.now() - callAnsweredAt) / 1000));
+    };
+
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [callAnsweredAt, step]);
 
   useEffect(() => {
     if (step !== "completed") return;

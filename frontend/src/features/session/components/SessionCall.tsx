@@ -143,9 +143,7 @@ function ControlButton({
       className="group flex min-w-0 flex-col items-center gap-[clamp(0.35rem,0.95cqh,0.65rem)] text-center disabled:opacity-60"
     >
       <div className="relative">
-        {pulsing && (
-          <div className="call-pulse-ring" />
-        )}
+        {pulsing && <div className="call-pulse-ring" />}
         <div
           className={[
             "flex h-[clamp(56px,8.5cqh,80px)] w-[clamp(56px,8.5cqh,80px)] items-center justify-center rounded-full shadow-[inset_0_0_0_1px_rgba(91,63,214,0.06)] transition group-active:scale-95 [&>svg]:h-[clamp(24px,3.45cqh,32px)] [&>svg]:w-[clamp(24px,3.45cqh,32px)]",
@@ -238,21 +236,29 @@ export function SessionCall({
       <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-[var(--stage-inline-pad)] pb-[var(--stage-safe-bottom)] pt-[var(--stage-safe-top)]">
         <section className="flex shrink-0 flex-col items-center text-center">
           <div className="mb-[clamp(0.45rem,1.8cqh,1.25rem)] relative h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)]">
-            {isAiSpeaking && !isEnding && (
-              <div className="call-pulse-ring" />
-            )}
+            {isAiSpeaking && !isEnding && <div className="call-pulse-ring" />}
             <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#eee8fb] shadow-[inset_0_0_0_1px_rgba(91,63,214,0.04)]">
               {trainerImage ? (
                 <img
                   src={trainerImage}
                   alt={trainerName}
                   className="absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-1000"
-                  style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
+                  style={{
+                    opacity:
+                      showInstructionsVideo && session.instructionsVideo
+                        ? 0
+                        : 1,
+                  }}
                 />
               ) : (
                 <div
                   className="absolute inset-0 flex items-center justify-center rounded-full bg-[#e8e1f8] text-[#5b3fd6] transition-opacity duration-1000"
-                  style={{ opacity: showInstructionsVideo && session.instructionsVideo ? 0 : 1 }}
+                  style={{
+                    opacity:
+                      showInstructionsVideo && session.instructionsVideo
+                        ? 0
+                        : 1,
+                  }}
                 >
                   <UserRound size={56} strokeWidth={1.8} />
                 </div>
@@ -282,16 +288,18 @@ export function SessionCall({
             {isLoading ? " " : trainerName || t("sessionCall.trainerMissing")}
           </h1>
 
-          <span className="sr-only">
-            Samtalstid {formatTime(elapsedSeconds)}
-          </span>
-
           <p className="mt-[clamp(0.3rem,0.9cqh,0.7rem)] max-w-[320px] text-[clamp(11px,1.4cqh,14px)] font-bold leading-snug text-[#6f6a93]">
-            {isLoading ? "" : displayWorkoutName || t("sessionCall.workoutMissing")}
+            {isLoading
+              ? ""
+              : displayWorkoutName || t("sessionCall.workoutMissing")}
           </p>
 
           <p className="mt-1 max-w-[320px] text-[clamp(10px,1.25cqh,13px)] font-bold text-[#8a83aa]">
             {coachStatusLabel}
+          </p>
+
+          <p className="mt-[clamp(0.55rem,1.4cqh,1rem)] text-[clamp(14px,1.8cqh,18px)] font-bold tabular-nums tracking-[0.22em] text-[#8a83aa]">
+            {formatTime(elapsedSeconds)}
           </p>
         </section>
 
@@ -372,12 +380,14 @@ export function SessionCall({
           disabled={isEnding}
           className="mx-auto mt-auto flex w-full max-w-[var(--stage-control-max-width)] flex-col items-center gap-[clamp(0.35rem,1cqh,0.6rem)] pb-[clamp(0rem,0.8cqh,0.25rem)] transition active:scale-95 disabled:cursor-not-allowed"
         >
-          <div className={[
-            "flex h-[clamp(58px,8.8cqh,84px)] w-[clamp(58px,8.8cqh,84px)] items-center justify-center rounded-full text-white transition-colors duration-300 [&>svg]:h-[clamp(28px,3.9cqh,38px)] [&>svg]:w-[clamp(28px,3.9cqh,38px)]",
-            isEnding
-              ? "bg-[#c8c4d0]"
-              : "bg-[#ef4444] shadow-[0_12px_26px_rgba(239,68,68,0.22)]",
-          ].join(" ")}>
+          <div
+            className={[
+              "flex h-[clamp(58px,8.8cqh,84px)] w-[clamp(58px,8.8cqh,84px)] items-center justify-center rounded-full text-white transition-colors duration-300 [&>svg]:h-[clamp(28px,3.9cqh,38px)] [&>svg]:w-[clamp(28px,3.9cqh,38px)]",
+              isEnding
+                ? "bg-[#c8c4d0]"
+                : "bg-[#ef4444] shadow-[0_12px_26px_rgba(239,68,68,0.22)]",
+            ].join(" ")}
+          >
             <PhoneOff strokeWidth={1.75} />
           </div>
 
