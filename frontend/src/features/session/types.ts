@@ -27,7 +27,11 @@ export type CoachCallSession = {
   // Behålls för äldre frontend-kod
   workoutName?: string;
 
+  // English dashboard display name (used when name/description is in another language)
+  dashboardName?: string | null;
+
   description?: string | null;
+  dashboardDescription?: string | null;
   instructions?: string | null;
 
   level?: number | string | null;

@@ -118,3 +118,25 @@ export async function deleteWorkout(id: number, token: string) {
   return true;
 }
 
+export async function setWorkoutEnabledWithToken(
+  id: number,
+  enabled: boolean,
+  token: string,
+) {
+  const res = await fetch(`${API_BASE}/api/workouts/${id}/enabled`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ enabled }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || "Failed to update workout status");
+  }
+
+  return res.json();
+}
+

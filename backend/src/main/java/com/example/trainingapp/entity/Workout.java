@@ -23,6 +23,12 @@ public class Workout {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "dashboard_name")
+    private String dashboardName;
+
+    @Column(name = "dashboard_description", columnDefinition = "TEXT")
+    private String dashboardDescription;
+
     private Integer level;
     private String type;
 
@@ -40,6 +46,9 @@ public class Workout {
     private Boolean lowImpact;
     private Boolean seated;
     private Boolean beginnerFriendly;
+
+    @Column(nullable = false)
+    private Boolean enabled = true;
 
     @ManyToOne
     @JoinColumn(name = "trainer_id")
