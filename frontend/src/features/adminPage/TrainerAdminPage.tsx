@@ -22,6 +22,7 @@ type Trainer = {
   imageSelect?: string | null;
   imageCall?: string | null;
   imageStart?: string | null;
+  ambience?: string | null;
 };
 
 type TrainerForm = {
@@ -33,6 +34,7 @@ type TrainerForm = {
   imageSelect: string;
   imageCall: string;
   imageStart: string;
+  ambience: string;
 };
 
 type TrainerField = keyof TrainerForm;
@@ -51,6 +53,7 @@ const emptyForm: TrainerForm = {
   imageSelect: "",
   imageCall: "",
   imageStart: "",
+  ambience: "",
 };
 
 function normalizeOptional(value: string) {
@@ -77,6 +80,7 @@ function toForm(trainer: Trainer): TrainerForm {
     imageSelect: trainer.imageSelect ?? "",
     imageCall: trainer.imageCall ?? "",
     imageStart: trainer.imageStart ?? "",
+    ambience: trainer.ambience ?? "",
   };
 }
 
@@ -206,6 +210,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
           imageSelect: normalizeOptional(payload.imageSelect),
           imageCall: normalizeOptional(payload.imageCall),
           imageStart: normalizeOptional(payload.imageStart),
+          ambience: normalizeOptional(payload.ambience),
         },
         token,
       );
@@ -242,6 +247,7 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
           imageSelect: normalizeOptional(payload.imageSelect),
           imageCall: normalizeOptional(payload.imageCall),
           imageStart: normalizeOptional(payload.imageStart),
+          ambience: normalizeOptional(payload.ambience),
         },
         token,
       );
@@ -677,6 +683,19 @@ export default function TrainerAdminPage({ searchTerm = "" }: Props) {
                     </p>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-[#6f6a93]">
+                  {t("trainerAdmin.ambience")}
+                </label>
+                <input
+                  name="ambience"
+                  value={form.ambience}
+                  onChange={onFormChange}
+                  placeholder={t("trainerAdmin.ambiencePlaceholder")}
+                  className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                />
               </div>
 
               <div className="space-y-1">

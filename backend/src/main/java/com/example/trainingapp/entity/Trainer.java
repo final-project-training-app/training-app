@@ -30,6 +30,8 @@ public class Trainer {
 
     private String imageStart;
 
+    private String ambience;
+
     @OneToMany(mappedBy = "trainer")
     private List<Workout> workouts;
 }

@@ -39,6 +39,7 @@ export type BackendTrainerResponse = {
   imageSelect: string | null;
   imageCall: string | null;
   imageStart: string | null;
+  ambience: string | null;
 };
 
 type BackendProgressResponse = {
@@ -80,6 +81,7 @@ function toTrainerSummary(
     imageSelect: trainer.imageSelect ?? null,
     imageCall: trainer.imageCall ?? null,
     imageStart: trainer.imageStart ?? null,
+    ambience: trainer.ambience ?? null,
   };
 }
 

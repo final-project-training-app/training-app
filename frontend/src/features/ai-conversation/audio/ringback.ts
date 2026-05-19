@@ -34,19 +34,22 @@ export function stopRingback() {
   void click.play().catch(() => {});
 }
 
-let gymAmbienceBuffer: AudioBuffer | null = null;
+const FALLBACK_AMBIENCE = "gym-ambience-loop.mp3";
+const gymAmbienceCache = new Map<string, AudioBuffer>();
 let gymAmbienceSource: AudioBufferSourceNode | null = null;
 let gymAmbienceGain: GainNode | null = null;
 
-export async function startGymAmbience() {
+export async function startGymAmbience(ambienceFile?: string | null) {
   if (gymAmbienceSource) return;
   const ctx = getSharedAudioContext();
   await resumeSharedAudioContext();
 
-  if (!gymAmbienceBuffer) {
-    const response = await fetch("/phone-sounds/gym-ambience-loop.mp3");
+  const filename = ambienceFile?.trim() || FALLBACK_AMBIENCE;
+
+  if (!gymAmbienceCache.has(filename)) {
+    const response = await fetch(`/phone-sounds/${filename}`);
     const ab = await response.arrayBuffer();
-    gymAmbienceBuffer = await ctx.decodeAudioData(ab);
+    gymAmbienceCache.set(filename, await ctx.decodeAudioData(ab));
   }
 
   const gain = ctx.createGain();
@@ -54,7 +57,7 @@ export async function startGymAmbience() {
   gain.connect(ctx.destination);
 
   const source = ctx.createBufferSource();
-  source.buffer = gymAmbienceBuffer;
+  source.buffer = gymAmbienceCache.get(filename)!;
   source.loop = true;
   source.connect(gain);
   source.start();

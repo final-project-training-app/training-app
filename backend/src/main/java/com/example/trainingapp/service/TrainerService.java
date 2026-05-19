@@ -65,6 +65,7 @@ public class TrainerService {
         trainer.setImageSelect(normalizeOptional(request.imageSelect(), "imageSelect", 2048));
         trainer.setImageCall(normalizeOptional(request.imageCall(), "imageCall", 2048));
         trainer.setImageStart(normalizeOptional(request.imageStart(), "imageStart", 2048));
+        trainer.setAmbience(normalizeOptional(request.ambience(), "ambience", 255));
 
         return trainerRepository.save(trainer);
     }
@@ -99,6 +100,7 @@ public class TrainerService {
         trainer.setImageSelect(normalizeOptional(request.imageSelect(), "imageSelect", 2048));
         trainer.setImageCall(normalizeOptional(request.imageCall(), "imageCall", 2048));
         trainer.setImageStart(normalizeOptional(request.imageStart(), "imageStart", 2048));
+        trainer.setAmbience(normalizeOptional(request.ambience(), "ambience", 255));
 
         return trainerRepository.save(trainer);
     }

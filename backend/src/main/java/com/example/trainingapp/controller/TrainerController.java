@@ -67,7 +67,8 @@ public class TrainerController {
                 trainer.getLanguage(),
                 trainer.getImageSelect(),
                 trainer.getImageCall(),
-                trainer.getImageStart());
+                trainer.getImageStart(),
+                trainer.getAmbience());
     }
 
     @GetMapping
