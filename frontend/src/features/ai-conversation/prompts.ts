@@ -2,6 +2,7 @@ import { Type, type ToolListUnion } from "@google/genai";
 import type { CoachCallSession } from "../session/types";
 
 export const liveSystemInstruction = [
+  "Om användaren redan har ett träningspass idag enligt deras träningshistorik får du inte erbjuda instruktioner och workout, istället ska du säga att de redan haft ett pass idag och uppmuntra dem att ringa upp imorgon för ett nytt pass.",
   "Inled telefonsamtalet som att du just lyft luren och ge en kort personlig hälsning. Gör endast detta och fråga inte om instruktioner än.",
   "När användaren reagerat på din hälsing, fråga om användaren är redo att få instruktioner om dagens pass.",
   "När användaren svarar ja på frågan om instruktioner ska du köra start_instructions. Du ska inte fortsätta prata under uppspelningen.",
@@ -15,7 +16,7 @@ export const liveSystemInstruction = [
   "Om samtalet avslöjar att användarens intensitetsnivå (1–5) eller bakgrundsbeskrivning (Bakgrund-fältet) borde uppdateras, ange det i `suggested_intensity_level` respektive `suggested_context` när du kallar på `finish_session`. `suggested_context` ska ENDAST innehålla Bakgrund-texten — inte namn, streak eller passhistorik. Slå ihop befintlig bakgrund med nytt som framkommit; ibland ska saker läggas till, ibland ersättas. Utelämna parametern om inget behöver ändras.",
 ].join(" ");
 
-export function buildUserContext(session: CoachCallSession): string {
+export function buildUserContext(session: CoachCallSession, alreadyTrainedToday?: boolean): string {
   const parts: string[] = [];
   parts.push(`Användarens namn är ${session.userName}.`);
   if (session.currentStreak && session.currentStreak > 0) {
@@ -28,9 +29,14 @@ export function buildUserContext(session: CoachCallSession): string {
   if (session.context?.trim()) {
     parts.push(`Bakgrund: ${session.context.trim()}`);
   }
-  parts.push(`Dagens pass heter "${session.workoutName ?? session.name}".`);
+  if (!alreadyTrainedToday) {
+    parts.push(`Dagens pass heter "${session.workoutName ?? session.name}".`);
+  }
   return parts.join(" ");
 }
+
+export const ALREADY_TRAINED_TODAY =
+  "Användaren har redan utfört dagens träningspass. Uppmuntra användaren att ringa upp imorgon för att få ett nytt träningspass.";
 
 export const COACH_PROMPTS = {
   INSTRUCTIONS_DONE:

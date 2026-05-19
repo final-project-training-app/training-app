@@ -79,7 +79,7 @@ export default function HomePage() {
   const [guestWorkoutId, setGuestWorkoutId] = useState<string | null>(null);
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
-  const { currentWorkout } = useCurrentWorkout();
+  const { currentWorkout, alreadyTrainedToday } = useCurrentWorkout();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -172,7 +172,7 @@ export default function HomePage() {
   }
 
   if (activeWorkoutId !== null) {
-    return <SessionPage workoutId={activeWorkoutId} onEnd={() => setActiveWorkoutId(null)} />;
+    return <SessionPage workoutId={activeWorkoutId} onEnd={() => setActiveWorkoutId(null)} alreadyTrainedToday={alreadyTrainedToday} />;
   }
 
   return (

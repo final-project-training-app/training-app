@@ -29,6 +29,12 @@ public class ActivityLogService {
         this.workoutRepository = workoutRepository;
     }
 
+    public boolean hasWorkoutToday(Long userId) {
+        LocalDateTime start = LocalDate.now().atStartOfDay();
+        LocalDateTime end = LocalDate.now().atTime(23, 59, 59);
+        return activityLogRepository.existsByUserIdAndStatusAndCompletedAtBetween(userId, "COMPLETED", start, end);
+    }
+
     public ActivityLog createActivityLog(ActivityLog activityLog) {
         activityLog.setCompletedAt(LocalDateTime.now());
         return activityLogRepository.save(activityLog);

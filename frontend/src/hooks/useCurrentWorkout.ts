@@ -71,6 +71,23 @@ export default function useCurrentWorkout() {
     return [];
   }, [workouts, trainerId, level]);
 
+  const { data: todayCheck } = useQuery<{ hasWorkoutToday: boolean }>({
+    queryKey: ["has-workout-today", userId],
+    queryFn: async () => {
+      const rawToken = isSignedIn ? await getToken() : undefined;
+      const token: string | undefined = rawToken ?? undefined;
+      return await getJson<{ hasWorkoutToday: boolean }>(
+        `/api/activity-logs/user/${userId}/has-today`,
+        { token },
+      );
+    },
+    enabled: isSignedIn && !!userId,
+    staleTime: 1000 * 60,
+    retry: 1,
+  });
+
+  const alreadyTrainedToday = todayCheck?.hasWorkoutToday ?? false;
+
   const { data: recommendation } = useQuery<RecommendedWorkoutResponse>({
     queryKey: ["recommended-workout", trainerId, userId],
     queryFn: async () => {
@@ -88,7 +105,7 @@ export default function useCurrentWorkout() {
         { token },
       );
     },
-    enabled: isSignedIn && !!trainerId && !!userId,
+    enabled: isSignedIn && !!trainerId && !!userId && todayCheck !== undefined && !alreadyTrainedToday,
     staleTime: 1000 * 60 * 5,
     retry: 1,
   });
@@ -120,5 +137,6 @@ export default function useCurrentWorkout() {
     isError,
     refetch,
     recommendedWorkoutReasoning,
+    alreadyTrainedToday,
   };
 }

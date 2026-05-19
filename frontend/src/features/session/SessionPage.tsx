@@ -15,9 +15,11 @@ const LOADING_SESSION: CoachCallSession = {
 export function SessionPage({
   workoutId,
   onEnd,
+  alreadyTrainedToday,
 }: {
   workoutId: string;
   onEnd: () => void;
+  alreadyTrainedToday?: boolean;
 }) {
   const {
     data: session,
@@ -56,15 +58,17 @@ export function SessionPage({
     );
   }
 
-  return <ReadySessionPage session={session} onEnd={onEnd} />;
+  return <ReadySessionPage session={session} onEnd={onEnd} alreadyTrainedToday={alreadyTrainedToday} />;
 }
 
 function ReadySessionPage({
   session,
   onEnd,
+  alreadyTrainedToday,
 }: {
   session: CoachCallSession;
   onEnd: () => void;
+  alreadyTrainedToday?: boolean;
 }) {
   const [activePanel, setActivePanel] = useState<SessionPanel>("none");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -111,6 +115,7 @@ function ReadySessionPage({
     session,
     trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
     autoStart: true,
+    alreadyTrainedToday,
   });
 
   const isAiSpeaking =

@@ -16,6 +16,8 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
 
 	Optional<ActivityLog> findTopByUserIdAndWorkoutIdOrderByCompletedAtDesc(Long userId, Long workoutId);
 
+	boolean existsByUserIdAndStatusAndCompletedAtBetween(Long userId, String status, LocalDateTime start, LocalDateTime end);
+
 	@Query("SELECT COUNT(DISTINCT a.userId) FROM ActivityLog a WHERE a.status = 'COMPLETED' AND a.completedAt >= :since")
 	long countDistinctActiveUsersSince(@Param("since") LocalDateTime since);
 }

@@ -17,6 +17,7 @@ import {
   stopSessionAudio,
 } from "./audio/sessionAudio";
 import {
+  ALREADY_TRAINED_TODAY,
   COACH_PROMPTS,
   buildUserContext,
   liveSystemInstruction,
@@ -45,9 +46,11 @@ import useCurrentUser from "../../hooks/useCurrentUser";
 function buildSessionInstruction(
   session: CoachCallSession,
   trainerPrompt?: string | null,
+  alreadyTrainedToday?: boolean,
 ) {
-  const userContext = buildUserContext(session);
-  const base = `${userContext} ${liveSystemInstruction}`;
+  const userContext = buildUserContext(session, alreadyTrainedToday);
+  const extra = alreadyTrainedToday ? ` ${ALREADY_TRAINED_TODAY}` : "";
+  const base = `${userContext}${extra} ${liveSystemInstruction}`;
   if (!trainerPrompt?.trim()) return base;
   return `Trainer prompt:\n${trainerPrompt.trim()}\n\n${base}`;
 }
@@ -56,9 +59,10 @@ export function useCoachSession(
   options: UseCoachSessionOptions & {
     trainerId?: string;
     session: CoachCallSession;
+    alreadyTrainedToday?: boolean;
   },
 ) {
-  const { session, autoStart = true } = options;
+  const { session, autoStart = true, alreadyTrainedToday } = options;
 
   const { userId, voice, coachPrompt, updateProfile } = useCurrentUser();
   const {
@@ -68,8 +72,8 @@ export function useCoachSession(
   } = useTrainer(options.trainerId ?? "1");
 
   const sessionInstruction = useMemo(
-    () => buildSessionInstruction(session, coachPrompt),
-    [session, coachPrompt],
+    () => buildSessionInstruction(session, coachPrompt, alreadyTrainedToday),
+    [session, coachPrompt, alreadyTrainedToday],
   );
 
   useEffect(() => {
