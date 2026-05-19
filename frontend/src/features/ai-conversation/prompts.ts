@@ -17,7 +17,9 @@ export const liveSystemInstruction = [
 
 export function buildUserContext(session: CoachCallSession): string {
   const parts: string[] = [];
-  parts.push(`Användarens namn är ${session.userName}.`);
+  if (session.userName) {
+    parts.push(`Användarens namn är ${session.userName}.`);
+  }
   if (session.currentStreak && session.currentStreak > 0) {
     parts.push(`Nuvarande streak: ${session.currentStreak} dag(ar) i rad.`);
   }
@@ -28,7 +30,10 @@ export function buildUserContext(session: CoachCallSession): string {
   if (session.context?.trim()) {
     parts.push(`Bakgrund: ${session.context.trim()}`);
   }
-  parts.push(`Dagens pass heter "${session.workoutName ?? session.name}".`);
+  const workoutName = session.workoutName ?? session.name;
+  if (workoutName) {
+    parts.push(`Dagens pass heter "${workoutName}".`);
+  }
   return parts.join(" ");
 }
 
@@ -45,6 +50,9 @@ export const COACH_PROMPTS = {
   NO_INSTRUCTIONS_AUDIO: "Instruktionsljud saknas för vald workout.",
   NO_WORKOUT_AUDIO: "Workout-ljud saknas.",
 };
+
+export const ALREADY_COMPLETED_TODAY_INSTRUCTION =
+  "Användaren har redan utfört dagens träningspass. Uppmuntra användaren att ringa upp imorgon för att få ett nytt träningspass.";
 
 export const SESSION_CONTROL_TOOLS: ToolListUnion = [
   {

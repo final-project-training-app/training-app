@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {
 	List<ActivityLog> findByUserIdAndStatusOrderByCompletedAtDesc(Long userId, String status);
 
+	boolean existsByUserIdAndStatusAndCompletedAtBetween(Long userId, String status, LocalDateTime start, LocalDateTime end);
+
 	Optional<ActivityLog> findTopByUserIdAndWorkoutIdAndStatusOrderByCompletedAtDesc(Long userId, Long workoutId, String status);
 
 	Optional<ActivityLog> findTopByUserIdAndWorkoutIdOrderByCompletedAtDesc(Long userId, Long workoutId);

@@ -88,17 +88,21 @@ export const useGeminiLive = ({
   const voiceRef = useRef<string | null>(voice ?? null);
   const microphoneEnabledRef = useRef(true);
   const speakerMutedRef = useRef(false);
+
+  // Synchronous ref updates so that async callers (e.g. geminiConnect after
+  // an await) always read the latest prop values — never a render-stale copy.
+  tokenRef.current = token;
+  toolsRef.current = tools;
+  systemInstructionRef.current = systemInstruction;
+  onAudioRef.current = onAudioData;
+  onMessageRef.current = onMessage;
+  onToolCallRef.current = onToolCall;
+  onFirstAiAudioRef.current = onFirstAiAudio;
+  voiceRef.current = voice ?? null;
+
   useEffect(() => {
-    tokenRef.current = token;
-    toolsRef.current = tools;
-    systemInstructionRef.current = systemInstruction;
-    onAudioRef.current = onAudioData;
-    onMessageRef.current = onMessage;
-    onToolCallRef.current = onToolCall;
-    onFirstAiAudioRef.current = onFirstAiAudio;
-    voiceRef.current = voice ?? null;
     console.debug("[GeminiLive] voice prop:", voice, "voiceRef.current:", voiceRef.current);
-  }, [token, tools, systemInstruction, onAudioData, onMessage, onToolCall, onFirstAiAudio, voice]);
+  }, [voice]);
 
   async function handleToolCalls(functionCalls: FunctionCall[]) {
     const functionResponses = await Promise.all(
@@ -189,6 +193,12 @@ export const useGeminiLive = ({
         window.clearTimeout(reconnectTimerRef.current);
         reconnectTimerRef.current = null;
         reconnectAttemptsRef.current = 0;
+      }
+
+      const si = systemInstructionRef.current ?? "";
+      console.debug(`[GeminiLive] systemInstruction length=${si.length}, first 400:`, si.substring(0, 400));
+      if (si.length > 400) {
+        console.debug("[GeminiLive] systemInstruction last 300:", si.substring(si.length - 300));
       }
 
       const session = await ai.live.connect({

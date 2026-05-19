@@ -72,14 +72,16 @@ function getHomepageTrainer(trainerId?: number | null) {
 export default function HomePage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null);
+  const [isSessionActive, setIsSessionActive] = useState(false);
+  const [activeWorkoutId, setActiveWorkoutId] = useState<string | undefined>(undefined);
+  const [activeAlreadyCompleted, setActiveAlreadyCompleted] = useState(false);
   const [cachedTrainerId, setCachedTrainerId] = useState<number | null>(() =>
     getStoredTrainerId(),
   );
   const [guestWorkoutId, setGuestWorkoutId] = useState<string | null>(null);
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const { data: profile } = useMyProfile();
-  const { currentWorkout } = useCurrentWorkout();
+  const { currentWorkout, alreadyCompletedToday } = useCurrentWorkout();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export default function HomePage() {
       ? (profile?.trainerId ?? cachedTrainerId ?? DEFAULT_TRAINER_ID)
       : DEFAULT_TRAINER_ID;
   const selectedWorkoutId = isSignedIn
-    ? (currentWorkout ?? "1")
+    ? currentWorkout
     : (guestWorkoutId ?? "1");
 
   const activeTrainer = getHomepageTrainer(activeTrainerId);
@@ -144,6 +146,7 @@ export default function HomePage() {
     }
 
     void (async () => {
+      if (!selectedWorkoutId) return;
       const token = isSignedIn ? await getToken() : null;
 
       // Keep AI conversation aligned with the workout selected from user level/trainer.
@@ -164,15 +167,30 @@ export default function HomePage() {
     }
   }
 
+  function handleEndSession() {
+    setIsSessionActive(false);
+    setActiveWorkoutId(undefined);
+    setActiveAlreadyCompleted(false);
+  }
+
   async function handleStartCall() {
+    if (!selectedWorkoutId && !alreadyCompletedToday) return;
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
+    setActiveAlreadyCompleted(alreadyCompletedToday);
     setActiveWorkoutId(selectedWorkoutId);
+    setIsSessionActive(true);
   }
 
-  if (activeWorkoutId !== null) {
-    return <SessionPage workoutId={activeWorkoutId} onEnd={() => setActiveWorkoutId(null)} />;
+  if (isSessionActive) {
+    return (
+      <SessionPage
+        workoutId={activeWorkoutId}
+        alreadyCompletedToday={activeAlreadyCompleted}
+        onEnd={handleEndSession}
+      />
+    );
   }
 
   return (

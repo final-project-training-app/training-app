@@ -71,6 +71,23 @@ export default function useCurrentWorkout() {
     return [];
   }, [workouts, trainerId, level]);
 
+  const { data: completedTodayData } = useQuery<{ hasCompletedToday: boolean }>({
+    queryKey: ["has-completed-today", userId],
+    queryFn: async () => {
+      const rawToken = isSignedIn ? await getToken() : undefined;
+      const token: string | undefined = rawToken ?? undefined;
+      return await getJson<{ hasCompletedToday: boolean }>(
+        `/api/activity-logs/users/${userId}/has-completed-today`,
+        { token },
+      );
+    },
+    enabled: isSignedIn && !!userId,
+    staleTime: 1000 * 60,
+    retry: 1,
+  });
+
+  const alreadyCompletedToday = completedTodayData?.hasCompletedToday ?? false;
+
   const { data: recommendation } = useQuery<RecommendedWorkoutResponse>({
     queryKey: ["recommended-workout", trainerId, userId],
     queryFn: async () => {
@@ -88,7 +105,7 @@ export default function useCurrentWorkout() {
         { token },
       );
     },
-    enabled: isSignedIn && !!trainerId && !!userId,
+    enabled: isSignedIn && !!trainerId && !!userId && !alreadyCompletedToday,
     staleTime: 1000 * 60 * 5,
     retry: 1,
   });
@@ -98,7 +115,13 @@ export default function useCurrentWorkout() {
     }
   }, [recommendation]);
 
-  const currentWorkout = recommendation?.workoutId.toString();
+  // Never fall back to a workout from the wrong trainer.
+  // When already completed today: no workout at all (session uses getAlreadyCompletedSession).
+  // Otherwise: AI recommendation, then trainer's first workout, then nothing.
+  const trainerFallbackId = filteredWorkouts[0]?.id?.toString();
+  const currentWorkout = alreadyCompletedToday
+    ? undefined
+    : (recommendation?.workoutId.toString() ?? trainerFallbackId);
   const recommendedWorkoutReasoning = recommendation?.reasoning;
 
   if (DEBUG) {
@@ -120,5 +143,6 @@ export default function useCurrentWorkout() {
     isError,
     refetch,
     recommendedWorkoutReasoning,
+    alreadyCompletedToday,
   };
 }

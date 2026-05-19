@@ -6,12 +6,15 @@ import com.example.trainingapp.entity.ActivityLog;
 import com.example.trainingapp.service.ActivityLogService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/activity-logs")
@@ -48,6 +51,12 @@ public class ActivityLogController {
                 activityLog.getFeedback(),
                 activityLog.getStatus()
         );
+    }
+
+    @GetMapping("/users/{userId}/has-completed-today")
+    public ResponseEntity<Map<String, Boolean>> hasCompletedWorkoutToday(@PathVariable Long userId) {
+        boolean hasCompleted = activityLogService.hasCompletedWorkoutToday(userId);
+        return ResponseEntity.ok(Map.of("hasCompletedToday", hasCompleted));
     }
 
     @PostMapping

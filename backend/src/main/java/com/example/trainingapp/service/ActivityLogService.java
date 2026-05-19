@@ -105,6 +105,13 @@ public class ActivityLogService {
         return streak;
     }
 
+    public boolean hasCompletedWorkoutToday(Long userId) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
+        return activityLogRepository.existsByUserIdAndStatusAndCompletedAtBetween(userId, "COMPLETED", startOfDay, endOfDay);
+    }
+
     public long getActiveUserCount() {
         LocalDateTime since = LocalDateTime.now().minusDays(30);
         return activityLogRepository.countDistinctActiveUsersSince(since);
