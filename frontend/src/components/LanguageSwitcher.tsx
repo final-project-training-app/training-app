@@ -4,6 +4,9 @@ import { useTranslation } from "react-i18next";
 const LANGUAGES = [
   { code: "en", label: "English" },
   { code: "sv", label: "Svenska" },
+  { code: "so", label: "Somali" },
+  { code: "ta", label: "Tamil" },
+  { code: "ur", label: "Urdu" }
 ];
 
 export default function LanguageSwitcher({
