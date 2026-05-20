@@ -45,15 +45,22 @@ import { useQueryClient } from "@tanstack/react-query";
 //──────────────────────
 // Build system instruction
 //──────────────────────
+function normalizeLiveVoice(voiceName?: string | null) {
+  const value = voiceName?.trim();
+  return value ? value.toLowerCase() : null;
+}
+
 function buildSessionInstruction(
   session: CoachCallSession,
   trainerPrompt?: string | null,
   alreadyCompletedToday?: boolean,
 ) {
   const userContext = buildUserContext(session);
+  const personaStability =
+    "Detta gäller alla trainers: behåll exakt samma trainer-personlighet, språk, dialekt, röststil, energi och tonläge genom hela samtalet, inklusive instruktioner, feedback, avbrott och avslut. Om trainerprompten säger nervös, lugn, hetsig, elegant, varm eller något annat ska det märkas konsekvent hela tiden. Använd användarkontexten för vad du säger, men byt aldrig persona.";
   const trainerIdentity = trainerPrompt?.trim()
-    ? `\n\nTrainer identity and style (apply this throughout the conversation):\n${trainerPrompt.trim()}`
-    : "";
+    ? `\n\nTrainer identity and style (apply this throughout the conversation):\n${trainerPrompt.trim()}\n${personaStability}`
+    : `\n\nTrainer identity and style (apply this throughout the conversation):\n${personaStability}`;
 
   if (alreadyCompletedToday) {
     return `${userContext} ${ALREADY_COMPLETED_TODAY_INSTRUCTION}${trainerIdentity}`;
@@ -85,20 +92,24 @@ export function useCoachSession(
     isLoading: isTrainerLoading,
     error: trainerError,
   } = useTrainer(options.trainerId ?? "1");
+  const sessionCoachPrompt = trainer?.prompt ?? session.trainer?.prompt ?? coachPrompt;
+  const sessionVoice = normalizeLiveVoice(
+    trainer?.voice ?? session.trainer?.voice ?? voice,
+  );
 
   const sessionInstruction = useMemo(
     () =>
       buildSessionInstruction(
         session,
-        coachPrompt,
+        sessionCoachPrompt,
         options.alreadyCompletedToday,
       ),
-    [session, coachPrompt, options.alreadyCompletedToday],
+    [session, sessionCoachPrompt, options.alreadyCompletedToday],
   );
 
   useEffect(() => {
-    console.log("Coach prompt:", coachPrompt);
-  }, [coachPrompt]);
+    console.log("Coach prompt:", sessionCoachPrompt);
+  }, [sessionCoachPrompt]);
 
   const [step, setStep] = useState<CoachSessionStep>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -198,7 +209,7 @@ export function useCoachSession(
     token,
     tools: sessionTools,
     systemInstruction: sessionInstruction,
-    voice: voice,
+    voice: sessionVoice,
 
     //──────────────────────
     // Handle Gemini tool calls
@@ -790,6 +801,8 @@ export function useCoachSession(
   useEffect(() => {
     return () => {
       stopSessionAudio();
+      stopRingback();
+      stopGymAmbience();
       disconnectRef.current();
       videoTimersRef.current.forEach((id) => window.clearTimeout(id));
       videoTimersRef.current = [];
@@ -812,7 +825,7 @@ export function useCoachSession(
 
   // must be declared before usage in the auto-start effect
   const canStartLive = Boolean(
-    voice && !isTrainerLoading && !isCurrentUserTrainerLoading,
+    sessionVoice && !isTrainerLoading && !isCurrentUserTrainerLoading,
   );
 
   //──────────────────────
