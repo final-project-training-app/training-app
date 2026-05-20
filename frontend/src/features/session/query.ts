@@ -5,12 +5,13 @@ import { getCoachCallSession, getTrainer } from "./api";
 export function coachCallSessionQueryOptions(
   workoutId: string | undefined,
   token?: string | null,
+  userScope?: string | null,
 ) {
   return {
     queryKey: [
       "coach-call-session",
       workoutId ?? "no-workout",
-      token ? "auth" : "guest",
+      token ? (userScope ?? "auth") : "guest",
     ] as const,
     queryFn: () => getCoachCallSession(workoutId, token),
     retry: 1,
@@ -18,13 +19,13 @@ export function coachCallSessionQueryOptions(
 }
 
 export function useCoachCallSession(workoutId: string | undefined) {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
 
   return useQuery({
     queryKey: [
       "coach-call-session",
       workoutId ?? "no-workout",
-      isLoaded ? (isSignedIn ? "auth" : "guest") : "auth-loading",
+      isLoaded ? (isSignedIn ? (userId ?? "auth") : "guest") : "auth-loading",
     ] as const,
     queryFn: async () => {
       const token = isLoaded && isSignedIn ? await getToken() : null;

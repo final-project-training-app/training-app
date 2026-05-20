@@ -3,13 +3,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LogIn, Phone, Settings } from "lucide-react";
 import { SessionPage } from "../session/SessionPage";
 import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
-import { startRingback, stopGymAmbience } from "../ai-conversation/audio/ringback";
-import type { BackendWorkoutResponse } from "../ai-conversation/tools/workout/workoutTypes";
+import {
+  startRingback,
+  stopGymAmbience,
+} from "../ai-conversation/audio/ringback";
 import { coachCallSessionQueryOptions } from "../session/query";
 import { SignInButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
 import { useMyProfile } from "../../hooks/useMyProfile";
-import { getJson } from "../../lib/api/fetcher";
 import useCurrentWorkout from "../../hooks/useCurrentWorkout";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,12 +24,7 @@ const assets = {
   logo: "/start-page/logo.png",
 };
 
-const GUEST_USER_ID = 1;
-
-type BackendUserWorkoutProfile = {
-  trainerId: number | null;
-  intensityLevel: number | null;
-};
+const DEFAULT_GUEST_WORKOUT_ID = "17";
 
 const homepageTrainers: Record<number, { name: string; image: string }> = {
   1: {
@@ -73,20 +69,27 @@ export default function HomePage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
-  const [activeWorkoutId, setActiveWorkoutId] = useState<string | undefined>(undefined);
+  const [activeWorkoutId, setActiveWorkoutId] = useState<string | undefined>(
+    undefined,
+  );
   const [activeAlreadyCompleted, setActiveAlreadyCompleted] = useState(false);
   const [cachedTrainerId, setCachedTrainerId] = useState<number | null>(() =>
     getStoredTrainerId(),
   );
-  const [guestWorkoutId, setGuestWorkoutId] = useState<string | null>(null);
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  const { getToken, isLoaded, isSignedIn, userId } = useAuth();
   const { data: profile } = useMyProfile();
   const { currentWorkout, alreadyCompletedToday } = useCurrentWorkout();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     stopGymAmbience();
   }, []);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn && i18n.language !== "sv") {
+      void i18n.changeLanguage("sv");
+    }
+  }, [i18n, isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (typeof profile?.trainerId !== "number") {
@@ -108,37 +111,9 @@ export default function HomePage() {
       : DEFAULT_TRAINER_ID;
   const selectedWorkoutId = isSignedIn
     ? currentWorkout
-    : (guestWorkoutId ?? "17");
+    : DEFAULT_GUEST_WORKOUT_ID;
 
   const activeTrainer = getHomepageTrainer(activeTrainerId);
-
-  useEffect(() => {
-    if (!isLoaded || isSignedIn) {
-      return;
-    }
-
-    void (async () => {
-      try {
-        const [guestProfile, workouts] = await Promise.all([
-          getJson<BackendUserWorkoutProfile>(`/api/users/${GUEST_USER_ID}`),
-          getJson<BackendWorkoutResponse[]>(`/api/workouts`),
-        ]);
-
-        const matchingWorkout = workouts.find(
-          (workout) =>
-            workout.trainer?.id === guestProfile.trainerId &&
-            Number(workout.level) === guestProfile.intensityLevel,
-        );
-
-        setGuestWorkoutId(
-          matchingWorkout?.id ? String(matchingWorkout.id) : "17",
-        );
-      } catch (error) {
-        console.warn("[HomePage] Guest workout fallback failed", error);
-        setGuestWorkoutId("17");
-      }
-    })();
-  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -151,10 +126,10 @@ export default function HomePage() {
 
       // Keep AI conversation aligned with the workout selected from user level/trainer.
       await queryClient.prefetchQuery(
-        coachCallSessionQueryOptions(selectedWorkoutId, token),
+        coachCallSessionQueryOptions(selectedWorkoutId, token, userId),
       );
     })();
-  }, [getToken, isLoaded, isSignedIn, queryClient, selectedWorkoutId]);
+  }, [getToken, isLoaded, isSignedIn, queryClient, selectedWorkoutId, userId]);
 
   async function primeMicrophonePermission() {
     if (!navigator.mediaDevices?.getUserMedia) return;
@@ -174,9 +149,13 @@ export default function HomePage() {
   }
 
   async function handleStartCall() {
-    console.log("[HomePage] Trying to start session with workout ID:", selectedWorkoutId);
+    console.log(
+      "[HomePage] Trying to start session with workout ID:",
+      selectedWorkoutId,
+    );
     if (!selectedWorkoutId && !alreadyCompletedToday) {
-      return;}
+      return;
+    }
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
