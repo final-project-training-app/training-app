@@ -38,14 +38,16 @@ export default function SessionHeader({
       className={[
         "flex shrink-0 flex-col items-center text-center transition-all duration-300",
         isAvatarClicked ? "flex-1 justify-center" : "",
-      ].join(" ")}>
+      ].join(" ")}
+    >
       <div
         className={[
           "relative",
           isAvatarClicked
             ? "mb-6 h-[min(52vw,320px)] w-[min(52vw,320px)]"
             : "mb-[clamp(0.45rem,1.8cqh,1.25rem)] h-[clamp(106px,19.5cqh,184px)] w-[clamp(106px,19.5cqh,184px)]",
-        ].join(" ")}>
+        ].join(" ")}
+      >
         <SessionAvatar
           session={session}
           trainerName={trainerName}
@@ -67,7 +69,9 @@ export default function SessionHeader({
           </h1>
 
           <p className="mt-3 max-w-[360px] text-[clamp(13px,1.8cqh,16px)] font-bold leading-snug text-[#6f6a93]">
-            {isLoading ? "" : displayWorkoutName || t("sessionCall.workoutMissing")}
+            {isLoading
+              ? ""
+              : displayWorkoutName || t("sessionCall.workoutMissing")}
           </p>
         </>
       ) : (
@@ -75,11 +79,11 @@ export default function SessionHeader({
           <h1 className="text-[clamp(25px,3.45cqh,34px)] font-extrabold leading-none text-[#100b2f]">
             {isLoading ? " " : trainerName || t("sessionCall.trainerMissing")}
           </h1>
-
+          {/*
           <p className="mt-[clamp(0.3rem,0.9cqh,0.7rem)] max-w-[320px] text-[clamp(11px,1.4cqh,14px)] font-bold leading-snug text-[#6f6a93]">
             {isLoading ? "" : displayWorkoutName || t("sessionCall.workoutMissing")}
           </p>
-
+          */}
           <p className="mt-[clamp(0.55rem,1.4cqh,1rem)] text-[clamp(14px,1.8cqh,18px)] font-bold tabular-nums tracking-[0.22em] text-[#8a83aa]">
             {formatTime(elapsedSeconds)}
           </p>
