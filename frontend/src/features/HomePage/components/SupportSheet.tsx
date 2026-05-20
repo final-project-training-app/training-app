@@ -29,7 +29,7 @@ export default function SupportSheet({
       const body = encodeURIComponent(
         `${t("support.emailIntro")}\n\n${message}\n\n${t("support.userEmail")} : ${userEmail}`,
       );
-      window.location.href = `mailto:abc.123@gmail.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:support@ringsatranarvi.se?subject=${subject}&body=${body}`;
       setFeedback(t("support.sentSuccess"));
       setMessage("");
     } catch (err) {
@@ -75,7 +75,9 @@ export default function SupportSheet({
 
         <section className="py-5">
           <AppSheetSectionTitle>{t("support.formTitle")}</AppSheetSectionTitle>
-          <AppSheetSectionText>{t("support.formDescription")}</AppSheetSectionText>
+          <AppSheetSectionText>
+            {t("support.formDescription")}
+          </AppSheetSectionText>
 
           <div className="mt-3">
             <textarea
@@ -88,7 +90,9 @@ export default function SupportSheet({
 
           {feedback ? (
             <div className="mt-3">
-              <AppSheetNotice tone={feedback.includes("✓") ? "success" : "danger"}>
+              <AppSheetNotice
+                tone={feedback.includes("✓") ? "success" : "danger"}
+              >
                 {feedback}
               </AppSheetNotice>
             </div>

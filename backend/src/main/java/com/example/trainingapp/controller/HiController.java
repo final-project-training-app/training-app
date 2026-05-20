@@ -21,6 +21,7 @@ public class HiController {
 
     @GetMapping("/hi")
     public ResponseEntity<GreetingMessage> sayHi() {
+        //Just to trigger deployment
         return ResponseEntity.ok().body(hiService.getOrCreateGreeting());
     }
 }
