@@ -108,7 +108,7 @@ export default function HomePage() {
       : DEFAULT_TRAINER_ID;
   const selectedWorkoutId = isSignedIn
     ? currentWorkout
-    : (guestWorkoutId ?? "1");
+    : (guestWorkoutId ?? "17");
 
   const activeTrainer = getHomepageTrainer(activeTrainerId);
 
@@ -131,11 +131,11 @@ export default function HomePage() {
         );
 
         setGuestWorkoutId(
-          matchingWorkout?.id ? String(matchingWorkout.id) : "1",
+          matchingWorkout?.id ? String(matchingWorkout.id) : "17",
         );
       } catch (error) {
         console.warn("[HomePage] Guest workout fallback failed", error);
-        setGuestWorkoutId("1");
+        setGuestWorkoutId("17");
       }
     })();
   }, [isLoaded, isSignedIn]);
@@ -174,7 +174,9 @@ export default function HomePage() {
   }
 
   async function handleStartCall() {
-    if (!selectedWorkoutId && !alreadyCompletedToday) return;
+    console.log("[HomePage] Trying to start session with workout ID:", selectedWorkoutId);
+    if (!selectedWorkoutId && !alreadyCompletedToday) {
+      return;}
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
