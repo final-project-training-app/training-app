@@ -3,7 +3,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LogIn, Phone, Settings } from "lucide-react";
 import { SessionPage } from "../session/SessionPage";
 import { primeSessionAudio } from "../ai-conversation/audio/sessionAudio";
-import { startRingback, stopGymAmbience } from "../ai-conversation/audio/ringback";
+import {
+  startRingback,
+  stopGymAmbience,
+} from "../ai-conversation/audio/ringback";
 import { coachCallSessionQueryOptions } from "../session/query";
 import { SignInButton, useAuth } from "@clerk/react";
 import SettingsModalSheet from "./components/SettingsModalSheet";
@@ -66,14 +69,16 @@ export default function HomePage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
-  const [activeWorkoutId, setActiveWorkoutId] = useState<string | undefined>(undefined);
+  const [activeWorkoutId, setActiveWorkoutId] = useState<string | undefined>(
+    undefined,
+  );
   const [activeAlreadyCompleted, setActiveAlreadyCompleted] = useState(false);
   const [cachedTrainerId, setCachedTrainerId] = useState<number | null>(() =>
     getStoredTrainerId(),
   );
   const { getToken, isLoaded, isSignedIn, userId } = useAuth();
   const { data: profile } = useMyProfile();
-  const { currentWorkout } = useCurrentWorkout();
+  const { currentWorkout, alreadyCompletedToday } = useCurrentWorkout();
   const { t, i18n } = useTranslation();
 
   useEffect(() => {
@@ -144,13 +149,17 @@ export default function HomePage() {
   }
 
   async function handleStartCall() {
-    console.log("[HomePage] Trying to start session with workout ID:", selectedWorkoutId);
-    if (!selectedWorkoutId) {
-      return;}
+    console.log(
+      "[HomePage] Trying to start session with workout ID:",
+      selectedWorkoutId,
+    );
+    if (!selectedWorkoutId && !alreadyCompletedToday) {
+      return;
+    }
     startRingback();
     void primeSessionAudio();
     void primeMicrophonePermission();
-    setActiveAlreadyCompleted(false);
+    setActiveAlreadyCompleted(alreadyCompletedToday);
     setActiveWorkoutId(selectedWorkoutId);
     setIsSessionActive(true);
   }

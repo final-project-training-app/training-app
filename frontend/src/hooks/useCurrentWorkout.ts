@@ -7,7 +7,7 @@ import useCurrentUser from "./useCurrentUser";
 
 export const DEBUG = import.meta.env.VITE_DEBUG === "true";
 export const DEBUG_WORKOUT_ID = import.meta.env.VITE_DEBUG_WORKOUT_ID ?? "1";
-const DAILY_WORKOUT_LIMIT_ENABLED = false;
+const DAILY_WORKOUT_LIMIT_ENABLED = true;
 
 type RecommendedWorkoutResponse = {
   workoutId: number;
@@ -72,20 +72,22 @@ export default function useCurrentWorkout() {
     return [];
   }, [workouts, trainerId, level]);
 
-  const { data: completedTodayData } = useQuery<{ hasCompletedToday: boolean }>({
-    queryKey: ["has-completed-today", userId],
-    queryFn: async () => {
-      const rawToken = isSignedIn ? await getToken() : undefined;
-      const token: string | undefined = rawToken ?? undefined;
-      return await getJson<{ hasCompletedToday: boolean }>(
-        `/api/activity-logs/users/${userId}/has-completed-today`,
-        { token },
-      );
+  const { data: completedTodayData } = useQuery<{ hasCompletedToday: boolean }>(
+    {
+      queryKey: ["has-completed-today", userId],
+      queryFn: async () => {
+        const rawToken = isSignedIn ? await getToken() : undefined;
+        const token: string | undefined = rawToken ?? undefined;
+        return await getJson<{ hasCompletedToday: boolean }>(
+          `/api/activity-logs/users/${userId}/has-completed-today`,
+          { token },
+        );
+      },
+      enabled: isSignedIn && !!userId,
+      staleTime: 1000 * 60,
+      retry: 1,
     },
-    enabled: isSignedIn && !!userId,
-    staleTime: 1000 * 60,
-    retry: 1,
-  });
+  );
 
   const alreadyCompletedToday = DAILY_WORKOUT_LIMIT_ENABLED
     ? (completedTodayData?.hasCompletedToday ?? false)
