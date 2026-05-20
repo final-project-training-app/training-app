@@ -141,7 +141,8 @@ export async function getCoachCallSession(
     }
   }
 
-  const resolvedTrainerId = user?.trainerId ?? DEFAULT_TRAINER_ID;
+  const resolvedTrainerId =
+    workout?.trainer?.id ?? user?.trainerId ?? DEFAULT_TRAINER_ID;
 
   let trainer: BackendTrainerResponse | null = null;
 
