@@ -7,6 +7,7 @@ import useCurrentUser from "./useCurrentUser";
 
 export const DEBUG = import.meta.env.VITE_DEBUG === "true";
 export const DEBUG_WORKOUT_ID = import.meta.env.VITE_DEBUG_WORKOUT_ID ?? "1";
+const DAILY_WORKOUT_LIMIT_ENABLED = false;
 
 type RecommendedWorkoutResponse = {
   workoutId: number;
@@ -86,15 +87,18 @@ export default function useCurrentWorkout() {
     retry: 1,
   });
 
-  const alreadyCompletedToday = completedTodayData?.hasCompletedToday ?? false;
+  const alreadyCompletedToday = DAILY_WORKOUT_LIMIT_ENABLED
+    ? (completedTodayData?.hasCompletedToday ?? false)
+    : false;
 
   const { data: recommendation } = useQuery<RecommendedWorkoutResponse>({
-    queryKey: ["recommended-workout", trainerId, userId],
+    queryKey: ["recommended-workout", trainerId, userId, level],
     queryFn: async () => {
       if (DEBUG) {
         console.debug("[useCurrentWorkout] fetching recommendation", {
           trainerId,
           userId,
+          level,
         });
       }
 
@@ -105,7 +109,12 @@ export default function useCurrentWorkout() {
         { token },
       );
     },
-    enabled: isSignedIn && !!trainerId && !!userId && !alreadyCompletedToday,
+    enabled:
+      isSignedIn &&
+      !!trainerId &&
+      !!userId &&
+      level != null &&
+      (!DAILY_WORKOUT_LIMIT_ENABLED || !alreadyCompletedToday),
     staleTime: 1000 * 60 * 5,
     retry: 1,
   });
@@ -115,14 +124,20 @@ export default function useCurrentWorkout() {
     }
   }, [recommendation]);
 
-  // Never fall back to a workout from the wrong trainer.
+  // Only accept recommendations inside the stable trainer + intensity bucket.
   // When already completed today: no workout at all (session uses getAlreadyCompletedSession).
   // Otherwise: AI recommendation, then trainer's first workout, then nothing.
+  const recommendedWorkout = filteredWorkouts.find(
+    (workout) => workout.id === recommendation?.workoutId,
+  );
+  const recommendedWorkoutId = recommendedWorkout?.id.toString();
   const trainerFallbackId = filteredWorkouts[0]?.id?.toString();
   const currentWorkout = alreadyCompletedToday
     ? undefined
-    : (recommendation?.workoutId.toString() ?? trainerFallbackId);
-  const recommendedWorkoutReasoning = recommendation?.reasoning;
+    : (recommendedWorkoutId ?? trainerFallbackId);
+  const recommendedWorkoutReasoning = recommendedWorkout
+    ? recommendation?.reasoning
+    : undefined;
 
   if (DEBUG) {
     console.debug("[useCurrentWorkout] state", {
