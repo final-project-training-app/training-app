@@ -10,6 +10,10 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: "sv", // Swedish fallback
+    detection: {
+      order: ["localStorage"],
+      caches: ["localStorage"],
+    },
     debug: true,
 
     resources: {
