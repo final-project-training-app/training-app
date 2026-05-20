@@ -1,0 +1,30 @@
+# Node modules
+**/node_modules
+
+# Build outputs
+**/dist
+**/target
+frontend/dist
+
+# OS / editor
+.DS_Store
+.idea
+.vscode
+
+# Logs
+*.log
+
+# Package locks (optional)
+**/package-lock.json
+**/pnpm-lock.yaml
+
+# Ignore local envs
+.env
+.env.local
+
+# Large media (replace with CDN or Git LFS if needed)
+frontend/public/phone-sounds
+frontend/src/assets
+
+# Ignore git metadata
+.git
