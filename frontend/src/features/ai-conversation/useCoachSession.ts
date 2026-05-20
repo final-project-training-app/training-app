@@ -40,6 +40,7 @@ import {
 } from "./helpers";
 import { useTrainer } from "../session/query";
 import useCurrentUser from "../../hooks/useCurrentUser";
+import { useQueryClient } from "@tanstack/react-query";
 
 //──────────────────────
 // Build system instruction
@@ -69,9 +70,16 @@ export function useCoachSession(
     alreadyCompletedToday?: boolean;
   },
 ) {
+  const queryClient = useQueryClient();
   const { session, autoStart = true } = options;
 
-  const { userId, voice, coachPrompt, updateProfile, isTrainerLoading: isCurrentUserTrainerLoading } = useCurrentUser();
+  const {
+    userId,
+    voice,
+    coachPrompt,
+    updateProfile,
+    isTrainerLoading: isCurrentUserTrainerLoading,
+  } = useCurrentUser();
   const {
     data: trainer,
     isLoading: isTrainerLoading,
@@ -79,7 +87,12 @@ export function useCoachSession(
   } = useTrainer(options.trainerId ?? "1");
 
   const sessionInstruction = useMemo(
-    () => buildSessionInstruction(session, coachPrompt, options.alreadyCompletedToday),
+    () =>
+      buildSessionInstruction(
+        session,
+        coachPrompt,
+        options.alreadyCompletedToday,
+      ),
     [session, coachPrompt, options.alreadyCompletedToday],
   );
 
@@ -113,7 +126,9 @@ export function useCoachSession(
   const disconnectRef = useRef<() => void>(() => {});
   const startInstructionsRef = useRef<() => Promise<void>>(async () => {});
   const startWorkoutRef = useRef<() => Promise<void>>(async () => {});
-  const finishSessionRef = useRef<(summary?: string, suggestions?: ProfileSuggestions) => void>(() => {});
+  const finishSessionRef = useRef<
+    (summary?: string, suggestions?: ProfileSuggestions) => void
+  >(() => {});
 
   const { token, loadToken, tokenLoading, tokenError } = useLiveToken();
 
@@ -448,7 +463,10 @@ export function useCoachSession(
       const videoStart = session.instructionsVideoStart;
       const videoStop = session.instructionsVideoStop;
 
-      addDebugEvent("video-fields", `url=${String(videoUrl)} start=${String(videoStart)} stop=${String(videoStop)}`);
+      addDebugEvent(
+        "video-fields",
+        `url=${String(videoUrl)} start=${String(videoStart)} stop=${String(videoStop)}`,
+      );
 
       if (videoUrl && videoStart != null && videoStop != null) {
         const t1 = window.setTimeout(() => {
@@ -534,6 +552,7 @@ export function useCoachSession(
     sendCoachPrompt,
     session.instructionsAudio,
     session.instructionsAudioUrl,
+    session.trainer?.ambience,
     session.workoutAudio,
     session.workoutAudioUrl,
     setSessionStep,
@@ -657,6 +676,12 @@ export function useCoachSession(
             "create_feedback",
             JSON.stringify(feedbackResp?.response ?? {}),
           );
+
+          if (userId) {
+            queryClient.setQueryData(["has-completed-today", userId], {
+              hasCompletedToday: true,
+            });
+          }
         } else {
           addDebugEvent("skip_feedback", "workout not completed");
         }
@@ -679,7 +704,6 @@ export function useCoachSession(
             addDebugEvent("update_profile_failed", String(e));
           }
         }
-
       } catch (e) {
         addDebugEvent("create_feedback_failed", String(e));
         try {
@@ -711,6 +735,8 @@ export function useCoachSession(
       session.id,
       setSessionStep,
       updateProfile,
+      queryClient,
+      userId,
     ],
   );
 
@@ -740,7 +766,13 @@ export function useCoachSession(
     disconnectLive();
     hasStartedRef.current = false;
     setSessionStep("idle");
-  }, [addDebugEvent, clearVideoTimers, disconnectLive, getAiPlaybackRemainingMs, setSessionStep]);
+  }, [
+    addDebugEvent,
+    clearVideoTimers,
+    disconnectLive,
+    getAiPlaybackRemainingMs,
+    setSessionStep,
+  ]);
 
   const hangUp = useCallback(() => {
     stopRingback();
@@ -779,7 +811,9 @@ export function useCoachSession(
   }, [isSpeakerMuted, setSpeakerMuted]);
 
   // must be declared before usage in the auto-start effect
-  const canStartLive = Boolean(voice && !isTrainerLoading && !isCurrentUserTrainerLoading);
+  const canStartLive = Boolean(
+    voice && !isTrainerLoading && !isCurrentUserTrainerLoading,
+  );
 
   //──────────────────────
   // Auto-start on mount
