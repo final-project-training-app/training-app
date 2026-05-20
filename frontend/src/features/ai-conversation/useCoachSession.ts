@@ -92,7 +92,8 @@ export function useCoachSession(
     isLoading: isTrainerLoading,
     error: trainerError,
   } = useTrainer(options.trainerId ?? "1");
-  const sessionCoachPrompt = trainer?.prompt ?? session.trainer?.prompt ?? coachPrompt;
+  const sessionCoachPrompt =
+    trainer?.prompt ?? session.trainer?.prompt ?? coachPrompt;
   const sessionVoice = normalizeLiveVoice(
     trainer?.voice ?? session.trainer?.voice ?? voice,
   );
@@ -764,16 +765,17 @@ export function useCoachSession(
   // Manual end session
   //──────────────────────
   const endSession = useCallback(async () => {
-    stopRingback();
-    addDebugEvent("manual end");
-    clearVideoTimers();
-    setShowInstructionsVideo(false);
-    stopSessionAudio();
     await waitForAIToFinishSpeaking(
       () => aiTurnStateRef.current,
       () => getAiPlaybackRemainingMs(),
       { timeoutMs: 10000 },
     );
+    stopRingback();
+    addDebugEvent("manual end");
+    clearVideoTimers();
+    setShowInstructionsVideo(false);
+    stopSessionAudio();
+
     disconnectLive();
     hasStartedRef.current = false;
     setSessionStep("idle");
