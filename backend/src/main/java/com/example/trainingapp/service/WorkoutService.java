@@ -140,6 +140,8 @@ public class WorkoutService {
                 workout.getDescription(),
                 workout.getDashboardName(),
                 workout.getDashboardDescription(),
+                workout.getSubtitleText(),
+                workout.getInstructionsSubtitleText(),
                 workout.getLevel(),
                 workout.getType(),
                 workout.getDurationSeconds(),

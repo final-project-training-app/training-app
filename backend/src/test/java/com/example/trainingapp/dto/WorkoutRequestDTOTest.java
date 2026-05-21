@@ -15,6 +15,8 @@ class WorkoutRequestDTOTest {
                 "Upper body",
                 "Push Ups",
                 "Upper body dashboard",
+                null,
+                null,
                 1,
                 "strength",
                 300,

@@ -27,6 +27,8 @@ type Workout = {
   description?: string;
   dashboardName?: string | null;
   dashboardDescription?: string | null;
+  subtitleText?: string | null;
+  instructionsSubtitleText?: string | null;
   type?: string;
   level?: number;
   durationSeconds?: number;
@@ -50,6 +52,8 @@ type WorkoutForm = {
   description: string;
   dashboardName: string;
   dashboardDescription: string;
+  subtitleText: string;
+  instructionsSubtitleText: string;
   type: string;
   level: number;
   durationSeconds: number;
@@ -78,6 +82,8 @@ const emptyForm: WorkoutForm = {
   description: "",
   dashboardName: "",
   dashboardDescription: "",
+  subtitleText: "",
+  instructionsSubtitleText: "",
   type: "",
   level: 1,
   durationSeconds: 60,
@@ -100,6 +106,8 @@ function toForm(workout: Workout): WorkoutForm {
     description: workout.description ?? "",
     dashboardName: workout.dashboardName ?? "",
     dashboardDescription: workout.dashboardDescription ?? "",
+    subtitleText: workout.subtitleText ?? "",
+    instructionsSubtitleText: workout.instructionsSubtitleText ?? "",
     type: workout.type ?? "",
     level: workout.level ?? 1,
     durationSeconds: workout.durationSeconds ?? 60,
@@ -108,8 +116,14 @@ function toForm(workout: Workout): WorkoutForm {
     instructionsImage: workout.instructionsImage ?? "",
     workoutImage: workout.workoutImage ?? "",
     instructionsVideo: workout.instructionsVideo ?? "",
-    instructionsVideoStart: workout.instructionsVideoStart != null ? String(workout.instructionsVideoStart) : "",
-    instructionsVideoStop: workout.instructionsVideoStop != null ? String(workout.instructionsVideoStop) : "",
+    instructionsVideoStart:
+      workout.instructionsVideoStart != null
+        ? String(workout.instructionsVideoStart)
+        : "",
+    instructionsVideoStop:
+      workout.instructionsVideoStop != null
+        ? String(workout.instructionsVideoStop)
+        : "",
     kneeFriendly: workout.kneeFriendly ?? false,
     lowImpact: workout.lowImpact ?? false,
     seated: workout.seated ?? false,
@@ -250,7 +264,9 @@ function WorkoutDetailsPanel({
 
       <div className="p-4 space-y-4">
         <div>
-          <h3 className="text-lg font-bold text-[#100b2f]">{workout.dashboardName || workout.name}</h3>
+          <h3 className="text-lg font-bold text-[#100b2f]">
+            {workout.dashboardName || workout.name}
+          </h3>
           <p className="text-xs text-[#9b96b8]">
             {t("workoutsAdmin.level")} {workout.level ?? "-"}
           </p>
@@ -493,6 +509,8 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
         description: form.description.trim(),
         dashboardName: form.dashboardName.trim() || null,
         dashboardDescription: form.dashboardDescription.trim() || null,
+        subtitleText: form.subtitleText.trim() || null,
+        instructionsSubtitleText: form.instructionsSubtitleText.trim() || null,
         type: form.type.trim(),
         level: form.level,
         durationSeconds: form.durationSeconds,
@@ -501,8 +519,14 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
         instructionsImage: form.instructionsImage.trim(),
         workoutImage: form.workoutImage.trim(),
         instructionsVideo: form.instructionsVideo.trim() || null,
-        instructionsVideoStart: form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null,
-        instructionsVideoStop: form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null,
+        instructionsVideoStart:
+          form.instructionsVideoStart !== ""
+            ? Number(form.instructionsVideoStart)
+            : null,
+        instructionsVideoStop:
+          form.instructionsVideoStop !== ""
+            ? Number(form.instructionsVideoStop)
+            : null,
         kneeFriendly: form.kneeFriendly,
         lowImpact: form.lowImpact,
         seated: form.seated,
@@ -533,7 +557,7 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
           ? t("workoutsAdmin.toastCreated")
           : t("workoutsAdmin.toastUpdated"),
         {
-        type: "success",
+          type: "success",
         },
       );
     },
@@ -583,7 +607,8 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
   const validate = () => {
     const nextErrors: string[] = [];
 
-    if (!form.name.trim()) nextErrors.push(t("workoutsAdmin.validation.nameRequired"));
+    if (!form.name.trim())
+      nextErrors.push(t("workoutsAdmin.validation.nameRequired"));
     if (form.level < 0 || form.level > 4) {
       nextErrors.push(t("workoutsAdmin.validation.levelRange"));
     }
@@ -608,8 +633,14 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
       nextErrors.push(t("workoutsAdmin.validation.instructionsVideoUrl"));
     }
 
-    const vStart = form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null;
-    const vStop = form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null;
+    const vStart =
+      form.instructionsVideoStart !== ""
+        ? Number(form.instructionsVideoStart)
+        : null;
+    const vStop =
+      form.instructionsVideoStop !== ""
+        ? Number(form.instructionsVideoStop)
+        : null;
     if (vStart !== null && vStop !== null && vStart >= vStop) {
       nextErrors.push(t("workoutsAdmin.validation.videoStartBeforeStop"));
     }
@@ -661,7 +692,11 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-(--brand-muted)">{t("workoutsAdmin.loading")}</p>;
+    return (
+      <p className="text-sm text-(--brand-muted)">
+        {t("workoutsAdmin.loading")}
+      </p>
+    );
   }
 
   if (isError) {
@@ -768,8 +803,12 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
           <option value="newest">{t("workoutsAdmin.sortNewest")}</option>
           <option value="name-asc">{t("workoutsAdmin.sortNameAsc")}</option>
           <option value="name-desc">{t("workoutsAdmin.sortNameDesc")}</option>
-          <option value="duration-asc">{t("workoutsAdmin.sortDurationAsc")}</option>
-          <option value="duration-desc">{t("workoutsAdmin.sortDurationDesc")}</option>
+          <option value="duration-asc">
+            {t("workoutsAdmin.sortDurationAsc")}
+          </option>
+          <option value="duration-desc">
+            {t("workoutsAdmin.sortDurationDesc")}
+          </option>
         </select>
       </div>
 
@@ -971,7 +1010,9 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                   name="dashboardDescription"
                   value={form.dashboardDescription}
                   onChange={onFormChange}
-                  placeholder={t("workoutsAdmin.dashboardDescriptionPlaceholder")}
+                  placeholder={t(
+                    "workoutsAdmin.dashboardDescriptionPlaceholder",
+                  )}
                   className="min-h-16 w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6] focus:ring-1 focus:ring-[#5836d6]/20"
                 />
               </div>
@@ -1070,6 +1111,30 @@ export default function MainWorkoutPage({ searchTerm = "" }: Props) {
                       onChange={onFormChange}
                       placeholder="https://..."
                       className="w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-[#6f6a93]">
+                      Workout audio subtitle text
+                    </label>
+                    <textarea
+                      name="subtitleText"
+                      value={form.subtitleText}
+                      onChange={onFormChange}
+                      placeholder="Example: subtitles for the workout audio in the language spoken during the workout"
+                      className="min-h-[120px] w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-[#6f6a93]">
+                      Instructions audio subtitle text
+                    </label>
+                    <textarea
+                      name="instructionsSubtitleText"
+                      value={form.instructionsSubtitleText}
+                      onChange={onFormChange}
+                      placeholder="Example: subtitles for the instructions audio in the language spoken during the instructions"
+                      className="min-h-[120px] w-full rounded-xl border border-[#ece5ff] p-2.5 text-sm outline-none transition focus:border-[#5836d6]"
                     />
                   </div>
                   <div className="space-y-1">

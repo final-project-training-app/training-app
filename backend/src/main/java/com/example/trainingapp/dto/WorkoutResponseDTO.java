@@ -6,6 +6,8 @@ public record WorkoutResponseDTO(
         String description,
         String dashboardName,
         String dashboardDescription,
+        String subtitleText,
+        String instructionsSubtitleText,
         Integer level,
         String type,
         Integer durationSeconds,

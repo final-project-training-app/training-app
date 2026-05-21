@@ -34,6 +34,8 @@ export type CoachCallSession = {
   description?: string | null;
   dashboardDescription?: string | null;
   instructions?: string | null;
+  subtitleText?: string | null;
+  instructionsSubtitleText?: string | null;
 
   level?: number | string | null;
   type?: string | null;

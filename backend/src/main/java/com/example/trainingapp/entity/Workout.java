@@ -29,6 +29,12 @@ public class Workout {
     @Column(name = "dashboard_description", columnDefinition = "TEXT")
     private String dashboardDescription;
 
+    @Column(name = "subtitle_text", columnDefinition = "TEXT")
+    private String subtitleText;
+
+    @Column(name = "instructions_subtitle_text", columnDefinition = "TEXT")
+    private String instructionsSubtitleText;
+
     private Integer level;
     private String type;
 

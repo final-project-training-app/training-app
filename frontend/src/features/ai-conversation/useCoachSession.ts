@@ -70,6 +70,31 @@ function buildSessionInstruction(
   return `${base}${trainerIdentity}`;
 }
 
+function normalizeCaptionText(text?: string | null) {
+  return text?.replace(/\s+/g, " ").trim() ?? "";
+}
+
+function mergeCaptionFragments(previous: string, next: string) {
+  const current = normalizeCaptionText(previous);
+  const incoming = normalizeCaptionText(next);
+
+  if (!current) return incoming;
+  if (!incoming) return current;
+  if (incoming === current) return current;
+  if (incoming.startsWith(current)) return incoming;
+  if (current.startsWith(incoming)) return current;
+  if (current.endsWith(incoming)) return current;
+  if (incoming.endsWith(current)) return incoming;
+  return `${current} ${incoming}`.replace(/\s+/g, " ").trim();
+}
+
+function splitCaptionParagraphs(text?: string | null) {
+  return normalizeCaptionText(text)
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 export function useCoachSession(
   options: UseCoachSessionOptions & {
     trainerId?: string;
@@ -119,6 +144,13 @@ export function useCoachSession(
   const [showInstructionsVideo, setShowInstructionsVideo] = useState(false);
   const [isMicrophoneMuted, setIsMicrophoneMuted] = useState(false);
   const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
+  const [caption, setCaption] = useState<string | null>(null);
+  const [captionDraft, setCaptionDraft] = useState<string>("");
+  const [captionHistory, setCaptionHistory] = useState<string[]>([]);
+  const [playbackSubtitle, setPlaybackSubtitle] = useState<string>("");
+  // captions are per-call (ephemeral) — do not persist to localStorage
+  const [captionsEnabled, setCaptionsEnabled] = useState<boolean>(false);
+  const toggleCaptions = useCallback(() => setCaptionsEnabled((c) => !c), []);
 
   const debugIdRef = useRef(0);
   const startedAtRef = useRef(0);
@@ -190,6 +222,52 @@ export function useCoachSession(
   const sessionTools = options.alreadyCompletedToday
     ? [...coachLiveTools, ...ALREADY_COMPLETED_TOOLS]
     : [...coachLiveTools, ...SESSION_CONTROL_TOOLS];
+
+  const addCaptionParagraph = useCallback((text?: string | null) => {
+    const paragraphs = splitCaptionParagraphs(text);
+    if (paragraphs.length === 0) return;
+
+    setCaptionHistory((current) => {
+      const next = [...current];
+      for (const paragraph of paragraphs) {
+        const last = next[next.length - 1];
+        if (last !== paragraph) {
+          next.push(paragraph);
+        }
+      }
+      return next.slice(-100);
+    });
+  }, []);
+
+  const resolveInstructionSubtitle = useCallback(() => {
+    return normalizeCaptionText(
+      session.instructionsSubtitleText ??
+        session.dashboardDescription ??
+        session.description ??
+        session.instructions ??
+        session.name,
+    );
+  }, [
+    session.description,
+    session.dashboardDescription,
+    session.instructions,
+    session.instructionsSubtitleText,
+    session.name,
+  ]);
+
+  const resolveWorkoutSubtitle = useCallback(() => {
+    return normalizeCaptionText(
+      session.subtitleText ??
+        session.dashboardDescription ??
+        session.description ??
+        session.name,
+    );
+  }, [
+    session.description,
+    session.dashboardDescription,
+    session.name,
+    session.subtitleText,
+  ]);
 
   const {
     geminiConnect,
@@ -322,6 +400,28 @@ export function useCoachSession(
 
       if (modelText.trim().length > 0) {
         aiTurnStateRef.current.started = true;
+      }
+
+      const transcription = message.serverContent?.outputTranscription;
+      const trainerText = normalizeCaptionText(transcription?.text);
+
+      if (trainerText) {
+        const mergedCaption = mergeCaptionFragments(captionDraft, trainerText);
+        setCaption(mergedCaption);
+        setCaptionDraft(mergedCaption);
+
+        if (transcription?.finished) {
+          setCaptionHistory((cur) => {
+            const next = [...cur];
+            const last = next[next.length - 1];
+            if (last !== mergedCaption) {
+              next.push(mergedCaption);
+            }
+            return next.slice(-100);
+          });
+          setCaption("");
+          setCaptionDraft("");
+        }
       }
 
       const generationFinished =
@@ -463,10 +563,13 @@ export function useCoachSession(
       return;
     }
     try {
+      const subtitleText = resolveInstructionSubtitle();
+      setPlaybackSubtitle(subtitleText);
       addDebugEvent("play instructions", instructionsAudioUrl);
       await startSessionAudio(instructionsAudioUrl, {
         onEnded: () => {
           addDebugEvent("instructions ended");
+          setPlaybackSubtitle("");
           void askIfReadyForWorkout();
         },
       });
@@ -503,6 +606,7 @@ export function useCoachSession(
     askIfReadyForWorkout,
     clearVideoTimers,
     pauseLive,
+    resolveInstructionSubtitle,
     session.instructionsAudio,
     session.instructionsAudioUrl,
     session.instructionsVideo,
@@ -592,10 +696,14 @@ export function useCoachSession(
     }
 
     try {
+      const subtitleText = resolveWorkoutSubtitle();
+      setPlaybackSubtitle(subtitleText);
+      addCaptionParagraph(subtitleText);
       addDebugEvent("play workout", workoutAudioUrl);
       await startSessionAudio(workoutAudioUrl, {
         onEnded: async () => {
           workoutCompletedRef.current = true;
+          setPlaybackSubtitle("");
           allowAiOutput();
           addDebugEvent("workout ended");
           setSessionStep("collecting_feedback");
@@ -652,7 +760,9 @@ export function useCoachSession(
     session.workoutAudioUrl,
     session.id,
     addDebugEvent,
+    addCaptionParagraph,
     allowAiOutput,
+    resolveWorkoutSubtitle,
     userId,
     getSession,
     startAudioCapture,
@@ -868,6 +978,12 @@ export function useCoachSession(
     showInstructionsVideo,
     isMicrophoneMuted,
     isSpeakerMuted,
+    caption,
+    captionDraft,
+    playbackSubtitle,
+    captionsEnabled,
+    toggleCaptions,
+    captionHistory,
     toggleMicrophoneMuted: () => setIsMicrophoneMuted((current) => !current),
     toggleSpeakerMuted: () => setIsSpeakerMuted((current) => !current),
   };

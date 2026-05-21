@@ -8,6 +8,8 @@ type BackendWorkoutResponse = {
   dashboardName?: string | null;
   dashboardDescription?: string | null;
   instructions?: string | null;
+  subtitleText?: string | null;
+  instructionsSubtitleText?: string | null;
   level?: number | string | null;
   type?: string | null;
 
@@ -172,12 +174,20 @@ export async function getCoachCallSession(
     id: workout?.id ?? 0,
     isAuthenticated: Boolean(token && user),
 
-    name: workout ? (workout.dashboardName || workout.name) : undefined,
-    workoutName: workout ? (workout.dashboardName || workout.name) : undefined,
+    name: workout ? workout.dashboardName || workout.name : undefined,
+    workoutName: workout ? workout.dashboardName || workout.name : undefined,
     dashboardName: workout?.dashboardName,
-    description: workout ? (workout.dashboardDescription || workout.description) : undefined,
+    description: workout
+      ? workout.dashboardDescription || workout.description
+      : undefined,
     dashboardDescription: workout?.dashboardDescription,
-    instructions: workout ? (workout.instructions ?? workout.dashboardDescription ?? workout.description) : undefined,
+    instructions: workout
+      ? (workout.instructions ??
+        workout.dashboardDescription ??
+        workout.description)
+      : undefined,
+    subtitleText: workout?.subtitleText,
+    instructionsSubtitleText: workout?.instructionsSubtitleText,
 
     level: workout?.level,
     type: workout?.type,

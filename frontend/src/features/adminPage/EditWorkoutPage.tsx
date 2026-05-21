@@ -15,6 +15,8 @@ type WorkoutForm = {
   description: string;
   dashboardName: string;
   dashboardDescription: string;
+  subtitleText: string;
+  instructionsSubtitleText: string;
   level: number;
   type: string;
   durationSeconds: number;
@@ -38,6 +40,8 @@ type WorkoutResponse = {
   description?: string;
   dashboardName?: string | null;
   dashboardDescription?: string | null;
+  subtitleText?: string | null;
+  instructionsSubtitleText?: string | null;
   level?: number;
   type?: string;
   durationSeconds?: number;
@@ -82,6 +86,8 @@ const emptyForm: WorkoutForm = {
   description: "",
   dashboardName: "",
   dashboardDescription: "",
+  subtitleText: "",
+  instructionsSubtitleText: "",
   level: 2,
   type: "",
   durationSeconds: 0,
@@ -139,6 +145,8 @@ export default function EditWorkoutPage({
           description: workoutData.description ?? "",
           dashboardName: workoutData.dashboardName ?? "",
           dashboardDescription: workoutData.dashboardDescription ?? "",
+          subtitleText: workoutData.subtitleText ?? "",
+          instructionsSubtitleText: workoutData.instructionsSubtitleText ?? "",
           level: workoutData.level ?? 2,
           type: workoutData.type ?? "",
           durationSeconds: workoutData.durationSeconds ?? 0,
@@ -147,8 +155,14 @@ export default function EditWorkoutPage({
           instructionsImage: workoutData.instructionsImage ?? "",
           workoutImage: workoutData.workoutImage ?? "",
           instructionsVideo: workoutData.instructionsVideo ?? "",
-          instructionsVideoStart: workoutData.instructionsVideoStart != null ? String(workoutData.instructionsVideoStart) : "",
-          instructionsVideoStop: workoutData.instructionsVideoStop != null ? String(workoutData.instructionsVideoStop) : "",
+          instructionsVideoStart:
+            workoutData.instructionsVideoStart != null
+              ? String(workoutData.instructionsVideoStart)
+              : "",
+          instructionsVideoStop:
+            workoutData.instructionsVideoStop != null
+              ? String(workoutData.instructionsVideoStop)
+              : "",
           kneeFriendly: workoutData.kneeFriendly ?? false,
           lowImpact: workoutData.lowImpact ?? false,
           seated: workoutData.seated ?? false,
@@ -160,7 +174,9 @@ export default function EditWorkoutPage({
         });
       } catch (error) {
         console.error(error);
-        onStatusChange?.(t("workoutsAdmin.toastLoadWorkoutFailed"), { type: "error" });
+        onStatusChange?.(t("workoutsAdmin.toastLoadWorkoutFailed"), {
+          type: "error",
+        });
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -199,13 +215,15 @@ export default function EditWorkoutPage({
     const nextErrors: string[] = [];
 
     if (!form.name) nextErrors.push(t("workoutsAdmin.validation.nameRequired"));
-    if (!form.description) nextErrors.push(t("workoutsAdmin.validation.descriptionRequired"));
+    if (!form.description)
+      nextErrors.push(t("workoutsAdmin.validation.descriptionRequired"));
     if (!form.type) nextErrors.push(t("workoutsAdmin.validation.typeRequired"));
     if (form.durationSeconds <= 0)
       nextErrors.push(t("workoutsAdmin.validation.durationPositive"));
     if (form.level < 0 || form.level > 4)
       nextErrors.push(t("workoutsAdmin.validation.levelRange"));
-    if (!form.trainerId) nextErrors.push(t("workoutsAdmin.validation.trainerRequired"));
+    if (!form.trainerId)
+      nextErrors.push(t("workoutsAdmin.validation.trainerRequired"));
     if (!form.instructionsAudio || !isValidUrl(form.instructionsAudio)) {
       nextErrors.push(t("workoutsAdmin.validation.instructionsAudioUrl"));
     }
@@ -222,8 +240,14 @@ export default function EditWorkoutPage({
     if (form.instructionsVideo && !isValidUrl(form.instructionsVideo))
       nextErrors.push(t("workoutsAdmin.validation.instructionsVideoUrl"));
 
-    const start = form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null;
-    const stop = form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null;
+    const start =
+      form.instructionsVideoStart !== ""
+        ? Number(form.instructionsVideoStart)
+        : null;
+    const stop =
+      form.instructionsVideoStop !== ""
+        ? Number(form.instructionsVideoStop)
+        : null;
     if (start !== null && stop !== null && start >= stop)
       nextErrors.push(t("workoutsAdmin.validation.videoStartBeforeStop"));
 
@@ -252,6 +276,8 @@ export default function EditWorkoutPage({
           description: form.description,
           dashboardName: form.dashboardName || null,
           dashboardDescription: form.dashboardDescription || null,
+          subtitleText: form.subtitleText || null,
+          instructionsSubtitleText: form.instructionsSubtitleText || null,
           level: form.level,
           type: form.type,
           durationSeconds: form.durationSeconds,
@@ -260,8 +286,14 @@ export default function EditWorkoutPage({
           instructionsImage: form.instructionsImage,
           workoutImage: form.workoutImage,
           instructionsVideo: form.instructionsVideo || null,
-          instructionsVideoStart: form.instructionsVideoStart !== "" ? Number(form.instructionsVideoStart) : null,
-          instructionsVideoStop: form.instructionsVideoStop !== "" ? Number(form.instructionsVideoStop) : null,
+          instructionsVideoStart:
+            form.instructionsVideoStart !== ""
+              ? Number(form.instructionsVideoStart)
+              : null,
+          instructionsVideoStop:
+            form.instructionsVideoStop !== ""
+              ? Number(form.instructionsVideoStop)
+              : null,
           kneeFriendly: form.kneeFriendly,
           lowImpact: form.lowImpact,
           seated: form.seated,
@@ -273,11 +305,15 @@ export default function EditWorkoutPage({
         token,
       );
 
-      onStatusChange?.(t("workoutsAdmin.toastChangesSaved"), { type: "success" });
+      onStatusChange?.(t("workoutsAdmin.toastChangesSaved"), {
+        type: "success",
+      });
       onBack();
     } catch (error) {
       console.error(error);
-      onStatusChange?.(t("workoutsAdmin.toastSaveChangesFailed"), { type: "error" });
+      onStatusChange?.(t("workoutsAdmin.toastSaveChangesFailed"), {
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -286,7 +322,9 @@ export default function EditWorkoutPage({
   if (loading) {
     return (
       <div className="rounded-2xl border border-(--brand-border) bg-white p-6">
-        <p className="text-sm text-(--brand-muted)">{t("workoutsAdmin.loadingWorkout")}</p>
+        <p className="text-sm text-(--brand-muted)">
+          {t("workoutsAdmin.loadingWorkout")}
+        </p>
       </div>
     );
   }
@@ -295,23 +333,29 @@ export default function EditWorkoutPage({
     <main className="flex min-h-dvh items-center justify-center bg-(--brand-page) p-6 text-(--brand-ink)">
       <div className="w-full max-w-4xl rounded-2xl border border-(--brand-border) bg-white p-8 shadow-lg">
         <div className="mb-8 flex items-center justify-between gap-3">
-          <h1 className="text-3xl font-bold">{t("workoutsAdmin.editWorkout")}</h1>
+          <h1 className="text-3xl font-bold">
+            {t("workoutsAdmin.editWorkout")}
+          </h1>
           <button
             type="button"
             onClick={() => {
-              onStatusChange?.(t("workoutsAdmin.backToWorkouts"), { type: "info" });
+              onStatusChange?.(t("workoutsAdmin.backToWorkouts"), {
+                type: "info",
+              });
               onBack();
             }}
             className="rounded-full border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-2 text-sm font-semibold"
           >
-            {t("workoutsAdmin.back")}
+            {t("workoutsAdmin.backToWorkouts")}
           </button>
         </div>
 
         <form onSubmit={handleSave} className="flex flex-col gap-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.name")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.name")} *
+              </span>
               <input
                 name="name"
                 value={form.name}
@@ -321,7 +365,21 @@ export default function EditWorkoutPage({
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.type")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.dashboardName")}
+              </span>
+              <input
+                name="dashboardName"
+                value={form.dashboardName}
+                onChange={handleChange}
+                className="rounded-lg border border-(--brand-border) bg-white p-3"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.type")} *
+              </span>
               <input
                 name="type"
                 value={form.type}
@@ -331,7 +389,9 @@ export default function EditWorkoutPage({
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.trainer")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.trainer")} *
+              </span>
               <select
                 name="trainerId"
                 value={form.trainerId}
@@ -348,7 +408,9 @@ export default function EditWorkoutPage({
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.level")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.level")} *
+              </span>
               <input
                 type="number"
                 min="0"
@@ -361,7 +423,9 @@ export default function EditWorkoutPage({
             </label>
 
             <label className="flex flex-col gap-1 md:col-span-2">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.duration")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.duration")} *
+              </span>
               <input
                 type="number"
                 min="0"
@@ -374,7 +438,9 @@ export default function EditWorkoutPage({
           </div>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm opacity-80">{t("workoutsAdmin.description")} *</span>
+            <span className="text-sm opacity-80">
+              {t("workoutsAdmin.description")} *
+            </span>
             <textarea
               name="description"
               value={form.description}
@@ -383,14 +449,48 @@ export default function EditWorkoutPage({
             />
           </label>
 
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-sm opacity-80">
+                Workout audio subtitle text
+              </span>
+              <textarea
+                name="subtitleText"
+                placeholder="Example: subtitles for the workout audio in the language spoken during the workout"
+                value={form.subtitleText}
+                onChange={handleChange}
+                className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-sm opacity-80">
+                Instructions audio subtitle text
+              </span>
+              <textarea
+                name="instructionsSubtitleText"
+                placeholder="Example: subtitles for the instructions audio in the language spoken during the instructions"
+                value={form.instructionsSubtitleText}
+                onChange={handleChange}
+                className="min-h-[120px] rounded-lg border border-(--brand-border) bg-white p-3"
+              />
+            </label>
+          </div>
+
           {/* Dashboard Display (English) */}
           <div className="rounded-xl border border-(--brand-border) bg-(--brand-surface-glass) p-4 flex flex-col gap-4">
             <div>
-              <h3 className="text-base font-semibold">{t("workoutsAdmin.dashboardSection")}</h3>
-              <p className="text-sm text-(--brand-muted)">{t("workoutsAdmin.dashboardSectionHint")}</p>
+              <h3 className="text-base font-semibold">
+                {t("workoutsAdmin.dashboardSection")}
+              </h3>
+              <p className="text-sm text-(--brand-muted)">
+                {t("workoutsAdmin.dashboardSectionHint")}
+              </p>
             </div>
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.dashboardName")}</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.dashboardName")}
+              </span>
               <input
                 name="dashboardName"
                 placeholder={t("workoutsAdmin.dashboardNamePlaceholder")}
@@ -400,7 +500,9 @@ export default function EditWorkoutPage({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.dashboardDescription")}</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.dashboardDescription")}
+              </span>
               <textarea
                 name="dashboardDescription"
                 placeholder={t("workoutsAdmin.dashboardDescriptionPlaceholder")}
@@ -413,7 +515,9 @@ export default function EditWorkoutPage({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.instructionsAudio")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.instructionsAudio")} *
+              </span>
               <input
                 name="instructionsAudio"
                 value={form.instructionsAudio}
@@ -422,7 +526,9 @@ export default function EditWorkoutPage({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.workoutAudio")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.workoutAudio")} *
+              </span>
               <input
                 name="workoutAudio"
                 value={form.workoutAudio}
@@ -431,7 +537,9 @@ export default function EditWorkoutPage({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.instructionsImage")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.instructionsImage")} *
+              </span>
               <input
                 name="instructionsImage"
                 value={form.instructionsImage}
@@ -440,7 +548,9 @@ export default function EditWorkoutPage({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.workoutImage")} *</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.workoutImage")} *
+              </span>
               <input
                 name="workoutImage"
                 value={form.workoutImage}
@@ -450,7 +560,9 @@ export default function EditWorkoutPage({
             </label>
 
             <label className="flex flex-col gap-1 md:col-span-2">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.instructionsVideoOptional")}</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.instructionsVideoOptional")}
+              </span>
               <input
                 name="instructionsVideo"
                 placeholder={t("workoutsAdmin.videoPlaceholder")}
@@ -461,7 +573,9 @@ export default function EditWorkoutPage({
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.videoStartSeconds")}</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.videoStartSeconds")}
+              </span>
               <input
                 name="instructionsVideoStart"
                 inputMode="numeric"
@@ -474,7 +588,9 @@ export default function EditWorkoutPage({
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-80">{t("workoutsAdmin.videoStopSeconds")}</span>
+              <span className="text-sm opacity-80">
+                {t("workoutsAdmin.videoStopSeconds")}
+              </span>
               <input
                 name="instructionsVideoStop"
                 inputMode="numeric"
@@ -488,12 +604,15 @@ export default function EditWorkoutPage({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { name: "kneeFriendly", label: t("exercisePanel.kneeFriendly") },
-                { name: "lowImpact", label: t("exercisePanel.lowImpact") },
-                { name: "seated", label: t("exercisePanel.seated") },
-                { name: "beginnerFriendly", label: t("exercisePanel.beginnerFriendly") },
-              ].map((item) => (
+            {[
+              { name: "kneeFriendly", label: t("exercisePanel.kneeFriendly") },
+              { name: "lowImpact", label: t("exercisePanel.lowImpact") },
+              { name: "seated", label: t("exercisePanel.seated") },
+              {
+                name: "beginnerFriendly",
+                label: t("exercisePanel.beginnerFriendly"),
+              },
+            ].map((item) => (
               <label
                 key={item.name}
                 className="flex items-center gap-2 rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) p-3"
@@ -521,7 +640,9 @@ export default function EditWorkoutPage({
             <button
               type="button"
               onClick={() => {
-                onStatusChange?.(t("workoutsAdmin.canceling"), { type: "info" });
+                onStatusChange?.(t("workoutsAdmin.canceling"), {
+                  type: "info",
+                });
                 onBack();
               }}
               className="rounded-lg border border-(--brand-border) bg-(--brand-surface-glass) px-4 py-3 text-sm font-medium"

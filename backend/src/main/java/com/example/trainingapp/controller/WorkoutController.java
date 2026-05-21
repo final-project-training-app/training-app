@@ -45,6 +45,8 @@ public class WorkoutController {
         workout.setDescription(request.description());
         workout.setDashboardName(request.dashboardName());
         workout.setDashboardDescription(request.dashboardDescription());
+        workout.setSubtitleText(request.subtitleText());
+        workout.setInstructionsSubtitleText(request.instructionsSubtitleText());
         workout.setLevel(request.level());
         workout.setType(request.type());
         workout.setDurationSeconds(request.durationSeconds());
