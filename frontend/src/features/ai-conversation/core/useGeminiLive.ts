@@ -89,19 +89,34 @@ export const useGeminiLive = ({
   const microphoneEnabledRef = useRef(true);
   const speakerMutedRef = useRef(false);
 
-  // Synchronous ref updates so that async callers (e.g. geminiConnect after
-  // an await) always read the latest prop values — never a render-stale copy.
-  tokenRef.current = token;
-  toolsRef.current = tools;
-  systemInstructionRef.current = systemInstruction;
-  onAudioRef.current = onAudioData;
-  onMessageRef.current = onMessage;
-  onToolCallRef.current = onToolCall;
-  onFirstAiAudioRef.current = onFirstAiAudio;
-  voiceRef.current = voice ?? null;
+  useEffect(() => {
+    // Keep async callers reading the latest values without mutating refs during render.
+    tokenRef.current = token;
+    toolsRef.current = tools;
+    systemInstructionRef.current = systemInstruction;
+    onAudioRef.current = onAudioData;
+    onMessageRef.current = onMessage;
+    onToolCallRef.current = onToolCall;
+    onFirstAiAudioRef.current = onFirstAiAudio;
+    voiceRef.current = voice ?? null;
+  }, [
+    token,
+    tools,
+    systemInstruction,
+    onAudioData,
+    onMessage,
+    onToolCall,
+    onFirstAiAudio,
+    voice,
+  ]);
 
   useEffect(() => {
-    console.debug("[GeminiLive] voice prop:", voice, "voiceRef.current:", voiceRef.current);
+    console.debug(
+      "[GeminiLive] voice prop:",
+      voice,
+      "voiceRef.current:",
+      voiceRef.current,
+    );
   }, [voice]);
 
   async function handleToolCalls(functionCalls: FunctionCall[]) {
@@ -204,6 +219,8 @@ export const useGeminiLive = ({
           systemInstruction: systemInstructionRef.current
             ? { parts: [{ text: systemInstructionRef.current }] }
             : undefined,
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: selectedVoice },

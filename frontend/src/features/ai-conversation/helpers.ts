@@ -35,6 +35,14 @@ export type GeminiServerMessage = {
     modelTurn?: {
       parts?: Array<{ text?: string }>;
     };
+    inputTranscription?: {
+      text?: string;
+      finished?: boolean;
+    };
+    outputTranscription?: {
+      text?: string;
+      finished?: boolean;
+    };
   };
 };
 
@@ -61,13 +69,17 @@ export type ProfileSuggestions = {
   suggestedContext?: string | null;
 };
 
-export function readProfileSuggestions(functionCall: FunctionCall): ProfileSuggestions {
+export function readProfileSuggestions(
+  functionCall: FunctionCall,
+): ProfileSuggestions {
   const args = functionCall.args ?? {};
   const level = args.suggested_intensity_level;
   const ctx = args.suggested_context;
   return {
     suggestedIntensityLevel:
-      typeof level === "number" ? Math.round(Math.min(5, Math.max(1, level))) : null,
+      typeof level === "number"
+        ? Math.round(Math.min(5, Math.max(1, level)))
+        : null,
     // AI producerar alltid den fullständiga sammanslagna kontextsträngen
     suggestedContext: typeof ctx === "string" && ctx.trim() ? ctx.trim() : null,
   };
@@ -97,12 +109,21 @@ export function getModelText(message: unknown): string {
   const parts =
     (
       message as {
-        serverContent?: { modelTurn?: { parts?: Array<{ text?: string }> } };
+        serverContent?: {
+          modelTurn?: { parts?: Array<{ text?: string }> };
+          outputTranscription?: { text?: string };
+        };
       }
     ).serverContent?.modelTurn?.parts ?? [];
 
-  return parts
-    .map((part) => part.text)
+  const outputText =
+    (
+      message as {
+        serverContent?: { outputTranscription?: { text?: string } };
+      }
+    ).serverContent?.outputTranscription?.text ?? "";
+
+  return [outputText, ...parts.map((part) => part.text).filter(Boolean)]
     .filter(Boolean)
     .join(" ");
 }

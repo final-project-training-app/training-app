@@ -52,11 +52,20 @@ export function SessionPage({
         onInfo={() => {}}
         onClosePanel={() => {}}
         onEnd={onEnd}
+        caption={null}
+        captionsEnabled={false}
+        onToggleCaptions={() => {}}
       />
     );
   }
 
-  return <ReadySessionPage session={session} alreadyCompletedToday={alreadyCompletedToday} onEnd={onEnd} />;
+  return (
+    <ReadySessionPage
+      session={session}
+      alreadyCompletedToday={alreadyCompletedToday}
+      onEnd={onEnd}
+    />
+  );
 }
 
 function ReadySessionPage({
@@ -84,6 +93,12 @@ function ReadySessionPage({
     isSpeakerMuted,
     toggleMicrophoneMuted,
     toggleSpeakerMuted,
+    caption,
+    captionDraft,
+    playbackSubtitle,
+    captionsEnabled,
+    toggleCaptions,
+    captionHistory,
   } = useCoachSession({
     session,
     trainerId: session.trainer?.id ? String(session.trainer.id) : undefined,
@@ -149,6 +164,12 @@ function ReadySessionPage({
       isSpeakerMuted={isSpeakerMuted}
       onToggleMicrophoneMuted={toggleMicrophoneMuted}
       onToggleSpeakerMuted={toggleSpeakerMuted}
+      caption={caption}
+      captionDraft={captionDraft}
+      playbackSubtitle={playbackSubtitle}
+      captionsEnabled={captionsEnabled}
+      onToggleCaptions={toggleCaptions}
+      captionHistory={captionHistory}
       onSpeaker={() => togglePanel("exercise")}
       onTrainingSuite={() => togglePanel("suite")}
       onInfo={() => togglePanel("info")}
